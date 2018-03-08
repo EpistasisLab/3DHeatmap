@@ -1,0 +1,4 @@
+System Requirements
+
+3D Heatmap runs under recent versions of OS X and Windows.  It makes heavy use of the Graphics Processing Unit and may fail if the GPU does not have access to adequate memory.
+The most common failure mode is that all text appears as gray boxes or blurry blobs.
