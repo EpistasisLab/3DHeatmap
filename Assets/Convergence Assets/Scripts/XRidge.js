@@ -13,7 +13,7 @@ class XRidge extends System.Object
 	{
 		myMeshObject = aMeshObject;
 		trans = aMeshObject.transform;
-		myRenderer = aMeshObject.renderer;
+		myRenderer = aMeshObject.GetComponent.<Renderer>();
 		myMesh = amesh;
 		vertexColors = passColors;
 		myBin = bin;
@@ -24,7 +24,7 @@ class XRidge extends System.Object
 	{
 		myMeshObject = aMeshObject;
 		trans = aMeshObject.transform;
-		myRenderer = aMeshObject.renderer;
+		myRenderer = aMeshObject.GetComponent.<Renderer>();
 		myMesh = amesh;
 		myBin = bin;
 		myRow = row;

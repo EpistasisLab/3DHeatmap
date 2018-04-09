@@ -165,7 +165,7 @@ private var maxMarker : int;
 private var numMarkers : int;
 private var currBin : int = 0;
 private var bScrollBin : boolean = false;
-private var lastScrollTime : float = Time.time;
+private var lastScrollTime : float = 0.0; //Stauffer mod
 var minScrollSecs : float = 0.1;	// minimum time between changes of scrolling value
 private var choiceHeight : int = 0;
 private var choiceFOV : int = 1;
@@ -223,6 +223,8 @@ private var colLimit = 32000;
 
 function Start()
 {
+	lastScrollTime = Time.time; //Stauffer move init here
+
 	isWindowOpen = new boolean[NUMwin];
 	windowRects = new Rect[NUMwin];
 	windowRects[DSwin] = dsRect;
@@ -278,7 +280,7 @@ function Start()
 	
 	// Find the prototype mesh object, if present
 	proto = GameObject.Find("protomesh");
-	if(!includeBalls) Destroy(proto.collider);
+	if(!includeBalls) Destroy(proto.GetComponent.<Collider>());
 	baseCube = GameObject.Find("basecube");
 	MakeUnitCube(baseCube);
 	protolabel = GameObject.Find("protolabel");
@@ -606,7 +608,7 @@ function DoDS(windowID : int) : void
 	GUI.DragWindow();
 	if(dataChanged && (++waitCount > 4))
 	{
-		if(beServer) networkView.RPC("DatasetSelected", RPCMode.All, selTable, bConnectX, bExtendZ, bInterpolateY, topColorChoice, sideColorChoice, currGraphHeight);
+		if(beServer) GetComponent.<NetworkView>().RPC("DatasetSelected", RPCMode.All, selTable, bConnectX, bExtendZ, bInterpolateY, topColorChoice, sideColorChoice, currGraphHeight);
 		else DatasetSelected(selTable, bConnectX, bExtendZ, bInterpolateY, topColorChoice, sideColorChoice, currGraphHeight);
 	}
 }
@@ -689,17 +691,17 @@ function DoStyle(windowID : int) : void
 	GUI.DragWindow();
 	if(wantRedraw && (++waitCount > 4))
 	{
-		if(beServer) networkView.RPC("DatasetSelected", RPCMode.All, selTable, bConnectX, bExtendZ, bInterpolateY, topColorChoice, sideColorChoice, currGraphHeight);
+		if(beServer) GetComponent.<NetworkView>().RPC("DatasetSelected", RPCMode.All, selTable, bConnectX, bExtendZ, bInterpolateY, topColorChoice, sideColorChoice, currGraphHeight);
 		else DatasetSelected(selTable, bConnectX, bExtendZ, bInterpolateY, topColorChoice, sideColorChoice, currGraphHeight);
 	}
 	if(wantVRML && (++waitCount > 4))
 	{
-		if(beServer) networkView.RPC("DrawVRML", RPCMode.All);
+		if(beServer) GetComponent.<NetworkView>().RPC("DrawVRML", RPCMode.All);
 		else DrawVRML();
 	}
 	if(wantTriangles && (++waitCount > 4))
 	{
-		if(beServer) networkView.RPC("DrawTriangle", RPCMode.All);
+		if(beServer) GetComponent.<NetworkView>().RPC("DrawTriangle", RPCMode.All);
 		else DrawVRML();
 	}
 }
@@ -741,41 +743,41 @@ function DoSliders(windowID : int) : void
 	GUI.DragWindow();
 	if(oldScrollChoice != scrollChoice)
 	{
-		if(beServer) networkView.RPC("ScrollingSelected", RPCMode.All, scrollChoice);
+		if(beServer) GetComponent.<NetworkView>().RPC("ScrollingSelected", RPCMode.All, scrollChoice);
 		else ScrollingSelected(scrollChoice);
 		
 		if(oldScrollChoice == choiceBin)
 		{
-			if(beServer) networkView.RPC("VisBins", RPCMode.All, -1);
+			if(beServer) GetComponent.<NetworkView>().RPC("VisBins", RPCMode.All, -1);
 			else VisBins(-1);
 		}
 		if(scrollChoice == choiceBin)
 		{
-			if(beServer) networkView.RPC("VisBins", RPCMode.All, currBin);
+			if(beServer) GetComponent.<NetworkView>().RPC("VisBins", RPCMode.All, currBin);
 			else VisBins(currBin);
 		}
 	}
 	
 	if(oldGraphHeight != currGraphHeight)
 	{
-		if(beServer) networkView.RPC("GraphHeightSelected", RPCMode.All, currGraphHeight);
+		if(beServer) GetComponent.<NetworkView>().RPC("GraphHeightSelected", RPCMode.All, currGraphHeight);
 		else GraphHeightSelected(currGraphHeight);
 	}
 	if(oldFOV != currFOV)
 	{
-		if(beServer) networkView.RPC("FOVSelected", RPCMode.All, currFOV);
+		if(beServer) GetComponent.<NetworkView>().RPC("FOVSelected", RPCMode.All, currFOV);
 		else FOVSelected(currFOV);
 	}
 	
 	if((currThick != oldThick) || (currSep != oldSep) || (currGap != oldGap))
 	{
-		if(beServer) networkView.RPC("Redistribute", RPCMode.All, currThick, currSep, currGap);
+		if(beServer) GetComponent.<NetworkView>().RPC("Redistribute", RPCMode.All, currThick, currSep, currGap);
 		else Redistribute(currThick, currSep, currGap);
 	}
 	
 	if(currBin != oldBin)
 	{
-		if(beServer) networkView.RPC("VisBins", RPCMode.All, currBin);
+		if(beServer) GetComponent.<NetworkView>().RPC("VisBins", RPCMode.All, currBin);
 		else VisBins(currBin);
 	}
 	Const.menuScrolling = (scrollChoice >= 0);
@@ -843,7 +845,7 @@ function DoZip(windowID : int) : void
 	GUILayout.EndHorizontal();
 	if(zipChoice >= 0)
 	{
-		if(beServer) networkView.RPC("ZipSelected", RPCMode.All, zipChoice);
+		if(beServer) GetComponent.<NetworkView>().RPC("ZipSelected", RPCMode.All, zipChoice);
 		else ZipSelected(zipChoice);
 	}
 	
@@ -859,7 +861,7 @@ function DoZip(windowID : int) : void
 	GUILayout.EndHorizontal();
 	if(lookChoice >= 0)
 	{
-		if(beServer) networkView.RPC("LookSelected", RPCMode.All, lookChoice);
+		if(beServer) GetComponent.<NetworkView>().RPC("LookSelected", RPCMode.All, lookChoice);
 		else LookSelected(lookChoice);
 	}
 	GUI.DragWindow();
@@ -1402,7 +1404,7 @@ function BuildRidge(row : int, numx : int, binindex : int)
 	mm.Attach(amesh);
 	try
 	{
-		newRidge.transform.collider.sharedMesh = amesh;
+		newRidge.transform.GetComponent.<Collider>().sharedMesh = amesh;
 	}
 	catch(err)
 	{
@@ -1588,9 +1590,9 @@ function ShowPointedData()
 		signPost.transform.position = Vector3(scenex, sceney, scenez);
 		var signSize : float = Mathf.Min(tokenWidth, xSceneSize / numCols);
 		signPost.transform.localScale = Vector3(signSize, signSize, signSize);
-		signPost.renderer.enabled = true;
+		signPost.GetComponent.<Renderer>().enabled = true;
 	}
-	else signPost.renderer.enabled = false;
+	else signPost.GetComponent.<Renderer>().enabled = false;
 }
 
 // debugging
@@ -1716,13 +1718,13 @@ function DatasetSelected(newDB : String, newBConnectX : boolean, newBExtendZ : b
 	reader = dbcmd.ExecuteReader();
 	while(reader.Read())
 	{
-		var fieldname : String = reader.GetString(1);
+		var fname : String = reader.GetString(1);
 		var fieldtype : String = reader.GetString(2);
 		if(fieldtype != "INTEGER") continue;
-		if(fieldname == "row") continue;
-		if(fieldname == "col") continue;
-		if(fieldname == "bin") continue;
-		nameArray.push(fieldname);
+		if(fname == "row") continue;
+		if(fname == "col") continue;
+		if(fname == "bin") continue;
+		nameArray.push(fname);
 	}
 	reader.Close();
 	

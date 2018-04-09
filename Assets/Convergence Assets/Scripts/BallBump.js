@@ -6,8 +6,8 @@ function OnCollisionEnter (collision : Collision) {
 	if(mag > minMag)
 	{
 		if(mag > bigMag) mag = bigMag;
-		audio.volume = mag / bigMag;
-		audio.Play();
+		GetComponent.<AudioSource>().volume = mag / bigMag;
+		GetComponent.<AudioSource>().Play();
 		//Debug.Log("collision " + mag);
 	}
 	//Debug.Log("Had a collision");

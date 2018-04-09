@@ -44,8 +44,8 @@ function Awake()
 	usesNoise = useNoise;
 	if(enableProfiling)
 	{
-		Profiler.logFile = "mylog.log";
-		Profiler.enabled = true;
+		UnityEngine.Profiling.Profiler.logFile = "mylog.log";
+		UnityEngine.Profiling.Profiler.enabled = true;
 	}
 }
 
