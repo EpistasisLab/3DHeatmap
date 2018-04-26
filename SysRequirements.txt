@@ -1,4 +1,15 @@
 System Requirements
 
-3D Heatmap runs under recent versions of OS X and Windows.  It makes heavy use of the Graphics Processing Unit and may fail if the GPU does not have access to adequate memory.
+3D Heatmap runs under recent versions of OS X and Windows.
+
+GPU
+
+It makes heavy use of the Graphics Processing Unit and may fail if the GPU does not have access to adequate memory.
 The most common failure mode is that all text appears as gray boxes or blurry blobs.
+
+3D Mouse
+
+3D Heatmap is capable of using a Space Navigator 3D mouse by 3DConnexion. The appropriate drivers must be installed:
+https://www.3dconnexion.com/service/drivers.html
+Other devices from 3DConnexcion may also work, if they use the same protocols as the Space Navigator.
+

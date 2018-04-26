@@ -1,3 +1,7 @@
+System Requirements
+
+See SysRequirements.txt
+
 DESIGN
 
 A conventional heat map consists of a 2D grid of colored squares where each square represents an observation of a random variable and the color of the square is proportional to the value of that observation. 2D heat maps are used pervasively in the Biological sciences and both the grid and the dimension mapped to the grid can represent a variety of concepts. Genes, experimental conditions, subjects, genomic elements, etc... are distributed on the grid where a color palette is used to encode transcript abundance, protein concentration, conservation, activation, etc...
@@ -48,6 +52,7 @@ Data sets can be superimposed using the merge.pl script. An arbitrary number of 
     import.pl PATTERN
 
 If you are running the scripts under Windows type "perl " preceding the previous commands, if you're running a Linux/UNIX distribution precede them with "./".
+
 
 
 

@@ -1,9 +1,0 @@
-Building 3D Heatmap
-
-This application runs under the Unity3D game engine.  The free version is perfectly adequate; there is no need to buy the Pro version to build 3D Heatmap.  See information at http://www.unity3d.com.
-
-After installing Unity, open this folder, 3DHeatmap, as a project.  It may need to automatically convert the project files if the current release of Unity is different than the one it was originally built under.  Then open the "scene" 3DH, which will be in the Assets directory.  If this opens successfully, you should be able to run 3D Heatmap within the editor.  See Unity's documentation for information on how to build standalone versions.  This application has not been tested as a web-based application, and I do not expect it will work that way.
-
-When you build a standalone version, be sure to include testdata.sqlite, which will contain your datasets.
-
-If you have difficulty building, contact me, Douglas Hill at douglas.p.hill@dartmouth.edu
