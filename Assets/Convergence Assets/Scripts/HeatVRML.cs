@@ -1,7 +1,8 @@
 using Mono.Data.Sqlite;
+using System;
 using System.IO;
 using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 [System.Serializable]
 public partial class HeatVRML : MonoBehaviour
@@ -25,6 +26,7 @@ public partial class HeatVRML : MonoBehaviour
 */
     // Version
     public string programVersion;
+
     // window numbers
     private int DSwin;
     private int STYLEwin;
@@ -33,12 +35,13 @@ public partial class HeatVRML : MonoBehaviour
     private int NUMwin;
     private bool[] isWindowOpen;
     private Rect[] windowRects;
-    private Boo.Lang.ICallable[] sizeRect;
+    private System.Action[] sizeRect;
     private bool[] windChanged;
     private GUI.WindowFunction[] doWind;
     private GUI.WindowFunction closefunc;
     private bool[] isLayout;
     private bool allHidden;
+   
     // window extents
     public Rect dsRect;
     public Rect styleRect;
@@ -48,6 +51,7 @@ public partial class HeatVRML : MonoBehaviour
     public Rect xrayWindowRect;
     public Rect helpWindowRect;
     public string[] windNames;
+
     //Stauffer - Textures - change these from Texture to Texture2D to avoid implicit downcast when assigned to GUIStyle later. 
     //These get assigned in the 'prefab objectify' GameObject in the editor Hierarchy for the scene. Seems like this HeatVRML script
     // was added to the instance of 'prefab objectify' that's in the scene, cuz the version in project Prefabs folder doesn't have it.
@@ -76,6 +80,7 @@ public partial class HeatVRML : MonoBehaviour
     public Texture2D yellowblueOffTexture;
     private bool initDone;
     private float scrollAmount;
+
     // scene related
     public float xSceneSize;
     public float ySceneSize;
@@ -83,6 +88,7 @@ public partial class HeatVRML : MonoBehaviour
     public Vector3 xzySceneCorner;
     private float fullYSceneSize;
     public int maxXs;
+
     // Database related
     private Vector2 dbPos;
     private int numDB;
@@ -102,6 +108,7 @@ public partial class HeatVRML : MonoBehaviour
     private bool wantTriangles;
     private int numFields;
     private FieldData[] allFields;
+
     // data values for the current row
     private int[] colVals;
     private float[] heightVals;
@@ -109,10 +116,12 @@ public partial class HeatVRML : MonoBehaviour
     private int[] sideVals;
     public string serverURL;
     public bool beServer;
+
     // feature inclusion
     public bool includeVRML;
     public bool includeBalls;
     public bool includeTriangles;
+    
     // chart related
     private bool bInterpolateY;
     private bool bConnectX;
@@ -179,32 +188,41 @@ public partial class HeatVRML : MonoBehaviour
     private float currGap;
     private PointedData pointedData;
     private GameObject signPost;
+
     // Layout
     public int pixPerLine;
     public int rowHeight;
     public int colWidth;
     public int lineWidth;
+    
     // Specific windows
     public int scrollHeight;
+    
     // Help window
     private bool showHelp;
     private int helpPage;
     private int oldHelpPage;
     private Vector2 menuScrollPos;
     private int helpCount;
+
     // Components
     public Camera myCamera; //Stauffer - add declare as type Camera
     public GameObject myController;
+    
     // VRML
     //private File fileVRML; //Stauffer - removing this. Not used anywhere, and giving c# compilation error
     public float vrmlModelMM;
+    
     // Ball dropping
     private bool doDrop;
+    
     // Debugging
     private Texture2D xray;
     private bool showXRay;
     private int colLimit;
-    public virtual void Start()//SpreadBalls(16, 10.0);
+
+    //
+    public virtual void Start()
     {
         int i = 0;
         this.lastScrollTime = Time.time; //Stauffer move init here
@@ -214,7 +232,7 @@ public partial class HeatVRML : MonoBehaviour
         this.windowRects[this.STYLEwin] = this.styleRect;
         this.windowRects[this.ZIPwin] = this.zipRect;
         this.windowRects[this.SLwin] = this.slidersRect;
-        this.sizeRect = new Boo.Lang.ICallable[this.NUMwin];
+        this.sizeRect = new System.Action[this.NUMwin];
         this.sizeRect[this.DSwin] = (System.Action) this.SizeDS;
         this.sizeRect[this.STYLEwin] = (System.Action) this.SizeStyle;
         this.sizeRect[this.ZIPwin] = (System.Action) this.SizeZip;
@@ -271,6 +289,7 @@ public partial class HeatVRML : MonoBehaviour
         this.MakeUnitCube(this.baseCube);
         this.protolabel = GameObject.Find("protolabel");
         this.signPost = UnityEngine.Object.Instantiate(GameObject.Find("SignPost"), new Vector3(-1000, -1000, -1000), Quaternion.identity);
+        
         // Open database
         this.connStrn = "URI=file:" + Const.dataBase;
         this.connection = new SqliteConnection(this.connStrn);
@@ -286,6 +305,7 @@ public partial class HeatVRML : MonoBehaviour
         this.allFields[1].SetInt("bin", 0, 2);
         this.numFields = 2;
         this.xray = new Texture2D(Screen.width / 2, Screen.height / 2);
+        //SpreadBalls(16, 10.0);
     }
 
     private bool haveBalls;
@@ -315,7 +335,7 @@ public partial class HeatVRML : MonoBehaviour
             col = 0;
             while (col < rowcols)
             {
-                this.allBalls[i] = UnityEngine.Object.Instantiate(this.protoBall, new Vector3((startX + (col * spread)) + Random.Range(-spread, spread), startY, zPos + Random.Range(-spread, spread)), Quaternion.identity);
+                this.allBalls[i] = UnityEngine.Object.Instantiate(this.protoBall, new Vector3((startX + (col * spread)) + UnityEngine.Random.Range(-spread, spread), startY, zPos + UnityEngine.Random.Range(-spread, spread)), Quaternion.identity);
                 this.allBalls[i++].velocity = new Vector3(0, 0, 0);
                 ++col;
             }
@@ -2047,7 +2067,7 @@ public partial class HeatVRML : MonoBehaviour
         this.GetAxisExtents();
         // Find the fields in this database
         this.dbcmd.CommandText = ("PRAGMA table_info(" + this.selTable) + ");";
-        object[] nameArray = new object[0];
+        List<string> nameArray = new List<string>();
         this.reader = this.dbcmd.ExecuteReader();
         while (this.reader.Read())
         {
@@ -2069,7 +2089,9 @@ public partial class HeatVRML : MonoBehaviour
             {
                 continue;
             }
-            nameArray.Push(fname);
+            nameArray.Add(fname);
+    
+
         }
         this.reader.Close();
         thisField = 0;
@@ -2078,13 +2100,13 @@ public partial class HeatVRML : MonoBehaviour
             this.allFields[thisField] = new FieldData(); // just to destroy old values
             ++thisField;
         }
-        this.allFields = new FieldData[2 + nameArray.Length];
+        this.allFields = new FieldData[2 + nameArray.Count];
         this.allFields[0] = new FieldData();
         this.allFields[0].SetFloat("height", this.minHeight, this.maxHeight);
         this.allFields[1] = new FieldData();
         this.allFields[1].SetInt("bin", this.minBin, this.maxBin);
         this.numFields = 2;
-        foreach (object fieldname in nameArray)
+        foreach (string fieldname in nameArray)
         {
             this.dbcmd.CommandText = ((((("SELECT MIN(" + fieldname) + "), MAX(") + fieldname) + ") from ") + this.selTable) + ";";
             //Debug.Log("trying " + dbcmd.CommandText);

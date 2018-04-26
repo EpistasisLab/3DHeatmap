@@ -151,6 +151,10 @@ Prefab:
       propertyPath: m_LocalPosition.z
       value: 600
       objectReference: {fileID: 0}
+    - target: {fileID: 400002, guid: 6fcce0a51a2974872b04ea31c26e65d7, type: 2}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 6fcce0a51a2974872b04ea31c26e65d7, type: 2}
   m_IsPrefabParent: 0
@@ -185,40 +189,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   programVersion: 1.0
   dsRect:
-    x: 2
-    y: 2
-    width: 120
-    height: 100
-  styleRect:
-    x: 130
-    y: 2
-    width: 120
-    height: 40
-  zipRect:
-    x: 258
-    y: 2
-    width: 120
-    height: 40
-  slidersRect:
-    x: 258
-    y: 2
-    width: 120
-    height: 40
-  pointedWindowRect:
+    serializedVersion: 2
     x: 0
-    y: 300
-    width: 120
-    height: 60
+    y: 0
+    width: 0
+    height: 0
+  styleRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  zipRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  slidersRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  pointedWindowRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
   xrayWindowRect:
-    x: 200
-    y: 200
-    width: 800
-    height: 800
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
   helpWindowRect:
-    x: 10
-    y: 10
-    width: 10
-    height: 10
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
   windNames:
   - Data Selection
   - Chart Style
@@ -233,71 +244,47 @@ MonoBehaviour:
     m_Name: 
     m_Normal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Active:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Focused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnNormal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnHover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnActive:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnFocused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Border:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Padding:
+    m_Margin:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Margin:
+    m_Padding:
       m_Left: 0
       m_Right: 0
       m_Top: 0
@@ -308,87 +295,63 @@ MonoBehaviour:
       m_Top: 0
       m_Bottom: 0
     m_Font: {fileID: 0}
-    m_ImagePosition: 0
-    m_Alignment: 0
-    m_WordWrap: 0
-    m_TextClipping: 1
-    m_ContentOffset: {x: 0, y: 0}
-    m_ClipOffset: {x: 0, y: 0}
-    m_FixedWidth: 0
-    m_FixedHeight: 0
     m_FontSize: 0
     m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 1
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
   grayscaleStyle:
     m_Name: 
     m_Normal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Active:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Focused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnNormal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnHover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnActive:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnFocused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Border:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Padding:
+    m_Margin:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Margin:
+    m_Padding:
       m_Left: 0
       m_Right: 0
       m_Top: 0
@@ -399,16 +362,16 @@ MonoBehaviour:
       m_Top: 0
       m_Bottom: 0
     m_Font: {fileID: 0}
-    m_ImagePosition: 0
-    m_Alignment: 0
-    m_WordWrap: 0
-    m_TextClipping: 1
-    m_ContentOffset: {x: 0, y: 0}
-    m_ClipOffset: {x: 0, y: 0}
-    m_FixedWidth: 0
-    m_FixedHeight: 0
     m_FontSize: 0
     m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 1
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
   grayscaleOnTexture: {fileID: 2800000, guid: 7382b3d7208db4ba99d7cce451a3cee3, type: 3}
@@ -417,71 +380,47 @@ MonoBehaviour:
     m_Name: 
     m_Normal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Active:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Focused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnNormal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnHover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnActive:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnFocused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Border:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Padding:
+    m_Margin:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Margin:
+    m_Padding:
       m_Left: 0
       m_Right: 0
       m_Top: 0
@@ -492,16 +431,16 @@ MonoBehaviour:
       m_Top: 0
       m_Bottom: 0
     m_Font: {fileID: 0}
-    m_ImagePosition: 0
-    m_Alignment: 0
-    m_WordWrap: 0
-    m_TextClipping: 1
-    m_ContentOffset: {x: 0, y: 0}
-    m_ClipOffset: {x: 0, y: 0}
-    m_FixedWidth: 0
-    m_FixedHeight: 0
     m_FontSize: 0
     m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 1
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
   constantOnTexture: {fileID: 2800000, guid: 4856816788d624ff6b262b4778fb3df5, type: 3}
@@ -510,71 +449,47 @@ MonoBehaviour:
     m_Name: 
     m_Normal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Active:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Focused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnNormal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnHover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnActive:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnFocused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Border:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Padding:
+    m_Margin:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Margin:
+    m_Padding:
       m_Left: 0
       m_Right: 0
       m_Top: 0
@@ -585,16 +500,16 @@ MonoBehaviour:
       m_Top: 0
       m_Bottom: 0
     m_Font: {fileID: 0}
-    m_ImagePosition: 0
-    m_Alignment: 0
-    m_WordWrap: 0
-    m_TextClipping: 1
-    m_ContentOffset: {x: 0, y: 0}
-    m_ClipOffset: {x: 0, y: 0}
-    m_FixedWidth: 0
-    m_FixedHeight: 0
     m_FontSize: 0
     m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 1
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
   rainbowOnTexture: {fileID: 2800000, guid: 5b39ac05f0f9540ad9c1c4dbccd6fe74, type: 3}
@@ -603,71 +518,47 @@ MonoBehaviour:
     m_Name: 
     m_Normal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Active:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Focused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnNormal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnHover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnActive:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnFocused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Border:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Padding:
+    m_Margin:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Margin:
+    m_Padding:
       m_Left: 0
       m_Right: 0
       m_Top: 0
@@ -678,16 +569,16 @@ MonoBehaviour:
       m_Top: 0
       m_Bottom: 0
     m_Font: {fileID: 0}
-    m_ImagePosition: 0
-    m_Alignment: 0
-    m_WordWrap: 0
-    m_TextClipping: 1
-    m_ContentOffset: {x: 0, y: 0}
-    m_ClipOffset: {x: 0, y: 0}
-    m_FixedWidth: 0
-    m_FixedHeight: 0
     m_FontSize: 0
     m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 1
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
   redgreenOnTexture: {fileID: 2800000, guid: aed8b76d5c58942a98377e770c28bbca, type: 3}
@@ -696,71 +587,47 @@ MonoBehaviour:
     m_Name: 
     m_Normal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Hover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Active:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Focused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnNormal:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnHover:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnActive:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_OnFocused:
       m_Background: {fileID: 0}
-      m_TextColor:
-        r: 0
-        g: 0
-        b: 0
-        a: 1
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
     m_Border:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Padding:
+    m_Margin:
       m_Left: 0
       m_Right: 0
       m_Top: 0
       m_Bottom: 0
-    m_Margin:
+    m_Padding:
       m_Left: 0
       m_Right: 0
       m_Top: 0
@@ -771,16 +638,16 @@ MonoBehaviour:
       m_Top: 0
       m_Bottom: 0
     m_Font: {fileID: 0}
-    m_ImagePosition: 0
-    m_Alignment: 0
-    m_WordWrap: 0
-    m_TextClipping: 1
-    m_ContentOffset: {x: 0, y: 0}
-    m_ClipOffset: {x: 0, y: 0}
-    m_FixedWidth: 0
-    m_FixedHeight: 0
     m_FontSize: 0
     m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 1
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
   yellowblueOnTexture: {fileID: 2800000, guid: 77173b075fae549c8812b12fc2857ce3, type: 3}
@@ -924,16 +791,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &54
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications: []
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 100100000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
-  m_IsPrefabParent: 0
 --- !u!1001 &61
 Prefab:
   m_ObjectHideFlags: 0
@@ -996,6 +853,10 @@ Prefab:
     - target: {fileID: 100000, guid: 901a114dc778c4811b19313853df6ebd, type: 2}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 901a114dc778c4811b19313853df6ebd, type: 2}
+      propertyPath: m_RootOrder
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 901a114dc778c4811b19313853df6ebd, type: 2}
@@ -1077,7 +938,11 @@ Prefab:
   serializedVersion: 2
   m_Modification:
     m_TransformParent: {fileID: 0}
-    m_Modifications: []
+    m_Modifications:
+    - target: {fileID: 400000, guid: 622e4dd1b8dd24a309179cd67a67f23a, type: 2}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 622e4dd1b8dd24a309179cd67a67f23a, type: 2}
   m_IsPrefabParent: 0
@@ -1150,7 +1015,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &96
 GameObject:
@@ -1311,3 +1176,45 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &2122762190
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 36.42089
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: -12.718552
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 53.569046
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+      propertyPath: m_RootOrder
+      value: 3
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: d799fb6a2ca1c479c8516cc09a05ef10, type: 2}
+  m_IsPrefabParent: 0
