@@ -144,20 +144,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 80
+  DXspeed: 15
   liftSpeed: 80
-  flightSpeed: 0.1
-  brakingFraction: 0.9
   maxVelocity: 100
   accel: 0.4
   sensitivityX: 15
   sensitivityY: 15
   rotateSensitivityX: 0.5
   rotateSensitivityY: 0.5
-  sensitivityDX: 140
-  minimumX: -360
-  maximumX: 360
-  minimumY: -360
-  maximumY: 360
+  DXsensitivity: 3
 --- !u!1002 &11400001
 EditorExtensionImpl:
   serializedVersion: 6

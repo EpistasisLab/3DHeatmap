@@ -66,6 +66,7 @@ public class DX : MonoBehaviour {
 
 	public static float GetRY()
 	{
+        //Debug.Log("GetRY: Y, Angle: " + device.Sensor.Rotation.Y + " , " + device.Sensor.Rotation.Angle);
 		return (float)-(device.Sensor.Rotation.Y * device.Sensor.Rotation.Angle / 80.0);
 	}
 

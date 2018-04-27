@@ -12,20 +12,21 @@ using System.Collections;
 public partial class Fly : MonoBehaviour
 {
     public float speed;
+    public float DXspeed; //Stauffer - translation speed when using 3D mouse
     public int liftSpeed;
-    public float flightSpeed;
-    public float brakingFraction;
+    //public float flightSpeed; not used
+    //public float brakingFraction; Stauffer - not used
     public float maxVelocity;
     public float accel;
     public float sensitivityX;
     public float sensitivityY;
     public float rotateSensitivityX;
     public float rotateSensitivityY;
-    public float sensitivityDX;
-    public float minimumX;
-    public float maximumX;
-    public float minimumY;
-    public float maximumY;
+    public float DXsensitivity;
+    //public float minimumX; //Stauffer - not used
+    //public float maximumX;
+    //public float minimumY;
+    //public float maximumY;
     public static float vertButton;
     public static float horzButton;
     public static float turnButton;
@@ -34,20 +35,49 @@ public partial class Fly : MonoBehaviour
     public static float upDownMove;
     public static float zoom;
     public static Vector3 moveDirection;
-    private bool grounded;
-    public static Vector3 accelDirection;
+    //private bool grounded; Stauffer - not used
+    private static Vector3 accelDirection;
     private Camera myCamera;
     private Quaternion originalRotation;
     private static float rotateMove;
     private static float tiltMove;
-    public static float rotationX;
-    public static float rotationY;
-    public static bool rotationChanged;
-    public static Vector3 dxDirection;
+    private static float rotationX;
+    private static float rotationY;
+    private static bool rotationChanged;
+    private static Vector3 DXdirection;
     private CharacterController controller;
     private float rotationXChange;
     private float rotationYChange;
     public static bool haveTurned;  // Other classes check and clear this
+
+    public Fly()
+    {
+        //Note these are overridden by editor inspector settings during dev
+
+        this.speed = 30f;
+        this.DXspeed = 15f; //translation speed
+        this.liftSpeed = 30;
+        //this.flightSpeed = 0.1f;
+        //this.brakingFraction = 0.9f;
+        this.maxVelocity = 40f;
+        this.accel = 0.4f;
+        this.sensitivityX = 15f;
+        this.sensitivityY = 15f;
+        this.rotateSensitivityX = 0.5f;
+        this.rotateSensitivityY = 0.5f;
+        this.DXsensitivity = 3f;
+        //this.minimumX = -360f;
+        //this.maximumX = 360f;
+        //this.minimumY = -360f;
+        //this.maximumY = 360f;
+    }
+
+    static Fly()
+    {
+        Fly.moveDirection = Vector3.zero;
+        Fly.accelDirection = Vector3.zero;
+        Fly.DXdirection = Vector3.zero;
+    }
 
     public virtual void Start()
     {
@@ -78,13 +108,13 @@ public partial class Fly : MonoBehaviour
                 Fly.sideMove = DX.GetX();
                 Fly.upDownMove = DX.GetZ();
                 Fly.zoom = DX.GetY();
-                Fly.dxDirection = new Vector3(Fly.sideMove, Fly.zoom, Fly.upDownMove);
-                Fly.dxDirection = this.myCamera.transform.TransformDirection(Fly.dxDirection);
-                Fly.dxDirection = Fly.dxDirection * this.speed;
+                Fly.DXdirection = new Vector3(Fly.sideMove, Fly.zoom, Fly.upDownMove);
+                Fly.DXdirection = this.myCamera.transform.TransformDirection(Fly.DXdirection);
+                Fly.DXdirection = Fly.DXdirection * this.DXspeed;
             }
             else
             {
-                Fly.dxDirection = Vector3.zero;
+                Fly.DXdirection = Vector3.zero;
             }
         #else
             Fly.accelDirection = Vector3.zero;
@@ -136,16 +166,18 @@ public partial class Fly : MonoBehaviour
         {
             heightAdjust = ((Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime) * this.liftSpeed) * new Vector3(0, 1, 0);
         }
-        this.controller.Move(((Fly.moveDirection + Fly.dxDirection) * Time.deltaTime) + heightAdjust);
+        this.controller.Move(((Fly.moveDirection + Fly.DXdirection) * Time.deltaTime) + heightAdjust);
 
+        //Rotations
+        //
         #if UNITY_STANDALONE_WIN
         if (DX.hasController)
         {
             Fly.rotateMove = DX.GetRY();
             Fly.tiltMove = DX.GetRX();
-            this.rotationXChange = (Fly.rotateMove * this.sensitivityDX) * Time.deltaTime;
+            this.rotationXChange = (Fly.rotateMove * this.DXsensitivity) * Time.deltaTime;
             Fly.rotationX = Fly.rotationX + this.rotationXChange;
-            this.rotationYChange = (Fly.tiltMove * this.sensitivityDX) * Time.deltaTime;
+            this.rotationYChange = (Fly.tiltMove * this.DXsensitivity) * Time.deltaTime;
             Fly.rotationY = Fly.rotationY + this.rotationYChange;
         }
         #endif
@@ -180,6 +212,7 @@ public partial class Fly : MonoBehaviour
             //rotationY = ClampAngle (rotationY, minimumY, maximumY);
 
         }
+        //Apply the rotation
         Quaternion xQuaternion = Quaternion.AngleAxis(Fly.rotationX, Vector3.up);
         Quaternion yQuaternion = Quaternion.AngleAxis(Fly.rotationY, Vector3.left);
         this.myCamera.transform.localRotation = (this.originalRotation * xQuaternion) * yQuaternion;
@@ -207,32 +240,6 @@ public partial class Fly : MonoBehaviour
         Fly.rotationX = rotX;
         Fly.rotationY = rotY;
         Fly.rotationChanged = true;
-    }
-
-    public Fly()
-    {
-        this.speed = 30f;
-        this.liftSpeed = 30;
-        this.flightSpeed = 0.1f;
-        this.brakingFraction = 0.9f;
-        this.maxVelocity = 40f;
-        this.accel = 0.4f;
-        this.sensitivityX = 15f;
-        this.sensitivityY = 15f;
-        this.rotateSensitivityX = 0.5f;
-        this.rotateSensitivityY = 0.5f;
-        this.sensitivityDX = 40f;
-        this.minimumX = -360f;
-        this.maximumX = 360f;
-        this.minimumY = -360f;
-        this.maximumY = 360f;
-    }
-
-    static Fly()
-    {
-        Fly.moveDirection = Vector3.zero;
-        Fly.accelDirection = Vector3.zero;
-        Fly.dxDirection = Vector3.zero;
     }
 
 }
