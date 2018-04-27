@@ -48,6 +48,7 @@ public partial class Fly : MonoBehaviour
     private float rotationXChange;
     private float rotationYChange;
     public static bool haveTurned;  // Other classes check and clear this
+
     public virtual void Start()
     {
         this.myCamera = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
@@ -69,7 +70,7 @@ public partial class Fly : MonoBehaviour
     public virtual void CombinedUpdate()
     {
         Vector3 heightAdjust = Vector3.zero;
-        float minDx = 2f;
+        //float minDx = 2f;
         
         #if UNITY_STANDALONE_WIN
             if (DX.hasController)
