@@ -1,4 +1,4 @@
-System Requirements
+SYSTEM REQUIREMENT
 
 See SysRequirements.txt
 
