@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "3DHM-pr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp.Editor.Plugins", "3DHM-proj-Csharp.Editor.Plugins.csproj", "{BD4B0F66-B565-3529-6BEA-DB847926986F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp.Editor", "3DHM-proj-Csharp.Editor.csproj", "{90116958-DDD8-B03F-48D1-886FBDD2705D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp.Editor", "3DHM-proj-Csharp.Editor.csproj", "{90116958-DDD8-B03F-48D1-886FBDD2705D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +29,14 @@ Global
 		{BD4B0F66-B565-3529-6BEA-DB847926986F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD4B0F66-B565-3529-6BEA-DB847926986F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD4B0F66-B565-3529-6BEA-DB847926986F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90116958-DDD8-B03F-48D1-886FBDD2705D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
