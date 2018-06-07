@@ -114,9 +114,11 @@ public partial class HeatVRML : MonoBehaviour
     private float[] heightVals;
     private int[] topVals;
     private int[] sideVals;
-    public string serverURL;
-    public bool beServer;
 
+    //RPC server network
+    public string serverURL;
+    public bool beServer; //Stauffer - Flag to make RPC calls (but why, since its presumably saying we're running on the server?). It's always true, set during class init. 
+    
     // feature inclusion
     public bool includeVRML;
     public bool includeBalls;
@@ -124,7 +126,7 @@ public partial class HeatVRML : MonoBehaviour
     
     // chart related
     private bool bInterpolateY;
-    private bool bConnectX;
+    private bool bConnectX; //Draw ribbon. Flag
     private bool bExtendZ;
     private bool bHaveLabels;
     private bool bShowLabels;
@@ -173,6 +175,7 @@ public partial class HeatVRML : MonoBehaviour
     private int scrollChoice;
     private float lowGraphHeightRange;
     private float highGraphHeightRange;
+    /// <summary> Scaling of column/ridge height </summary>
     private float currGraphHeight;
     private float lowFOVRange;
     private float highFOVRange;
@@ -367,7 +370,9 @@ public partial class HeatVRML : MonoBehaviour
 			else VisBins(currBin);
 		}
 	}
-	*/    public virtual void Update()
+	*/
+
+    public virtual void Update()
     {
         if (Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.F5))
         {
@@ -645,12 +650,15 @@ public partial class HeatVRML : MonoBehaviour
         GUI.DragWindow();
         if (this.dataChanged && (++this.waitCount > 4))
         {
-            if (this.beServer)
+            if (false/*this.beServer*/) //testing
             {
+                //Stauffer - THIS gets called, not the direct call below.
+                // Why does it use RPC if we are the server?
                 this.GetComponent<NetworkView>().RPC("DatasetSelected", RPCMode.All, new object[] {this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight});
             }
             else
             {
+                //OK, this works too, i.e. force false above and come here instead of doing the RPC call.
                 this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight);
             }
         }
@@ -1323,8 +1331,8 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void ShowData()
     {
-        int prow = 0;
-        int pbin = 0;
+        int prow = 0; //Stauffer - previous row?
+        int pbin = 0; //Stauffer - previous bin?
         int col = 0;
         int row = 0;
         int abin = 0;
@@ -1336,6 +1344,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             return;
         }
+        //Looks to be deleting old mesh/visualization
         if (this.numRidges > 0)
         {
             int iridge = 0;
@@ -1369,25 +1378,29 @@ public partial class HeatVRML : MonoBehaviour
         this.heightVals = new float[this.numCols];
         this.topVals = new int[this.numCols];
         this.sideVals = new int[this.numCols];
-        int recNum = 0;
+        int recNum = 0; //Stauffer - record number. Each row spans multiple records, since each record has multiple values/observations
         int xslot = 0;
-        while (this.reader.Read())
+        while (this.reader.Read()) // Stauffer - order of fields below is spec'ed by query above. Each row in database will have fields: row #, column #, height value, bin #, and possibly two more int-valued fields
         {
-            col = this.reader.GetInt32(0);
+            col = this.reader.GetInt32(0); //NOTE - row is first field in the db, and columns is 2nd, but above the query has 'col' first
             row = this.reader.GetInt32(1);
             hght = this.reader.GetFloat(2);
             abin = this.reader.GetInt32(3);
-            top = this.reader.GetInt32(4);
-            side = this.reader.GetInt32(5);
+            top = this.reader.GetInt32(4); //presumably returns 0 if field not present?
+            side = this.reader.GetInt32(5); //presumably returns 0 if field not present?
+            //Build a ridge for a complete row's-worth of data
+            //NOTE this block only gets called once the database read above 
+            // has encountered a new row #. It visualizes everything read into the arrays in the next block. Awkward
             if ((recNum > 0) && (row != prow))
             {
                 this.BuildRidge(prow, xslot, pbin - this.minBin);
                 prow = row;
-                xslot = 0;
+                xslot = 0; //reset this so the data read above will now start to fill arrays from begin below, for new row 
             }
+            //Fill the data for a full row, one column at a time
             if (xslot < this.numCols)
             {
-                this.colVals[xslot] = col;
+                this.colVals[xslot] = col; //NOTE - these are class properties, that then get used in BuildRidge
                 this.heightVals[xslot] = hght;
                 this.topVals[xslot] = top;
                 this.sideVals[xslot] = side;
@@ -1395,15 +1408,15 @@ public partial class HeatVRML : MonoBehaviour
             }
             prow = row;
             pbin = abin;
-            ++recNum;
+            ++recNum; //next record in the table. This is only used in the check above to decide when to call BuildRidge
         }
         this.reader.Close();
         this.BuildRidge(prow, xslot, pbin - this.minBin);
     }
 
-    public bool doingEdges;
+    public bool doingEdges; //Stauffer - seems to determine if a bevel is drawn at top of column
     public float bevelFraction;
-    public virtual void BuildRidge(int row, int numx, int binindex)
+    public virtual void BuildRidge(int row, int numx /*== xslot from ShowData() == col number I believe*/, int binindex)
     {
         Color thisColor = default(Color);
         Color sideColor = default(Color);
@@ -1433,7 +1446,7 @@ public partial class HeatVRML : MonoBehaviour
         GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z + yoff), Quaternion.identity);
         newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeight, this.tokenWidth);
         Mesh amesh = ((MeshFilter) newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
-        this.xRidges[this.numRidges] = new XRidge();
+        this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
         IdentifyRidge idScript = (IdentifyRidge) newRidge.gameObject.GetComponent(typeof(IdentifyRidge));
         idScript.row = row;
         idScript.bin = binindex + this.minBin;
@@ -1488,7 +1501,7 @@ public partial class HeatVRML : MonoBehaviour
         float topBite = (edgeBite * this.xSceneSize) / (this.zSceneSize * this.currGraphHeight);
         MeshMaker mm = new MeshMaker();
         int i = 0;
-        while (i <= lastInd)
+        while (i <= lastInd) //loop over columns
         {
             if ((i % 2) == 0)
             {
@@ -1572,7 +1585,7 @@ public partial class HeatVRML : MonoBehaviour
             else
             {
                  // tile
-                if (this.doingEdges)
+                if (this.doingEdges) //Seems to mean draw a bevel
                 {
                     edgeZ = thisZ - topBite;
                     // draw top
@@ -1686,6 +1699,8 @@ public partial class HeatVRML : MonoBehaviour
         amesh.RecalculateBounds();
     }
 
+    // Stauffer - NOTE this seems to work with the currently-loaded row data,
+    //   by accessing the HeatVRML class properties topVals[] and sideVals[]
     public virtual Color MakeColor(int col, int bin, bool isSide)
     {
         float inv = 0.0f;
@@ -1716,8 +1731,10 @@ public partial class HeatVRML : MonoBehaviour
             else
             {
                 int thisVal = isSide ? this.sideVals[col] : this.topVals[col];
+                //Stauffer this.[side|top]ColorChoice seem to be indicating which of the db record fields is being used for coloring,
+                // i.e. which observational/dependent variable.
                 FieldData thisField = isSide ? this.allFields[this.sideColorChoice] : this.allFields[this.topColorChoice];
-                if ((styleChoice < 0) && thisField.Fields.ContainsKey(thisVal))
+                if ((styleChoice < 0) && thisField.Fields.ContainsKey(thisVal)) //Is this looking up a color via color index/lut?
                 {
                      //Stauffer - thisField.Fields[n] is type Object from a hashtable, so r,g,b members not defined.
                      //So, do this via casting to get compiler happy for coversion to C#
@@ -2047,7 +2064,9 @@ public partial class HeatVRML : MonoBehaviour
     {
         int i = 0;
         int thisField = 0;
-         //Debug.Log("DatasetSelected " + newDB);
+        //Debug.Log("DatasetSelected " + newDB);
+        //Stauffer - NOTE that all these input params, from both calls to this method, are just
+        // the same class props that they're assigned to. Useless.
         this.selTable = newDB;
         this.bConnectX = newBConnectX;
         this.bExtendZ = newBExtendZ;
@@ -2064,7 +2083,10 @@ public partial class HeatVRML : MonoBehaviour
             }
             ++i;
         }
+
+        //
         this.GetAxisExtents();
+
         // Find the fields in this database
         this.dbcmd.CommandText = ("PRAGMA table_info(" + this.selTable) + ");";
         List<string> nameArray = new List<string>();
@@ -2140,6 +2162,8 @@ public partial class HeatVRML : MonoBehaviour
             }
             this.allFields[this.numFields++] = intField;
         }
+
+        //Look for table with row labels and parse if found
         string rowtable = "heatrows_" + this.selTable.Substring(5);
         this.dbcmd.CommandText = ("SELECT count(*) from " + rowtable) + ";";
 

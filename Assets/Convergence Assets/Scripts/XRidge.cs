@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections;
 
 [System.Serializable]
+///<summary>
+///Stauffer: a 'ridge' is a mesh and assoc'ed objects that visualizes a full row of data
+/// </summary>
 public class XRidge : object
 {
     public GameObject myMeshObject;
