@@ -1,0 +1,5 @@
+﻿corner,col1,col2,col3,colLast
+row1,0.1,0.2,0.3,0.4
+row2,1,2,3,4
+row3,10,11,12,13
+rowLast,100,101,102,103

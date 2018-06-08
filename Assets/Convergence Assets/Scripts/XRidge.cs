@@ -67,6 +67,7 @@ public class XRidge : object
         }
     }
 
+    //Stauffer - used (at least in one way) to show/hide ridges based on their bin number, and what bins are chosen for viewing
     public virtual void Show(bool doShow)
     {
         this.myRenderer.enabled = doShow;

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp.Plugins", "3DHM-proj-Csharp.Plugins.csproj", "{B7DC01D2-AF77-38C5-77CA-65F4DB436A2F}"
 EndProject
@@ -38,6 +38,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {06261B59-092E-44BC-8EA6-738B0F08E6FE}
+		SolutionGuid = {7488E488-3F4B-4765-82B5-5C3E3BCF1338}
 	EndGlobalSection
 EndGlobal

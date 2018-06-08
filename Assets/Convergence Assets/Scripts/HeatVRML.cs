@@ -107,7 +107,8 @@ public partial class HeatVRML : MonoBehaviour
     private bool wantVRML;
     private bool wantTriangles;
     private int numFields;
-    private FieldData[] allFields;
+    /// <summary> array of descriptions of all the variables (originally called Fields) being visualized </summary>
+    private VariableDesc[] allVariableDescs;
 
     // data values for the current row
     private int[] colVals;
@@ -301,11 +302,11 @@ public partial class HeatVRML : MonoBehaviour
         this.myCamera = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
         this.currFOV = (this.lowFOVRange + this.highFOVRange) - this.myCamera.fieldOfView; // hokey, but we want currFOV to increase as fieldOfView decreases
         this.myController = GameObject.Find("FPC");
-        this.allFields = new FieldData[2];
-        this.allFields[0] = new FieldData();
-        this.allFields[0].SetFloat("height", 0f, 10f);
-        this.allFields[1] = new FieldData();
-        this.allFields[1].SetInt("bin", 0, 2);
+        this.allVariableDescs = new VariableDesc[2];
+        this.allVariableDescs[0] = new VariableDesc();
+        this.allVariableDescs[0].SetAsFloat("height", 0f, 10f);
+        this.allVariableDescs[1] = new VariableDesc();
+        this.allVariableDescs[1].SetAsInt("bin", 0, 2);
         this.numFields = 2;
         this.xray = new Texture2D(Screen.width / 2, Screen.height / 2);
         //SpreadBalls(16, 10.0);
@@ -740,7 +741,7 @@ public partial class HeatVRML : MonoBehaviour
         choiceInd = 0;
         while (choiceInd < this.numFields)
         {
-            if (GUILayout.Toggle(this.topColorChoice == choiceInd, this.allFields[choiceInd].fieldName, Const.realToggle, new GUILayoutOption[] {}))
+            if (GUILayout.Toggle(this.topColorChoice == choiceInd, this.allVariableDescs[choiceInd].name, Const.realToggle, new GUILayoutOption[] {}))
             {
                 this.topColorChoice = choiceInd;
             }
@@ -759,7 +760,7 @@ public partial class HeatVRML : MonoBehaviour
         choiceInd = 0;
         while (choiceInd < this.numFields)
         {
-            if (GUILayout.Toggle(this.sideColorChoice == choiceInd, this.allFields[choiceInd].fieldName, Const.realToggle, new GUILayoutOption[] {}))
+            if (GUILayout.Toggle(this.sideColorChoice == choiceInd, this.allVariableDescs[choiceInd].name, Const.realToggle, new GUILayoutOption[] {}))
             {
                 this.sideColorChoice = choiceInd;
             }
@@ -853,6 +854,7 @@ public partial class HeatVRML : MonoBehaviour
                 }
                 else
                 {
+                    //Shows all ridges, regardless of bin #
                     this.VisBins(-1);
                 }
             }
@@ -863,7 +865,8 @@ public partial class HeatVRML : MonoBehaviour
                     this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] {this.currBin});
                 }
                 else
-                {
+                {   
+                    //Show only ridges with this bin #
                     this.VisBins(this.currBin);
                 }
             }
@@ -909,6 +912,7 @@ public partial class HeatVRML : MonoBehaviour
             }
             else
             {
+                //Show only ridges with this bin #
                 this.VisBins(this.currBin);
             }
         }
@@ -1237,6 +1241,9 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void GetAxisExtents()
     {
+        //Stauffer - get ranges for row and col numbers, bin numbers, and height values (first observed value)
+        //In DatasetSelected, the ranges get set for the optional subsequent int columns.
+        //
         this.dbcmd.CommandText = ((("SELECT MIN(row), MAX(row), MIN(col), MAX(col), MIN(bin), MAX(bin), MIN(height), MAX(height) from " + this.selTable) + " where col <= ") + this.colLimit) + ";";
         Debug.Log("GetAxisExtents() query is " + this.dbcmd.CommandText);
         this.reader = this.dbcmd.ExecuteReader();
@@ -1369,8 +1376,8 @@ public partial class HeatVRML : MonoBehaviour
         {
             this.sideColorChoice = 0;
         }
-        string extra1 = this.topColorChoice > 1 ? ", " + this.allFields[this.topColorChoice].fieldName : ", 0";
-        string extra2 = this.sideColorChoice > 1 ? ", " + this.allFields[this.sideColorChoice].fieldName : ", 0";
+        string extra1 = this.topColorChoice > 1 ? ", " + this.allVariableDescs[this.topColorChoice].name : ", 0";
+        string extra2 = this.sideColorChoice > 1 ? ", " + this.allVariableDescs[this.sideColorChoice].name : ", 0";
         this.dbcmd.CommandText = (((((("SELECT col, row, height, bin" + extra1) + extra2) + " from ") + this.selTable) + " where col <= ") + this.colLimit) + " order by bin, row, col;";
         Debug.Log("Query is " + this.dbcmd.CommandText);
         this.reader = this.dbcmd.ExecuteReader();
@@ -1733,12 +1740,12 @@ public partial class HeatVRML : MonoBehaviour
                 int thisVal = isSide ? this.sideVals[col] : this.topVals[col];
                 //Stauffer this.[side|top]ColorChoice seem to be indicating which of the db record fields is being used for coloring,
                 // i.e. which observational/dependent variable.
-                FieldData thisField = isSide ? this.allFields[this.sideColorChoice] : this.allFields[this.topColorChoice];
-                if ((styleChoice < 0) && thisField.Fields.ContainsKey(thisVal)) //Is this looking up a color via color index/lut?
+                VariableDesc thisField = isSide ? this.allVariableDescs[this.sideColorChoice] : this.allVariableDescs[this.topColorChoice];
+                if ((styleChoice < 0) && thisField.ColorMap.ContainsKey(thisVal)) //Is this looking up a color via color index/lut?
                 {
                      //Stauffer - thisField.Fields[n] is type Object from a hashtable, so r,g,b members not defined.
                      //So, do this via casting to get compiler happy for coversion to C#
-                    OneField oneField = thisField.Fields[thisVal] as OneField;
+                    OneColor oneField = thisField.ColorMap[thisVal] as OneColor;
                     return new Color(oneField.r, oneField.g, oneField.b, isSide ? 0.7f : 0.9f);
                 }
                 //ORIG:
@@ -2053,6 +2060,7 @@ public partial class HeatVRML : MonoBehaviour
             i = 0;
             while (i < this.numRidges)
             {
+                //Show all the ridges
                 this.xRidges[i].Show(true);
                 ++i;
             }
@@ -2084,10 +2092,13 @@ public partial class HeatVRML : MonoBehaviour
             ++i;
         }
 
-        //
+        //Stauffer - this simply get the value range for row, col, bin numbers, and height values. Simple
         this.GetAxisExtents();
 
         // Find the fields in this database
+        //
+        //Stauffer - this first step looks to be getting the names of *extra* fields, ie the optional int fields past
+        // the required row, col, bin and height fields
         this.dbcmd.CommandText = ("PRAGMA table_info(" + this.selTable) + ");";
         List<string> nameArray = new List<string>();
         this.reader = this.dbcmd.ExecuteReader();
@@ -2116,27 +2127,40 @@ public partial class HeatVRML : MonoBehaviour
 
         }
         this.reader.Close();
+
+        //Stauffer - now it's setting up the field description array with bin, height, and any additional fields it found above
         thisField = 0;
         while (thisField < this.numFields)
         {
-            this.allFields[thisField] = new FieldData(); // just to destroy old values
+            this.allVariableDescs[thisField] = new VariableDesc(); // just to destroy old values
             ++thisField;
         }
-        this.allFields = new FieldData[2 + nameArray.Count];
-        this.allFields[0] = new FieldData();
-        this.allFields[0].SetFloat("height", this.minHeight, this.maxHeight);
-        this.allFields[1] = new FieldData();
-        this.allFields[1].SetInt("bin", this.minBin, this.maxBin);
+
+        //Stauffer - the 2 required data fields (height & bin)
+        this.allVariableDescs = new VariableDesc[2 + nameArray.Count];
+        this.allVariableDescs[0] = new VariableDesc();
+        this.allVariableDescs[0].SetAsFloat("height", this.minHeight, this.maxHeight);
+        this.allVariableDescs[1] = new VariableDesc();
+        this.allVariableDescs[1].SetAsInt("bin", this.minBin, this.maxBin);
         this.numFields = 2;
+
+        //Stauffer - for each additional field beyond the required ones...
+        // REMEMBER that a field/column here in the db format is a variable (i.e. colleciton of observations for a particular class/type/param)
         foreach (string fieldname in nameArray)
         {
             this.dbcmd.CommandText = ((((("SELECT MIN(" + fieldname) + "), MAX(") + fieldname) + ") from ") + this.selTable) + ";";
             //Debug.Log("trying " + dbcmd.CommandText);
             this.reader = this.dbcmd.ExecuteReader();
             this.reader.Read();
-            FieldData intField = new FieldData();
-            intField.SetInt(fieldname as string, this.reader.GetInt32(0), this.reader.GetInt32(1));
+            VariableDesc intField = new VariableDesc();
+
+            //Set the field's name and int range
+            intField.SetAsInt(fieldname as string, this.reader.GetInt32(0), this.reader.GetInt32(1));
+
             this.reader.Close();
+
+            //Stauffer - look for table with color map for the optional int fields
+            //If found, it gets stored in the variable description
             string infoTable = (("heatfield_" + this.selTable.Substring(5)) + "_") + fieldname;
 
             try
@@ -2144,23 +2168,25 @@ public partial class HeatVRML : MonoBehaviour
                 this.dbcmd.CommandText = ("SELECT value, r, g, b, name from " + infoTable) + ";";
                 //Debug.Log(dbcmd.CommandText);
                 this.reader = this.dbcmd.ExecuteReader();
+                //Stauffer - each row in the heatfield_* table is functinally a colormap entry
                 while (this.reader.Read())
                 {
-                    OneField oneF = new OneField();
+                    OneColor oneF = new OneColor();
                     oneF.r = this.reader.GetInt32(1) / 255f;
                     oneF.g = this.reader.GetInt32(2) / 255f;
                     oneF.b = this.reader.GetInt32(3) / 255f;
                     oneF.name = this.reader.GetString(4);
                     int value = this.reader.GetInt32(0);
-                    intField.Fields[value] = oneF;
+                    intField.ColorMap[value] = oneF; //Stauffer - hashtable with key 'value' and value 'oneF, not an array or list
                     //Debug.Log("setting Fields of " + value + " to " + oneF.r + " " + oneF.g + " " + oneF.b + " " + oneF.name);
                 }
                 this.reader.Close();
             }
             catch
             {
+                //no color map table found
             }
-            this.allFields[this.numFields++] = intField;
+            this.allVariableDescs[this.numFields++] = intField;
         }
 
         //Look for table with row labels and parse if found
@@ -2185,14 +2211,20 @@ public partial class HeatVRML : MonoBehaviour
             this.rowLabels = new string[1];
         }
 
+        //Draw it!
         this.ShowData();
+
         if (this.bScrollBin)
         {
+            //Stauffer - show only ridges with this bin # (or all if currBin < 0)
+            //Why is this done here? As a refresh-type action?
             this.VisBins(this.currBin);
         }
+
         this.dataChanged = false;
         this.wantRedraw = false;
         this.waitCount = 0;
+        //Stauffer - has to do with clicking on graph and showing details
         this.pointedData.ready = false;
         this.ShowPointedData();
     }
