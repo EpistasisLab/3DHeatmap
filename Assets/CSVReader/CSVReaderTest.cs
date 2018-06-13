@@ -34,10 +34,12 @@ public class CSVReaderTest : MonoBehaviour {
 
             bool success = false;
             string errorMsg = "Unknown Error";
-            CSVReaderData data;
+            //CSVReaderData data = new CSVReaderData();
+            DataVariable dataVariable = new DataVariable();
+            CSVReaderData dataObj = (CSVReaderData) dataVariable; // new CSVReaderData();
             try
             {
-                data = CSVReader.Read(paths[0], hasColumnsHeader, hasRowHeader, out success, out errorMsg);
+                success = CSVReader.Read(paths[0], hasColumnsHeader, hasRowHeader, ref dataObj, out errorMsg);
             }
             catch (Exception e)
             {
@@ -51,8 +53,9 @@ public class CSVReaderTest : MonoBehaviour {
             }
             else
             {
-                data.DumpNonData();
-                data.DumpData();
+                dataVariable.DumpNonData();
+                dataVariable.DumpData();
+                dataVariable.Clear();
             }
         }
 

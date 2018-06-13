@@ -11,19 +11,21 @@ using System.IO;
 /// </summary>
 public class CSVReaderData
 {
-    public float[,] data;
-    /// <summary>
-    /// Flag. Set if there are headers for the data columns.
-    /// </summary>
-    public bool hasColumnHeaders;
-    /// <summary>
-    /// Flag. Set if there are headers for each data row.
-    /// </summary>
-    public bool hasRowHeaders;
-    public List<string> columnHeaders;
-    public List<string> rowHeaders;
+    /// <summary> The data read from the csv file, without any headers. </summary>
+    protected float[][] _data; //use a jagged array so we can easily access whole rows
+    public virtual float[][] Data { get { return _data; } set { _data = value; } }
+    /// <summary> Number of data rows for convenience.  </summary>
     public int numDataRows;
+    /// <summary> Number of data columns for convenience.  </summary>
     public int numDataCols;
+    /// <summary> Flag. Set if there are headers for the data columns. </summary>
+    public bool hasColumnHeaders;
+    /// <summary> Flag. Set if there are headers for each data row. </summary>
+    public bool hasRowHeaders;
+    /// <summary> List of column header strings, one per column. This is first row of csv file, if columns headers are present in the file. </summary>
+    public List<string> columnHeaders;
+    /// <summary> List of row header strings, one per row. This is first column of csv file, if row headers are present in the file. </summary>
+    public List<string> rowHeaders;
 
     public CSVReaderData()
     {
@@ -33,12 +35,13 @@ public class CSVReaderData
     /// <summary>
     /// Clear/empty the object. Array size is set to 0
     /// </summary>
-    public void Clear()
+    public virtual void Clear()
     {
+        //Debug.Log("CSVReaderData:Clear()");
         //Header lists will be empty if not available.
         columnHeaders = new List<string>();
         rowHeaders = new List<string>();
-        data = new float[0, 0];
+        Data = new float[0][];
         hasColumnHeaders = false;
         hasRowHeaders = false;
         numDataCols = 0;
@@ -48,7 +51,7 @@ public class CSVReaderData
     /// <summary>
     /// Debug dump of non-data properties of this class
     /// </summary>
-    public void DumpNonData()
+    public virtual void DumpNonData()
     {
         Debug.Log("hasColumnHeaders: " + hasColumnHeaders + " hasRowHeaders: " + hasRowHeaders);
         Debug.Log("numDataRows: " + numDataRows + " numDataCols: " + numDataCols);
@@ -76,7 +79,7 @@ public class CSVReaderData
         {
             string str = "Row " + i + ":";
             for (int j = 0; j < (numCols == 0 ? numDataCols : numCols); j++)
-                str += " " + data[i, j].ToString().PadLeft(8, ' ');
+                str += " " + Data[i][j].ToString().PadLeft(8, ' ');
             Debug.Log(str);
         }
     }
@@ -112,15 +115,15 @@ public class CSVReader
     /// <param name="file">Full path for file to read.</param>
     /// <param name="columnHeadersExpected">Flag. Set this if columns headers are expected in the file. This is headers in the first row/line of the file.</param>
     /// <param name="rowHeadersExpected">Flag. Set this is row headers are expected. This means the first field/column of each row is a header/name/string for the row</param>
-    /// <param name="success">Return value. True if file read successfully.</param>
+    /// <param name="result">Ref var. If passed object is non-null, it's filled, otherwise a new data object - containing data, headers, etc.</param>
     /// <param name="errorMsg">Return value. Error message string if failed (including exception string if an excpetion occured).</param>
-    /// <returns>New data object containing data, headers, etc.</returns>
-    public static CSVReaderData Read(string file, bool columnHeadersExpected, bool rowHeadersExpected, out bool success, out string errorMsg)
+    /// <returns>True on success, otherwise false</returns>
+    public static bool Read(string file, bool columnHeadersExpected, bool rowHeadersExpected, ref CSVReaderData result, out string errorMsg)
     {
-        success = true;
         errorMsg = "no error";
 
-        CSVReaderData result = new CSVReaderData();
+        if ( result == null )
+            result = new CSVReaderData();
 
         //var list = new List<Dictionary<string, object>>();
         //TextAsset textData = Resources.Load(file) as TextAsset;
@@ -138,16 +141,15 @@ public class CSVReader
         catch (Exception e)
         {
             errorMsg = "Failed loading file: " + file + ".  Exception: " + e.ToString();
-            success = false;
             Debug.Log(errorMsg);
             result.Clear();
-            return result;
+            return false;
         }
 
         if (lines.Length < 1)
         {
             result.Clear();
-            return result;
+            return false;
         }
 
         int numDataColumns = 0;
@@ -174,15 +176,16 @@ public class CSVReader
         //Alloc the data array
         try
         {
-            result.data = new float[numDataRows, numDataColumns];
+            result.Data = new float[numDataRows][];
+            for( int row = 0; row < numDataRows; row++)
+                result.Data[row] = new float[numDataColumns];
         }
         catch( Exception e)
         {
             errorMsg = "Aborting. Failed allocating data array, with exception: " + e.ToString();
-            success = false;
             Debug.Log(errorMsg);
             result.Clear();
-            return result;
+            return false;
         }
 
         //Read in the lines
@@ -197,10 +200,9 @@ public class CSVReader
             if (values.Length != numAllColumns)
             {
                 errorMsg = "Row " + fileRow + " is empty or otherwise incorrect length: " + values.Length + " instead of " + numAllColumns + ". Aborting.";
-                success = false;
                 Debug.Log(errorMsg);
                 result.Clear();
-                return result;
+                return false;
             }
 
             //Parse a line
@@ -211,10 +213,9 @@ public class CSVReader
                 if (value == "" && (!columnHeadersExpected || (columnHeadersExpected && fileCol > 0)))
                 {
                     errorMsg = "Empty data cell. Row, col: " + fileRow + ", " + fileCol + ". Aborting.";
-                    success = false;
                     Debug.Log(errorMsg);
                     result.Clear();
-                    return result;
+                    return false;
                 }
                 value = value.TrimStart(TRIM_CHARS).TrimEnd(TRIM_CHARS).Replace("\\", "");
                 if (rowHeadersExpected && fileCol == 0)
@@ -230,7 +231,7 @@ public class CSVReader
                     {
                         int ii = fileRow - (columnHeadersExpected ? 1 : 0);
                         int jj = fileCol - (rowHeadersExpected ? 1 : 0);
-                        result.data[ii, jj] = f;
+                        result.Data[ii][jj] = f;
                     }
                     else
                     {
@@ -240,15 +241,14 @@ public class CSVReader
                         else if (fileCol == 0 && !rowHeadersExpected)
                             ex = "Wasn't expecting first columns to be headers. But is it maybe? ";
                         errorMsg = ex + "Expected a number but got non-numeric value: " + value + ". At row, col: " + fileRow + ", " + fileCol + ". Aborting.";
-                        success = false;
                         Debug.Log(errorMsg);
                         result.Clear();
-                        return result;
+                        return false;
                     }
                 }
             }
         }
-        return result;
+        return true;
     }
 }
 

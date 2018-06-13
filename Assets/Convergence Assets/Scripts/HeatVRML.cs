@@ -27,6 +27,10 @@ public partial class HeatVRML : MonoBehaviour
     // Version
     public string programVersion;
 
+    //Data
+    //New model of self-contained data objects
+    DataManager dataMgr;
+
     // window numbers
     private int DSwin;
     private int STYLEwin;
@@ -41,7 +45,7 @@ public partial class HeatVRML : MonoBehaviour
     private GUI.WindowFunction closefunc;
     private bool[] isLayout;
     private bool allHidden;
-   
+
     // window extents
     public Rect dsRect;
     public Rect styleRect;
@@ -111,6 +115,7 @@ public partial class HeatVRML : MonoBehaviour
     private VariableDesc[] allVariableDescs;
 
     // data values for the current row
+    /// <summary> Stauffer. Seems to be an array of column numbers, used in BuildRidge. Gets shifted to start at 0 anyway, so not sure what the purpose is. </summary>
     private int[] colVals;
     private float[] heightVals;
     private int[] topVals;
@@ -119,12 +124,12 @@ public partial class HeatVRML : MonoBehaviour
     //RPC server network
     public string serverURL;
     public bool beServer; //Stauffer - Flag to make RPC calls (but why, since its presumably saying we're running on the server?). It's always true, set during class init. 
-    
+
     // feature inclusion
     public bool includeVRML;
     public bool includeBalls;
     public bool includeTriangles;
-    
+
     // chart related
     private bool bInterpolateY;
     private bool bConnectX; //Draw ribbon. Flag
@@ -198,10 +203,10 @@ public partial class HeatVRML : MonoBehaviour
     public int rowHeight;
     public int colWidth;
     public int lineWidth;
-    
+
     // Specific windows
     public int scrollHeight;
-    
+
     // Help window
     private bool showHelp;
     private int helpPage;
@@ -212,14 +217,14 @@ public partial class HeatVRML : MonoBehaviour
     // Components
     public Camera myCamera; //Stauffer - add declare as type Camera
     public GameObject myController;
-    
+
     // VRML
     //private File fileVRML; //Stauffer - removing this. Not used anywhere, and giving c# compilation error
     public float vrmlModelMM;
-    
+
     // Ball dropping
     private bool doDrop;
-    
+
     // Debugging
     private Texture2D xray;
     private bool showXRay;
@@ -228,6 +233,10 @@ public partial class HeatVRML : MonoBehaviour
     //
     public virtual void Start()
     {
+        //--- New
+        dataMgr = new DataManager();
+        //---
+
         int i = 0;
         this.lastScrollTime = Time.time; //Stauffer move init here
         this.isWindowOpen = new bool[this.NUMwin];
@@ -237,10 +246,10 @@ public partial class HeatVRML : MonoBehaviour
         this.windowRects[this.ZIPwin] = this.zipRect;
         this.windowRects[this.SLwin] = this.slidersRect;
         this.sizeRect = new System.Action[this.NUMwin];
-        this.sizeRect[this.DSwin] = (System.Action) this.SizeDS;
-        this.sizeRect[this.STYLEwin] = (System.Action) this.SizeStyle;
-        this.sizeRect[this.ZIPwin] = (System.Action) this.SizeZip;
-        this.sizeRect[this.SLwin] = (System.Action) this.SizeSliders;
+        this.sizeRect[this.DSwin] = (System.Action)this.SizeDS;
+        this.sizeRect[this.STYLEwin] = (System.Action)this.SizeStyle;
+        this.sizeRect[this.ZIPwin] = (System.Action)this.SizeZip;
+        this.sizeRect[this.SLwin] = (System.Action)this.SizeSliders;
         this.doWind = new GUI.WindowFunction[this.NUMwin];
         this.doWind[this.DSwin] = this.DoDS;
         this.doWind[this.STYLEwin] = this.DoStyle;
@@ -252,7 +261,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             this.windChanged[i] = true;
             this.isWindowOpen[i] = true;
-            this.sizeRect[i].DynamicInvoke(new object[] {});
+            this.sizeRect[i].DynamicInvoke(new object[] { });
             if (i > 0)
             {
                 this.windowRects[i].x = (this.windowRects[i - 1].x + this.windowRects[i - 1].width) + 2;
@@ -275,7 +284,7 @@ public partial class HeatVRML : MonoBehaviour
             {
             }
         }
-         //ErrorGUI.ShowError("Could not connect to server");
+        //ErrorGUI.ShowError("Could not connect to server");
         // If the falling ball feature is present, we want to have a small scene so gravity looks more realistic
         if (!this.includeBalls)
         {
@@ -293,7 +302,7 @@ public partial class HeatVRML : MonoBehaviour
         this.MakeUnitCube(this.baseCube);
         this.protolabel = GameObject.Find("protolabel");
         this.signPost = UnityEngine.Object.Instantiate(GameObject.Find("SignPost"), new Vector3(-1000, -1000, -1000), Quaternion.identity);
-        
+
         // Open database
         this.connStrn = "URI=file:" + Const.dataBase;
         this.connection = new SqliteConnection(this.connStrn);
@@ -322,8 +331,8 @@ public partial class HeatVRML : MonoBehaviour
         if (this.haveBalls)
         {
         }
-         //var i : int;
-         //for(i = 0; i < allBalls.length; ++i) Destroy(allBalls[i].gameObject);
+        //var i : int;
+        //for(i = 0; i < allBalls.length; ++i) Destroy(allBalls[i].gameObject);
         spread = (this.xSceneSize * spread) / rowcols;
         int numBalls = rowcols * rowcols;
         this.allBalls = new Rigidbody[numBalls];
@@ -375,6 +384,16 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void Update()
     {
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            if (dataMgr.DebugQuickChooseAndLoadFile())
+            {
+                //take the new data and draw it
+                Debug.Log("Loaded file with success");
+                NewPrepareAndDrawData();
+            }
+        }
+
         if (Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.F5))
         {
             this.allHidden = !this.allHidden;
@@ -420,7 +439,7 @@ public partial class HeatVRML : MonoBehaviour
             this.scrollStyle.stretchHeight = false;
             this.grayscaleStyle = new GUIStyle();
             this.grayscaleStyle.imagePosition = ImagePosition.ImageOnly;
-            this.grayscaleStyle.onActive.background = this.grayscaleOnTexture; 
+            this.grayscaleStyle.onActive.background = this.grayscaleOnTexture;
             this.grayscaleStyle.onNormal.background = this.grayscaleOnTexture;
             this.grayscaleStyle.onHover.background = this.grayscaleOnTexture;
             this.grayscaleStyle.active.background = this.grayscaleOffTexture;
@@ -485,7 +504,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.helpCount++ == 2)
             {
-                 // Center screen after first sizing; after that let the user control position
+                // Center screen after first sizing; after that let the user control position
                 this.helpWindowRect.x = (Screen.width - this.helpWindowRect.width) / 2f;
                 this.helpWindowRect.y = (Screen.height - this.helpWindowRect.height) / 3f;
             }
@@ -494,7 +513,7 @@ public partial class HeatVRML : MonoBehaviour
                 this.helpWindowRect.width = 800f;
                 this.helpWindowRect.height = 10f;
             }
-            this.helpWindowRect = GUILayout.Window(this.NUMwin + 100, this.helpWindowRect, this.DoHelp, "3D Heatmap " + this.programVersion, new GUILayoutOption[] {});
+            this.helpWindowRect = GUILayout.Window(this.NUMwin + 100, this.helpWindowRect, this.DoHelp, "3D Heatmap " + this.programVersion, new GUILayoutOption[] { });
         }
         if (!this.allHidden)
         {
@@ -511,11 +530,11 @@ public partial class HeatVRML : MonoBehaviour
         }
         if (this.pointedData.ready)
         {
-            this.pointedWindowRect = GUILayout.Window(this.NUMwin, this.pointedWindowRect, this.DoPointedWindow, "Data Point", new GUILayoutOption[] {});
+            this.pointedWindowRect = GUILayout.Window(this.NUMwin, this.pointedWindowRect, this.DoPointedWindow, "Data Point", new GUILayoutOption[] { });
         }
         if (this.showXRay)
         {
-            this.xrayWindowRect = GUILayout.Window(this.NUMwin + 1, this.xrayWindowRect, this.DoXRayWindow, "xray", new GUILayoutOption[] {});
+            this.xrayWindowRect = GUILayout.Window(this.NUMwin + 1, this.xrayWindowRect, this.DoXRayWindow, "xray", new GUILayoutOption[] { });
         }
     }
 
@@ -525,7 +544,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.isWindowOpen[windowID])
             {
-                this.windowRects[windowID] = GUILayout.Window(windowID, this.windowRects[windowID], this.doWind[windowID], this.windNames[windowID], new GUILayoutOption[] {});
+                this.windowRects[windowID] = GUILayout.Window(windowID, this.windowRects[windowID], this.doWind[windowID], this.windNames[windowID], new GUILayoutOption[] { });
             }
             else
             {
@@ -542,7 +561,7 @@ public partial class HeatVRML : MonoBehaviour
     {
         if (this.isWindowOpen[windowID])
         {
-            this.sizeRect[windowID].DynamicInvoke(new object[] {});
+            this.sizeRect[windowID].DynamicInvoke(new object[] { });
         }
         else
         {
@@ -563,7 +582,7 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void SizeDS()
     {
-         // These are going to expand because of GUILayout
+        // These are going to expand because of GUILayout
         this.windowRects[this.DSwin].height = 60;
         this.windowRects[this.DSwin].width = 280;
         this.scrollHeight = (this.numDB * this.pixPerLine) + 20;
@@ -575,7 +594,7 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void SizeStyle()
     {
-         //windowRects[STYLEwin].height = (12 * pixPerLine) + 6;
+        //windowRects[STYLEwin].height = (12 * pixPerLine) + 6;
         this.windowRects[this.STYLEwin].height = 60;
         this.windowRects[this.STYLEwin].width = 450;
     }
@@ -597,7 +616,7 @@ public partial class HeatVRML : MonoBehaviour
         this.ShrinkIt(windowID);
         if (this.isDetecting++ < 4)
         {
-            GUILayout.Label("Analyzing Datasets . . .", Const.greenCenterLabel, new GUILayoutOption[] {});
+            GUILayout.Label("Analyzing Datasets . . .", Const.greenCenterLabel, new GUILayoutOption[] { });
             // Give the above time to draw before lengthy examination of database
             if (this.isDetecting == 4)
             {
@@ -609,19 +628,19 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.dataChanged)
             {
-                GUILayout.Label("Drawing. . .", Const.greenCenterLabel, new GUILayoutOption[] {});
+                GUILayout.Label("Drawing. . .", Const.greenCenterLabel, new GUILayoutOption[] { });
             }
             else
             {
-                this.dbPos = GUILayout.BeginScrollView(this.dbPos, new GUILayoutOption[] {GUILayout.Width(260), GUILayout.Height(this.scrollHeight)});
-                GUILayout.BeginVertical(new GUILayoutOption[] {});
+                this.dbPos = GUILayout.BeginScrollView(this.dbPos, new GUILayoutOption[] { GUILayout.Width(260), GUILayout.Height(this.scrollHeight) });
+                GUILayout.BeginVertical(new GUILayoutOption[] { });
                 int dbnum = 0;
                 while (dbnum < this.numDB)
                 {
                     bool oldVal = dbnum == this.currDB;
-                    if (GUILayout.Toggle(oldVal, this.dbChoices[dbnum], Const.realToggle, new GUILayoutOption[] {}))
+                    if (GUILayout.Toggle(oldVal, this.dbChoices[dbnum], Const.realToggle, new GUILayoutOption[] { }))
                     {
-                         // Note: can't turn off a DB; can only turn on another
+                        // Note: can't turn off a DB; can only turn on another
                         this.currDB = dbnum;
                         this.selTable = this.dbChoices[this.currDB];
                         if (!oldVal)
@@ -646,7 +665,7 @@ public partial class HeatVRML : MonoBehaviour
         }
         if ((this.currDB >= 0) && !this.dataChanged)
         {
-            GUILayout.Label(infoString, new GUILayoutOption[] {});
+            GUILayout.Label(infoString, new GUILayoutOption[] { });
         }
         GUI.DragWindow();
         if (this.dataChanged && (++this.waitCount > 4))
@@ -655,7 +674,7 @@ public partial class HeatVRML : MonoBehaviour
             {
                 //Stauffer - THIS gets called, not the direct call below.
                 // Why does it use RPC if we are the server?
-                this.GetComponent<NetworkView>().RPC("DatasetSelected", RPCMode.All, new object[] {this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight});
+                this.GetComponent<NetworkView>().RPC("DatasetSelected", RPCMode.All, new object[] { this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight });
             }
             else
             {
@@ -669,61 +688,61 @@ public partial class HeatVRML : MonoBehaviour
     {
         int choiceInd = 0;
         this.ShrinkIt(windowID);
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
-        GUILayout.BeginVertical(new GUILayoutOption[] {});
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
-        GUILayout.BeginVertical(Const.grayStyle, new GUILayoutOption[] {});
-        this.bConnectX = GUILayout.Toggle(this.bConnectX, "Ribbon", Const.realToggle, new GUILayoutOption[] {});
-        this.bConnectX = !GUILayout.Toggle(!this.bConnectX, "Tile", Const.realToggle, new GUILayoutOption[] {});
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
+        GUILayout.BeginVertical(new GUILayoutOption[] { });
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
+        GUILayout.BeginVertical(Const.grayStyle, new GUILayoutOption[] { });
+        this.bConnectX = GUILayout.Toggle(this.bConnectX, "Ribbon", Const.realToggle, new GUILayoutOption[] { });
+        this.bConnectX = !GUILayout.Toggle(!this.bConnectX, "Tile", Const.realToggle, new GUILayoutOption[] { });
         GUILayout.EndVertical();
-        GUILayout.BeginVertical(new GUILayoutOption[] {});
-        this.bExtendZ = GUILayout.Toggle(this.bExtendZ, "Fill", Const.realToggle, new GUILayoutOption[] {});
+        GUILayout.BeginVertical(new GUILayoutOption[] { });
+        this.bExtendZ = GUILayout.Toggle(this.bExtendZ, "Fill", Const.realToggle, new GUILayoutOption[] { });
         if (this.bHaveLabels)
         {
-            this.bShowLabels = GUILayout.Toggle(this.bShowLabels, "Show Labels", Const.realToggle, new GUILayoutOption[] {});
+            this.bShowLabels = GUILayout.Toggle(this.bShowLabels, "Show Labels", Const.realToggle, new GUILayoutOption[] { });
         }
-        this.bInterpolateY = GUILayout.Toggle(this.bInterpolateY, "Interleave", Const.realToggle, new GUILayoutOption[] {});
+        this.bInterpolateY = GUILayout.Toggle(this.bInterpolateY, "Interleave", Const.realToggle, new GUILayoutOption[] { });
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
-        if ((this.drawn && !this.wantRedraw) && GUILayout.Button("Draw", Const.buttonToggle, new GUILayoutOption[] {}))
+        if ((this.drawn && !this.wantRedraw) && GUILayout.Button("Draw", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             this.wantRedraw = true;
         }
         if (!this.drawn && !this.wantRedraw)
         {
-            GUILayout.Label("Draw", Const.grayButton, new GUILayoutOption[] {});
+            GUILayout.Label("Draw", Const.grayButton, new GUILayoutOption[] { });
         }
         if (this.wantRedraw)
         {
-            GUILayout.Label("Drawing . . .", Const.greenCenterLabel, new GUILayoutOption[] {});
+            GUILayout.Label("Drawing . . .", Const.greenCenterLabel, new GUILayoutOption[] { });
         }
-        if (((this.includeVRML && this.drawn) && !this.wantVRML) && GUILayout.Button("Write VRML", Const.buttonToggle, new GUILayoutOption[] {}))
+        if (((this.includeVRML && this.drawn) && !this.wantVRML) && GUILayout.Button("Write VRML", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             this.wantVRML = true;
         }
         if (this.wantVRML)
         {
-            GUILayout.Label("Writing VRML . . .", Const.greenCenterLabel, new GUILayoutOption[] {});
+            GUILayout.Label("Writing VRML . . .", Const.greenCenterLabel, new GUILayoutOption[] { });
         }
-        if (((this.includeTriangles && this.drawn) && !this.wantTriangles) && GUILayout.Button("Write Triangles", Const.buttonToggle, new GUILayoutOption[] {}))
+        if (((this.includeTriangles && this.drawn) && !this.wantTriangles) && GUILayout.Button("Write Triangles", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             this.wantTriangles = true;
         }
         if (this.wantTriangles)
         {
-            GUILayout.Label("Writing Triangles . . .", Const.greenCenterLabel, new GUILayoutOption[] {});
+            GUILayout.Label("Writing Triangles . . .", Const.greenCenterLabel, new GUILayoutOption[] { });
         }
         if (this.includeBalls)
         {
-            if (GUILayout.Button("Drop Balls", Const.buttonToggle, new GUILayoutOption[] {}))
+            if (GUILayout.Button("Drop Balls", Const.buttonToggle, new GUILayoutOption[] { }))
             {
                 this.doDrop = true;
             }
         }
         GUILayout.EndVertical();
-        GUILayout.BeginVertical(Const.grayStyle, new GUILayoutOption[] {});
-        GUILayout.Label("Top Color", Const.littleCenterLabel, new GUILayoutOption[] {});
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
+        GUILayout.BeginVertical(Const.grayStyle, new GUILayoutOption[] { });
+        GUILayout.Label("Top Color", Const.littleCenterLabel, new GUILayoutOption[] { });
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
         this.UpdateColorStyleFromToggle(0, this.redgreenStyle, false);
         this.UpdateColorStyleFromToggle(1, this.rainbowStyle, false);
         this.UpdateColorStyleFromToggle(2, this.yellowblueStyle, false);
@@ -741,16 +760,16 @@ public partial class HeatVRML : MonoBehaviour
         choiceInd = 0;
         while (choiceInd < this.numFields)
         {
-            if (GUILayout.Toggle(this.topColorChoice == choiceInd, this.allVariableDescs[choiceInd].name, Const.realToggle, new GUILayoutOption[] {}))
+            if (GUILayout.Toggle(this.topColorChoice == choiceInd, this.allVariableDescs[choiceInd].name, Const.realToggle, new GUILayoutOption[] { }))
             {
                 this.topColorChoice = choiceInd;
             }
             ++choiceInd;
         }
         GUILayout.EndVertical();
-        GUILayout.BeginVertical(Const.grayStyle, new GUILayoutOption[] {});
-        GUILayout.Label("Side Color", Const.littleCenterLabel, new GUILayoutOption[] {});
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
+        GUILayout.BeginVertical(Const.grayStyle, new GUILayoutOption[] { });
+        GUILayout.Label("Side Color", Const.littleCenterLabel, new GUILayoutOption[] { });
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
         this.UpdateColorStyleFromToggle(0, this.redgreenStyle, true);
         this.UpdateColorStyleFromToggle(1, this.rainbowStyle, true);
         this.UpdateColorStyleFromToggle(2, this.yellowblueStyle, true);
@@ -760,7 +779,7 @@ public partial class HeatVRML : MonoBehaviour
         choiceInd = 0;
         while (choiceInd < this.numFields)
         {
-            if (GUILayout.Toggle(this.sideColorChoice == choiceInd, this.allVariableDescs[choiceInd].name, Const.realToggle, new GUILayoutOption[] {}))
+            if (GUILayout.Toggle(this.sideColorChoice == choiceInd, this.allVariableDescs[choiceInd].name, Const.realToggle, new GUILayoutOption[] { }))
             {
                 this.sideColorChoice = choiceInd;
             }
@@ -773,7 +792,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("DatasetSelected", RPCMode.All, new object[] {this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight});
+                this.GetComponent<NetworkView>().RPC("DatasetSelected", RPCMode.All, new object[] { this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight });
             }
             else
             {
@@ -784,7 +803,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("DrawVRML", RPCMode.All, new object[] {});
+                this.GetComponent<NetworkView>().RPC("DrawVRML", RPCMode.All, new object[] { });
             }
             else
             {
@@ -795,7 +814,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("DrawTriangle", RPCMode.All, new object[] {});
+                this.GetComponent<NetworkView>().RPC("DrawTriangle", RPCMode.All, new object[] { });
             }
             else
             {
@@ -825,22 +844,22 @@ public partial class HeatVRML : MonoBehaviour
             this.scrollAmount = 0f;
         }
         this.UpdateSliderFromToggle(this.choiceHeight, "height");
-        this.currGraphHeight = GUILayout.HorizontalSlider(this.currGraphHeight, this.lowGraphHeightRange, this.highGraphHeightRange, new GUILayoutOption[] {});
+        this.currGraphHeight = GUILayout.HorizontalSlider(this.currGraphHeight, this.lowGraphHeightRange, this.highGraphHeightRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceFOV, "zoom");
-        this.currFOV = GUILayout.HorizontalSlider(this.currFOV, this.lowFOVRange, this.highFOVRange, new GUILayoutOption[] {});
+        this.currFOV = GUILayout.HorizontalSlider(this.currFOV, this.lowFOVRange, this.highFOVRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceThick, "thickness");
-        this.currThick = GUILayout.HorizontalSlider(this.currThick, this.lowThickRange, this.highThickRange, new GUILayoutOption[] {});
+        this.currThick = GUILayout.HorizontalSlider(this.currThick, this.lowThickRange, this.highThickRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceSep, "bin separation");
-        this.currSep = GUILayout.HorizontalSlider(this.currSep, this.lowSepRange, this.highSepRange, new GUILayoutOption[] {});
+        this.currSep = GUILayout.HorizontalSlider(this.currSep, this.lowSepRange, this.highSepRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceGap, "row gap");
-        this.currGap = GUILayout.HorizontalSlider(this.currGap, this.lowGapRange, this.highGapRange, new GUILayoutOption[] {});
+        this.currGap = GUILayout.HorizontalSlider(this.currGap, this.lowGapRange, this.highGapRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceBin, "scroll bins");
         GUI.DragWindow();
         if (oldScrollChoice != this.scrollChoice)
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("ScrollingSelected", RPCMode.All, new object[] {this.scrollChoice});
+                this.GetComponent<NetworkView>().RPC("ScrollingSelected", RPCMode.All, new object[] { this.scrollChoice });
             }
             else
             {
@@ -850,7 +869,7 @@ public partial class HeatVRML : MonoBehaviour
             {
                 if (this.beServer)
                 {
-                    this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] {-1});
+                    this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] { -1 });
                 }
                 else
                 {
@@ -862,10 +881,10 @@ public partial class HeatVRML : MonoBehaviour
             {
                 if (this.beServer)
                 {
-                    this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] {this.currBin});
+                    this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] { this.currBin });
                 }
                 else
-                {   
+                {
                     //Show only ridges with this bin #
                     this.VisBins(this.currBin);
                 }
@@ -875,7 +894,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("GraphHeightSelected", RPCMode.All, new object[] {this.currGraphHeight});
+                this.GetComponent<NetworkView>().RPC("GraphHeightSelected", RPCMode.All, new object[] { this.currGraphHeight });
             }
             else
             {
@@ -886,7 +905,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("FOVSelected", RPCMode.All, new object[] {this.currFOV});
+                this.GetComponent<NetworkView>().RPC("FOVSelected", RPCMode.All, new object[] { this.currFOV });
             }
             else
             {
@@ -897,7 +916,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("Redistribute", RPCMode.All, new object[] {this.currThick, this.currSep, this.currGap});
+                this.GetComponent<NetworkView>().RPC("Redistribute", RPCMode.All, new object[] { this.currThick, this.currSep, this.currGap });
             }
             else
             {
@@ -908,7 +927,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] {this.currBin});
+                this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] { this.currBin });
             }
             else
             {
@@ -921,7 +940,7 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void UpdateSliderFromToggle(int choiceNumber, string sliderName)
     {
-        bool thisVal = GUILayout.Toggle(this.scrollChoice == choiceNumber, sliderName, this.scrollStyle, new GUILayoutOption[] {});
+        bool thisVal = GUILayout.Toggle(this.scrollChoice == choiceNumber, sliderName, this.scrollStyle, new GUILayoutOption[] { });
         if ((this.scrollChoice == choiceNumber) && !thisVal)
         {
             this.scrollChoice = -1;
@@ -937,7 +956,7 @@ public partial class HeatVRML : MonoBehaviour
         bool thisVal = false;
         if (bSide)
         {
-            thisVal = GUILayout.Toggle(this.sideStyleChoice == choiceNumber, "", style, new GUILayoutOption[] {});
+            thisVal = GUILayout.Toggle(this.sideStyleChoice == choiceNumber, "", style, new GUILayoutOption[] { });
             if ((this.sideStyleChoice == choiceNumber) && !thisVal)
             {
                 this.sideStyleChoice = -1;
@@ -949,7 +968,7 @@ public partial class HeatVRML : MonoBehaviour
         }
         else
         {
-            thisVal = GUILayout.Toggle(this.topStyleChoice == choiceNumber, "", style, new GUILayoutOption[] {});
+            thisVal = GUILayout.Toggle(this.topStyleChoice == choiceNumber, "", style, new GUILayoutOption[] { });
             if ((this.topStyleChoice == choiceNumber) && !thisVal)
             {
                 this.topStyleChoice = -1;
@@ -1018,26 +1037,26 @@ public partial class HeatVRML : MonoBehaviour
         int zipChoice = -1;
         int lookChoice = -1;
         this.ShrinkIt(windowID);
-        if (GUILayout.Button("Top", Const.buttonToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Button("Top", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             zipChoice = 0;
         }
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
-        if (GUILayout.Button("Left", Const.buttonToggle, new GUILayoutOption[] {}))
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
+        if (GUILayout.Button("Left", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             zipChoice = 3;
         }
-        if (GUILayout.Button("Right", Const.buttonToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Button("Right", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             zipChoice = 4;
         }
         GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
-        if (GUILayout.Button("Front", Const.buttonToggle, new GUILayoutOption[] {}))
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
+        if (GUILayout.Button("Front", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             zipChoice = 1;
         }
-        if (GUILayout.Button("Back", Const.buttonToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Button("Back", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             zipChoice = 2;
         }
@@ -1046,34 +1065,34 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("ZipSelected", RPCMode.All, new object[] {zipChoice});
+                this.GetComponent<NetworkView>().RPC("ZipSelected", RPCMode.All, new object[] { zipChoice });
             }
             else
             {
                 this.ZipSelected(zipChoice);
             }
         }
-        GUILayout.Label("Look", Const.littleCenterLabel, new GUILayoutOption[] {});
-        if (GUILayout.Button("Down", Const.buttonToggle, new GUILayoutOption[] {}))
+        GUILayout.Label("Look", Const.littleCenterLabel, new GUILayoutOption[] { });
+        if (GUILayout.Button("Down", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             lookChoice = 0;
         }
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
-        if (GUILayout.Button("Left", Const.buttonToggle, new GUILayoutOption[] {}))
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
+        if (GUILayout.Button("Left", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             lookChoice = 3;
         }
-        if (GUILayout.Button("Right", Const.buttonToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Button("Right", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             lookChoice = 4;
         }
         GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
-        if (GUILayout.Button("Ahead", Const.buttonToggle, new GUILayoutOption[] {}))
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
+        if (GUILayout.Button("Ahead", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             lookChoice = 1;
         }
-        if (GUILayout.Button("Back", Const.buttonToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Button("Back", Const.buttonToggle, new GUILayoutOption[] { }))
         {
             lookChoice = 2;
         }
@@ -1082,7 +1101,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             if (this.beServer)
             {
-                this.GetComponent<NetworkView>().RPC("LookSelected", RPCMode.All, new object[] {lookChoice});
+                this.GetComponent<NetworkView>().RPC("LookSelected", RPCMode.All, new object[] { lookChoice });
             }
             else
             {
@@ -1106,20 +1125,20 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void DoPointedWindow(int windowID)
     {
-        GUILayout.Label("x:" + this.pointedData.position.x, new GUILayoutOption[] {});
-        GUILayout.Label("y:" + this.pointedData.position.y, new GUILayoutOption[] {});
-        GUILayout.Label("z:" + this.pointedData.position.z, new GUILayoutOption[] {});
-        GUILayout.Label("row:" + this.pointedData.row, new GUILayoutOption[] {});
-        GUILayout.Label("col:" + this.pointedData.col, new GUILayoutOption[] {});
-        GUILayout.Label("bin:" + this.pointedData.bin, new GUILayoutOption[] {});
-        GUILayout.Label("height:" + this.pointedData.height, new GUILayoutOption[] {});
+        GUILayout.Label("x:" + this.pointedData.position.x, new GUILayoutOption[] { });
+        GUILayout.Label("y:" + this.pointedData.position.y, new GUILayoutOption[] { });
+        GUILayout.Label("z:" + this.pointedData.position.z, new GUILayoutOption[] { });
+        GUILayout.Label("row:" + this.pointedData.row, new GUILayoutOption[] { });
+        GUILayout.Label("col:" + this.pointedData.col, new GUILayoutOption[] { });
+        GUILayout.Label("bin:" + this.pointedData.bin, new GUILayoutOption[] { });
+        GUILayout.Label("height:" + this.pointedData.height, new GUILayoutOption[] { });
         GUI.DragWindow();
     }
 
     public virtual void DoXRayWindow(int windowID)
     {
-        GUILayout.Label(this.xray, new GUILayoutOption[] {});
-        if (GUILayout.Button("close", new GUILayoutOption[] {}))
+        GUILayout.Label(this.xray, new GUILayoutOption[] { });
+        if (GUILayout.Button("close", new GUILayoutOption[] { }))
         {
             this.showXRay = false;
         }
@@ -1129,22 +1148,22 @@ public partial class HeatVRML : MonoBehaviour
     public virtual void DoHelp(int windowID)
     {
         this.oldHelpPage = this.helpPage;
-        GUILayout.Label("Press F1 or H to hide/view this window.  Press F5 or M to hide/view menus.", Const.greenCenterLabel, new GUILayoutOption[] {});
-        GUILayout.Label("Press ESC to exit program", Const.littleCenterLabel, new GUILayoutOption[] {});
-        GUILayout.BeginHorizontal(new GUILayoutOption[] {});
-        if (GUILayout.Toggle(this.helpPage == 0, "About", Const.bigToggle, new GUILayoutOption[] {}))
+        GUILayout.Label("Press F1 or H to hide/view this window.  Press F5 or M to hide/view menus.", Const.greenCenterLabel, new GUILayoutOption[] { });
+        GUILayout.Label("Press ESC to exit program", Const.littleCenterLabel, new GUILayoutOption[] { });
+        GUILayout.BeginHorizontal(new GUILayoutOption[] { });
+        if (GUILayout.Toggle(this.helpPage == 0, "About", Const.bigToggle, new GUILayoutOption[] { }))
         {
             this.helpPage = 0;
         }
-        if (GUILayout.Toggle(this.helpPage == 1, "Data Preparation", Const.bigToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Toggle(this.helpPage == 1, "Data Preparation", Const.bigToggle, new GUILayoutOption[] { }))
         {
             this.helpPage = 1;
         }
-        if (GUILayout.Toggle(this.helpPage == 2, "Navigation", Const.bigToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Toggle(this.helpPage == 2, "Navigation", Const.bigToggle, new GUILayoutOption[] { }))
         {
             this.helpPage = 2;
         }
-        if (GUILayout.Toggle(this.helpPage == 3, "Menus", Const.bigToggle, new GUILayoutOption[] {}))
+        if (GUILayout.Toggle(this.helpPage == 3, "Menus", Const.bigToggle, new GUILayoutOption[] { }))
         {
             this.helpPage = 3;
         }
@@ -1156,71 +1175,71 @@ public partial class HeatVRML : MonoBehaviour
         switch (this.helpPage)
         {
             case 0:
-                GUILayout.Label("3D Heatmap was developed by Dr. Jason H. Moore and the Bioinformatics Visualization Laboratory at Dartmouth Medical School with support from the Institute for Quantitative Biomedical Sciences and the Norris-Cotton Cancer Center and funding from NIH grants LM009012 and RR018787.", new GUILayoutOption[] {});
-                GUILayout.Label("The goal of this project is to evaluate the use of 3D video game engines for the interactive visual exploration of more than two dimensions of data.", new GUILayoutOption[] {});
-                GUILayout.Label("3D Heatmap is open source software released unter the GNU General Public License, Version 3.", new GUILayoutOption[] {});
-                GUILayout.Label("We hope to receive comments, suggestions and feature requests from users who have tried this program using their own data. (Press \"Data Preparation\" button for instructions on formatting your data) Please e-mail Jason.H.Moore@Dartmouth.edu to offer feedback.", new GUILayoutOption[] {});
-                GUILayout.Label("This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.", new GUILayoutOption[] {});
-                GUILayout.Label("Powered by the Unity 3D Game Engine", Const.littleCenterLabel, new GUILayoutOption[] {});
+                GUILayout.Label("3D Heatmap was developed by Dr. Jason H. Moore and the Bioinformatics Visualization Laboratory at Dartmouth Medical School with support from the Institute for Quantitative Biomedical Sciences and the Norris-Cotton Cancer Center and funding from NIH grants LM009012 and RR018787.", new GUILayoutOption[] { });
+                GUILayout.Label("The goal of this project is to evaluate the use of 3D video game engines for the interactive visual exploration of more than two dimensions of data.", new GUILayoutOption[] { });
+                GUILayout.Label("3D Heatmap is open source software released unter the GNU General Public License, Version 3.", new GUILayoutOption[] { });
+                GUILayout.Label("We hope to receive comments, suggestions and feature requests from users who have tried this program using their own data. (Press \"Data Preparation\" button for instructions on formatting your data) Please e-mail Jason.H.Moore@Dartmouth.edu to offer feedback.", new GUILayoutOption[] { });
+                GUILayout.Label("This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.", new GUILayoutOption[] { });
+                GUILayout.Label("Powered by the Unity 3D Game Engine", Const.littleCenterLabel, new GUILayoutOption[] { });
                 break;
             case 1:
-                this.menuScrollPos = GUILayout.BeginScrollView(this.menuScrollPos, new GUILayoutOption[] {GUILayout.Width(780), GUILayout.Height(400)});
-                GUILayout.Label("Design", Const.fixLabel, new GUILayoutOption[] {});
-                GUILayout.Label("A conventional heat map consists of a 2D grid of colored squares where each square represents an observation of a random variable and the color of the square is proportional to the value of that observation. 2D heat maps are used pervasively in the Biological sciences and both the grid and the dimension mapped to the grid can represent a variety of concepts. Genes, experimental conditions, subjects, genomic elements, etc... are distributed on the grid where a color palette is used to encode transcript abundance, protein concentration, conservation, activation, etc...", new GUILayoutOption[] {});
-                GUILayout.Label("It is often desirable to map several dimensions to the same grid. This situation is usually resolved by plotting a separate 2D heat map for each dimension. The analysis of relationships between multiple dimensions is usually hindered by this design due to the loss of context and orientation when transitioning between dimensions in large data sets. It is our goal to explore alternative representations that superimpose and interleave several dimensions onto the same grid. Through this approach we aim to find a solution that decreases the disorienting effect of transitioning between dense and separately graphed volumes of data and to increase the interpretability of multidimensional data without overwhelming the user's senses.", new GUILayoutOption[] {});
-                GUILayout.Label("The current version includes the following features:", new GUILayoutOption[] {});
-                GUILayout.Label("- Updating graphical parameters in real time.", new GUILayoutOption[] {});
-                GUILayout.Label("The parameters that govern the graphing of data can be changed in real time. This allows for the seamless transition between dimensions without losing the current perspective and arrangement of the 3D heat map.", new GUILayoutOption[] {});
-                GUILayout.Label("- Superimposing dimensions.", new GUILayoutOption[] {});
-                GUILayout.Label("In order to map several dimensions onto the same grid we have chosen simple yet multifaceted geometries. The graphical unit can hold one dimension as its height, a second dimension as the color on its horizontal surface and a third dimension as the color of its vertical surfaces.", new GUILayoutOption[] {});
-                GUILayout.Label("- Interleaving dimensions.", new GUILayoutOption[] {});
-                GUILayout.Label("An alternative to superimposition that allows for an arbitrary number of dimensions to be mapped to the same grid is interleaving. This is achieved by consolidating the same row in the grid across all dimensions and plotting the consolidated rows adjacently. Spacer of different widths are used to convey the hierarchical structure of rows.", new GUILayoutOption[] {});
-                GUILayout.Label("All features can be explored in combination. It is possible to superimpose, interleave and switch between dimensions without interrupting the path of flight through the data or losing the point of view. It is important in this exercise that the user is able to start from a conventional 2D heat map and incrementally add dimensions as they elaborate and refine their analysis and interpretation. It is also up to the user to decide which variables are better represented by height or color.", new GUILayoutOption[] {});
-                GUILayout.Label("DATA IMPORT", Const.fixLabel, new GUILayoutOption[] {});
-                GUILayout.Label("See the README.txt for ways to import your data.", new GUILayoutOption[] {});
+                this.menuScrollPos = GUILayout.BeginScrollView(this.menuScrollPos, new GUILayoutOption[] { GUILayout.Width(780), GUILayout.Height(400) });
+                GUILayout.Label("Design", Const.fixLabel, new GUILayoutOption[] { });
+                GUILayout.Label("A conventional heat map consists of a 2D grid of colored squares where each square represents an observation of a random variable and the color of the square is proportional to the value of that observation. 2D heat maps are used pervasively in the Biological sciences and both the grid and the dimension mapped to the grid can represent a variety of concepts. Genes, experimental conditions, subjects, genomic elements, etc... are distributed on the grid where a color palette is used to encode transcript abundance, protein concentration, conservation, activation, etc...", new GUILayoutOption[] { });
+                GUILayout.Label("It is often desirable to map several dimensions to the same grid. This situation is usually resolved by plotting a separate 2D heat map for each dimension. The analysis of relationships between multiple dimensions is usually hindered by this design due to the loss of context and orientation when transitioning between dimensions in large data sets. It is our goal to explore alternative representations that superimpose and interleave several dimensions onto the same grid. Through this approach we aim to find a solution that decreases the disorienting effect of transitioning between dense and separately graphed volumes of data and to increase the interpretability of multidimensional data without overwhelming the user's senses.", new GUILayoutOption[] { });
+                GUILayout.Label("The current version includes the following features:", new GUILayoutOption[] { });
+                GUILayout.Label("- Updating graphical parameters in real time.", new GUILayoutOption[] { });
+                GUILayout.Label("The parameters that govern the graphing of data can be changed in real time. This allows for the seamless transition between dimensions without losing the current perspective and arrangement of the 3D heat map.", new GUILayoutOption[] { });
+                GUILayout.Label("- Superimposing dimensions.", new GUILayoutOption[] { });
+                GUILayout.Label("In order to map several dimensions onto the same grid we have chosen simple yet multifaceted geometries. The graphical unit can hold one dimension as its height, a second dimension as the color on its horizontal surface and a third dimension as the color of its vertical surfaces.", new GUILayoutOption[] { });
+                GUILayout.Label("- Interleaving dimensions.", new GUILayoutOption[] { });
+                GUILayout.Label("An alternative to superimposition that allows for an arbitrary number of dimensions to be mapped to the same grid is interleaving. This is achieved by consolidating the same row in the grid across all dimensions and plotting the consolidated rows adjacently. Spacer of different widths are used to convey the hierarchical structure of rows.", new GUILayoutOption[] { });
+                GUILayout.Label("All features can be explored in combination. It is possible to superimpose, interleave and switch between dimensions without interrupting the path of flight through the data or losing the point of view. It is important in this exercise that the user is able to start from a conventional 2D heat map and incrementally add dimensions as they elaborate and refine their analysis and interpretation. It is also up to the user to decide which variables are better represented by height or color.", new GUILayoutOption[] { });
+                GUILayout.Label("DATA IMPORT", Const.fixLabel, new GUILayoutOption[] { });
+                GUILayout.Label("See the README.txt for ways to import your data.", new GUILayoutOption[] { });
                 GUILayout.EndScrollView();
                 break;
             case 2:
-                #if UNITY_STANDALONE_WIN
-                    GUILayout.Label("We recommend a 3DConnexion SpaceNavigator for 3D navigation.  The following mouse and keyboard controls may also be used.", new GUILayoutOption[] {});
-                #endif
-                GUILayout.Label("To look in a different direction, hold down the right mouse button (or Alt key, if that is more convenient) and move the mouse (or touchpad).", new GUILayoutOption[] {});
-                GUILayout.Label("You can also turn left and right by holding down a shift key and pressing left or right arrow keys.  Hold down a shift key and press up and down arrow keys to tilt vertically.", new GUILayoutOption[] {});
-                GUILayout.Label("If you become disoriented, use the \"Look\" menu to select one of 5 fixed orientations.", new GUILayoutOption[] {});
-                GUILayout.Label("To move forward, press up arrow or \"w\".  The longer you hold it down, the faster you will go, and your motion will continue after you release the key.", new GUILayoutOption[] {});
-                GUILayout.Label("To stop, press the left mouse button while your cursor is within the scene, not in a menu.", new GUILayoutOption[] {});
-                GUILayout.Label("You can careen wildly and rapidly about the scene using only the mouse, right button and up arrow.  Onlookers may experience motion discomfort.", new GUILayoutOption[] {});
-                GUILayout.Label("To modify your velocity in a more controlled way, the following keys add velocity relative to your orientation:", new GUILayoutOption[] {});
-                GUILayout.Label("left arrow or \"a\" = left   right arrow or \"d\" = right", new GUILayoutOption[] {});
-                GUILayout.Label("down arrow or \"s\" = backwards", new GUILayoutOption[] {});
-                GUILayout.Label("space bar + up or down arrow = up or down", new GUILayoutOption[] {});
+#if UNITY_STANDALONE_WIN
+                GUILayout.Label("We recommend a 3DConnexion SpaceNavigator for 3D navigation.  The following mouse and keyboard controls may also be used.", new GUILayoutOption[] { });
+#endif
+                GUILayout.Label("To look in a different direction, hold down the right mouse button (or Alt key, if that is more convenient) and move the mouse (or touchpad).", new GUILayoutOption[] { });
+                GUILayout.Label("You can also turn left and right by holding down a shift key and pressing left or right arrow keys.  Hold down a shift key and press up and down arrow keys to tilt vertically.", new GUILayoutOption[] { });
+                GUILayout.Label("If you become disoriented, use the \"Look\" menu to select one of 5 fixed orientations.", new GUILayoutOption[] { });
+                GUILayout.Label("To move forward, press up arrow or \"w\".  The longer you hold it down, the faster you will go, and your motion will continue after you release the key.", new GUILayoutOption[] { });
+                GUILayout.Label("To stop, press the left mouse button while your cursor is within the scene, not in a menu.", new GUILayoutOption[] { });
+                GUILayout.Label("You can careen wildly and rapidly about the scene using only the mouse, right button and up arrow.  Onlookers may experience motion discomfort.", new GUILayoutOption[] { });
+                GUILayout.Label("To modify your velocity in a more controlled way, the following keys add velocity relative to your orientation:", new GUILayoutOption[] { });
+                GUILayout.Label("left arrow or \"a\" = left   right arrow or \"d\" = right", new GUILayoutOption[] { });
+                GUILayout.Label("down arrow or \"s\" = backwards", new GUILayoutOption[] { });
+                GUILayout.Label("space bar + up or down arrow = up or down", new GUILayoutOption[] { });
                 break;
             case 3:
-                this.menuScrollPos = GUILayout.BeginScrollView(this.menuScrollPos, new GUILayoutOption[] {GUILayout.Width(780), GUILayout.Height(400)});
-                GUILayout.Label("Toggle menus on and off by pressing F5.", new GUILayoutOption[] {});
-                GUILayout.Label("Data Selection", Const.fixLabel, new GUILayoutOption[] {});
-                GUILayout.Label("Clicking on a dataset causes it to be drawn immediately using the current chart style.", new GUILayoutOption[] {});
-                GUILayout.Label("If you prefer, choose chart style before selecting a dataset.", new GUILayoutOption[] {});
-                GUILayout.Label("Chart Style", Const.fixLabel, new GUILayoutOption[] {});
-                GUILayout.Label("Ribbon style draws a line from each point to the next along the row; the 3D equivalent of a line graph.  Selecting the \"fill\" option extends the ribbon down to the base.", new GUILayoutOption[] {});
-                GUILayout.Label("Tile style draws a horizontal tile for each point.  Selecting the \"fill\" option extends the tile down to the base, making the 3D equivalent of a bar chart.", new GUILayoutOption[] {});
-                GUILayout.Label("The Interleave option applies when the dataset has values in more than one bin.  If Interleave is on, the chart will show all the bins for one row before drawing the next row.  If it is off, all the rows for one bin will be shown before beginning the next bin.", new GUILayoutOption[] {});
-                GUILayout.Label("The color of the top and side of each point is driven by data values.  The data value can be height or bin number.  If your dataset has other integer fields, these will also appear as choices.  There are five color schemes for mapping data to colors, based on a linear interpolation between the lowest and highest values of the chosen data element.", new GUILayoutOption[] {});
-                GUILayout.Label("As described in Data Preparation, you can also provide a table of color assignments for each possible data value.  If this table is present, it will be used when no other color scheme is chosen.", new GUILayoutOption[] {});
-                GUILayout.Label("A Draw button appears on the Chart Style menu only if a dataset has been selected.  Changes chosen in the Chart Style menu only take effect when Draw is clicked or a new dataset is chosen in the Data Selection menu.", new GUILayoutOption[] {});
-                GUILayout.Label("Zip to Viewpoint", Const.fixLabel, new GUILayoutOption[] {});
-                GUILayout.Label("These buttons reposition and reorient the viewpoint so that your 3D chart can be viewd from fixed angles.  If you change the size of your chart using sliders in the Chart View menu, the Zip buttons will recalculate the positions needed to view your data.", new GUILayoutOption[] {});
-                GUILayout.Label("The Look submenu reorients the viewpoint without moving it.", new GUILayoutOption[] {});
-                GUILayout.Label("Chart View", Const.fixLabel, new GUILayoutOption[] {});
-                GUILayout.Label("There are 5 sliders for adjusting the view of your data without requiring a redraw.", new GUILayoutOption[] {});
-                GUILayout.Label("You may set a value by clicking on the slider bar or dragging the slider indicator.", new GUILayoutOption[] {});
-                GUILayout.Label("To the left of each slider is a stylized \"S\".  Clicking on this attaches that slider to the mouse scrollwheel, so it can be adjusted even when the menu is toggled off.", new GUILayoutOption[] {});
-                GUILayout.Label("Height - changes the height of the entire graph.", new GUILayoutOption[] {});
-                GUILayout.Label("Zoom - Like changing the focal length of a camera.  Zooming out (left) gives more feeling of being surrounded by your data, and provides smoother motion when turning.  Zooming in (and moving back) gives a more distant view, with less distortion at the edges of the view.  If you want to make screen shots of your chart, they make look better if you move the viewpoint back and zoom in to compensate.", new GUILayoutOption[] {});
-                GUILayout.Label("Thickness - the depth of each data element.  If there are many rows and few columns, you may wish to make the rows narrow to fit in a reasonable area.", new GUILayoutOption[] {});
-                GUILayout.Label("Bin Separation - the distance from the start of one bin to the start of the next.  Normally this is the size of one data point, so that when Interleave is chosen, each bin is next to the next.  Sliding this down to zero causes the bins to overlap.  If Interleave is off, you may want to choose a large value to give visible separation between bins.", new GUILayoutOption[] {});
-                GUILayout.Label("Row Gap - the distance between rows.  Defaults to the size of one data point.", new GUILayoutOption[] {});
-                GUILayout.Label("When the \"S\" on Scroll Bins is chosen, only one bin is visible at a time.  Moving the scroll wheel cycles through the bins.  By setting Interleave On, Bin Separation 0, and scrolling bins, you create a blink comparator for noticing small changes between bins.", new GUILayoutOption[] {});
+                this.menuScrollPos = GUILayout.BeginScrollView(this.menuScrollPos, new GUILayoutOption[] { GUILayout.Width(780), GUILayout.Height(400) });
+                GUILayout.Label("Toggle menus on and off by pressing F5.", new GUILayoutOption[] { });
+                GUILayout.Label("Data Selection", Const.fixLabel, new GUILayoutOption[] { });
+                GUILayout.Label("Clicking on a dataset causes it to be drawn immediately using the current chart style.", new GUILayoutOption[] { });
+                GUILayout.Label("If you prefer, choose chart style before selecting a dataset.", new GUILayoutOption[] { });
+                GUILayout.Label("Chart Style", Const.fixLabel, new GUILayoutOption[] { });
+                GUILayout.Label("Ribbon style draws a line from each point to the next along the row; the 3D equivalent of a line graph.  Selecting the \"fill\" option extends the ribbon down to the base.", new GUILayoutOption[] { });
+                GUILayout.Label("Tile style draws a horizontal tile for each point.  Selecting the \"fill\" option extends the tile down to the base, making the 3D equivalent of a bar chart.", new GUILayoutOption[] { });
+                GUILayout.Label("The Interleave option applies when the dataset has values in more than one bin.  If Interleave is on, the chart will show all the bins for one row before drawing the next row.  If it is off, all the rows for one bin will be shown before beginning the next bin.", new GUILayoutOption[] { });
+                GUILayout.Label("The color of the top and side of each point is driven by data values.  The data value can be height or bin number.  If your dataset has other integer fields, these will also appear as choices.  There are five color schemes for mapping data to colors, based on a linear interpolation between the lowest and highest values of the chosen data element.", new GUILayoutOption[] { });
+                GUILayout.Label("As described in Data Preparation, you can also provide a table of color assignments for each possible data value.  If this table is present, it will be used when no other color scheme is chosen.", new GUILayoutOption[] { });
+                GUILayout.Label("A Draw button appears on the Chart Style menu only if a dataset has been selected.  Changes chosen in the Chart Style menu only take effect when Draw is clicked or a new dataset is chosen in the Data Selection menu.", new GUILayoutOption[] { });
+                GUILayout.Label("Zip to Viewpoint", Const.fixLabel, new GUILayoutOption[] { });
+                GUILayout.Label("These buttons reposition and reorient the viewpoint so that your 3D chart can be viewd from fixed angles.  If you change the size of your chart using sliders in the Chart View menu, the Zip buttons will recalculate the positions needed to view your data.", new GUILayoutOption[] { });
+                GUILayout.Label("The Look submenu reorients the viewpoint without moving it.", new GUILayoutOption[] { });
+                GUILayout.Label("Chart View", Const.fixLabel, new GUILayoutOption[] { });
+                GUILayout.Label("There are 5 sliders for adjusting the view of your data without requiring a redraw.", new GUILayoutOption[] { });
+                GUILayout.Label("You may set a value by clicking on the slider bar or dragging the slider indicator.", new GUILayoutOption[] { });
+                GUILayout.Label("To the left of each slider is a stylized \"S\".  Clicking on this attaches that slider to the mouse scrollwheel, so it can be adjusted even when the menu is toggled off.", new GUILayoutOption[] { });
+                GUILayout.Label("Height - changes the height of the entire graph.", new GUILayoutOption[] { });
+                GUILayout.Label("Zoom - Like changing the focal length of a camera.  Zooming out (left) gives more feeling of being surrounded by your data, and provides smoother motion when turning.  Zooming in (and moving back) gives a more distant view, with less distortion at the edges of the view.  If you want to make screen shots of your chart, they make look better if you move the viewpoint back and zoom in to compensate.", new GUILayoutOption[] { });
+                GUILayout.Label("Thickness - the depth of each data element.  If there are many rows and few columns, you may wish to make the rows narrow to fit in a reasonable area.", new GUILayoutOption[] { });
+                GUILayout.Label("Bin Separation - the distance from the start of one bin to the start of the next.  Normally this is the size of one data point, so that when Interleave is chosen, each bin is next to the next.  Sliding this down to zero causes the bins to overlap.  If Interleave is off, you may want to choose a large value to give visible separation between bins.", new GUILayoutOption[] { });
+                GUILayout.Label("Row Gap - the distance between rows.  Defaults to the size of one data point.", new GUILayoutOption[] { });
+                GUILayout.Label("When the \"S\" on Scroll Bins is chosen, only one bin is visible at a time.  Moving the scroll wheel cycles through the bins.  By setting Interleave On, Bin Separation 0, and scrolling bins, you create a blink comparator for noticing small changes between bins.", new GUILayoutOption[] { });
                 GUILayout.EndScrollView();
                 break;
         }
@@ -1229,7 +1248,7 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void GetDatabaseChoices()
     {
-         //numDB = ArrayFromQuery(dbChoices, "name", "from SQLITE_MASTER where name like 'heat_%' order by name;");
+        //numDB = ArrayFromQuery(dbChoices, "name", "from SQLITE_MASTER where name like 'heat_%' order by name;");
         this.numDB = this.ArrayFromQuery(this.dbChoices, "name", "from SQLITE_MASTER where like('heat!_%', name, '!') order by name;");
         if (this.currDB >= this.numDB)
         {
@@ -1239,13 +1258,14 @@ public partial class HeatVRML : MonoBehaviour
         this.selTable = this.currDB >= 0 ? this.dbChoices[this.currDB] : "";
     }
 
-    public virtual void GetAxisExtents()
+
+    public virtual void GetAxisExtentsOld()
     {
         //Stauffer - get ranges for row and col numbers, bin numbers, and height values (first observed value)
         //In DatasetSelected, the ranges get set for the optional subsequent int columns.
         //
         this.dbcmd.CommandText = ((("SELECT MIN(row), MAX(row), MIN(col), MAX(col), MIN(bin), MAX(bin), MIN(height), MAX(height) from " + this.selTable) + " where col <= ") + this.colLimit) + ";";
-        Debug.Log("GetAxisExtents() query is " + this.dbcmd.CommandText);
+        Debug.Log("GetAxisExtentsOld() query is " + this.dbcmd.CommandText);
         this.reader = this.dbcmd.ExecuteReader();
         this.reader.Read();
         this.minRow = this.reader.GetInt32(0);
@@ -1423,7 +1443,7 @@ public partial class HeatVRML : MonoBehaviour
 
     public bool doingEdges; //Stauffer - seems to determine if a bevel is drawn at top of column
     public float bevelFraction;
-    public virtual void BuildRidge(int row, int numx /*== xslot from ShowData() == col number I believe*/, int binindex)
+    public virtual void BuildRidge(int row, int numx /*== num of columns*/, int binindex)
     {
         Color thisColor = default(Color);
         Color sideColor = default(Color);
@@ -1452,19 +1472,19 @@ public partial class HeatVRML : MonoBehaviour
         //Stauffer - 'proto' is from protomesh prefab. It's a private global instanced above.
         GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z + yoff), Quaternion.identity);
         newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeight, this.tokenWidth);
-        Mesh amesh = ((MeshFilter) newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
+        Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
-        IdentifyRidge idScript = (IdentifyRidge) newRidge.gameObject.GetComponent(typeof(IdentifyRidge));
+        IdentifyRidge idScript = (IdentifyRidge)newRidge.gameObject.GetComponent(typeof(IdentifyRidge));
         idScript.row = row;
         idScript.bin = binindex + this.minBin;
         GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.xzySceneCorner.x + this.xSceneSize, this.xzySceneCorner.y + 1f, (this.xzySceneCorner.z + yoff) + (this.tokenWidth * 0.1f)), this.protolabel.transform.rotation);
         if ((row > this.numRowLabels) || (this.rowLabels[row] == null))
         {
-            ((TextMesh) newLabel.GetComponent(typeof(TextMesh))).text = row.ToString();
+            ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = row.ToString();
         }
         else
         {
-            ((TextMesh) newLabel.GetComponent(typeof(TextMesh))).text = this.rowLabels[row];
+            ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = this.rowLabels[row];
         }
 
         {
@@ -1532,6 +1552,7 @@ public partial class HeatVRML : MonoBehaviour
             }
             else
             {
+                //Stauffer - colVals[] - seems to be just an array of column numbers. It gets shifted to always start at 0, so why bother with it???
                 thisX = ((this.colVals[0] + 0.5f) - this.minCol) * this.xScale;
                 thisZ = ((this.heightVals[0] - this.minHeight) * this.zScale) + minZ;
                 prevX = thisX - this.xScale;
@@ -1591,7 +1612,7 @@ public partial class HeatVRML : MonoBehaviour
             }
             else
             {
-                 // tile
+                // tile
                 if (this.doingEdges) //Seems to mean draw a bevel
                 {
                     edgeZ = thisZ - topBite;
@@ -1663,7 +1684,7 @@ public partial class HeatVRML : MonoBehaviour
             ++i;
         }
         mm.Attach(amesh);
-        
+
         try
         {
             //Stauffer
@@ -1686,10 +1707,10 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void MakeUnitCube(GameObject ac)
     {
-        Mesh amesh = ((MeshFilter) ac.GetComponent(typeof(MeshFilter))).mesh;
+        Mesh amesh = ((MeshFilter)ac.GetComponent(typeof(MeshFilter))).mesh;
         Vector3[] vertices = new Vector3[8];
-        int[] triangles = new int[] {0, 2, 1, 2, 0, 3, 1, 6, 5, 6, 1, 2, 4, 6, 7, 6, 4, 5, 4, 3, 0, 3, 4, 7, 4, 1, 5, 1, 4, 0, 3, 6, 2, 6, 3, 7};
-        Vector2[] uv = new Vector2[] {new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1)};
+        int[] triangles = new int[] { 0, 2, 1, 2, 0, 3, 1, 6, 5, 6, 1, 2, 4, 6, 7, 6, 4, 5, 4, 3, 0, 3, 4, 7, 4, 1, 5, 1, 4, 0, 3, 6, 2, 6, 3, 7 };
+        Vector2[] uv = new Vector2[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1) };
         vertices[0] = new Vector3(0, 0, 0);
         vertices[1] = new Vector3(1, 0, 0);
         vertices[2] = new Vector3(1, 1, 0);
@@ -1717,7 +1738,7 @@ public partial class HeatVRML : MonoBehaviour
         // side
         if (colorChoice == 0)
         {
-             // height
+            // height
             inv = (this.heightVals[col] - this.minHeight) / this.heightRange;
         }
         else
@@ -1725,7 +1746,7 @@ public partial class HeatVRML : MonoBehaviour
             //return GreenRed(inv, isSide);
             if (colorChoice == 1)
             {
-                 // bin
+                // bin
                 if (this.numBins < 2)
                 {
                     inv = 0f;
@@ -1743,8 +1764,8 @@ public partial class HeatVRML : MonoBehaviour
                 VariableDesc thisField = isSide ? this.allVariableDescs[this.sideColorChoice] : this.allVariableDescs[this.topColorChoice];
                 if ((styleChoice < 0) && thisField.ColorMap.ContainsKey(thisVal)) //Is this looking up a color via color index/lut?
                 {
-                     //Stauffer - thisField.Fields[n] is type Object from a hashtable, so r,g,b members not defined.
-                     //So, do this via casting to get compiler happy for coversion to C#
+                    //Stauffer - thisField.Fields[n] is type Object from a hashtable, so r,g,b members not defined.
+                    //So, do this via casting to get compiler happy for coversion to C#
                     OneColor oneField = thisField.ColorMap[thisVal] as OneColor;
                     return new Color(oneField.r, oneField.g, oneField.b, isSide ? 0.7f : 0.9f);
                 }
@@ -1864,7 +1885,7 @@ public partial class HeatVRML : MonoBehaviour
             return;
         }
         this.pointedData.position = HeatVRML.hit.point;
-        IdentifyRidge idScript = (IdentifyRidge) HeatVRML.hit.transform.gameObject.GetComponent(typeof(IdentifyRidge));
+        IdentifyRidge idScript = (IdentifyRidge)HeatVRML.hit.transform.gameObject.GetComponent(typeof(IdentifyRidge));
         this.pointedData.row = idScript.row;
         this.pointedData.bin = idScript.bin;
         // Calculate column from x position of hit
@@ -1874,7 +1895,7 @@ public partial class HeatVRML : MonoBehaviour
         {
             floatCol = floatCol - 1f;
         }
-        this.pointedData.col = (int) Mathf.Floor(floatCol);
+        this.pointedData.col = (int)Mathf.Floor(floatCol);
         this.dbcmd.CommandText = ((((((("Select height from " + this.selTable) + " where row = ") + this.pointedData.row) + " and col = ") + this.pointedData.col) + " and bin = ") + this.pointedData.bin) + ";";
         Debug.Log(this.dbcmd.CommandText);
         this.reader = this.dbcmd.ExecuteReader();
@@ -2067,6 +2088,152 @@ public partial class HeatVRML : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Stauffer. New routine. Prep and draw data loaded in DataManager.
+    /// Replacing functionality of DatasetSelected()
+    /// </summary>
+    public virtual void NewPrepareAndDrawData()
+    {
+        //TODO 
+        // some verification of data, so we don't have to check things every time we access dataMgr
+        // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
+
+        //Axis extents
+        NewGetAxisExtents();
+
+        //Old code for now - Clear the (old) variable (field) description list. 
+        for (int i = 0; i < allVariableDescs.Length; i++)
+        {
+            allVariableDescs[i] = new VariableDesc(); // just to destroy old values
+        }
+
+        //Old code - at this point it checks for the optional int-valued columns/fields for top/side 
+        // If found, they get setup and added to allVariableDescs
+        // Also looks for custom colormap table for each additional column/field
+
+        //Old code - the 2 required data fields (height & bin)
+        this.allVariableDescs = new VariableDesc[2];
+        this.allVariableDescs[0] = new VariableDesc();
+        this.allVariableDescs[0].SetAsFloat("height", this.minHeight, this.maxHeight);
+        this.allVariableDescs[1] = new VariableDesc();
+        this.allVariableDescs[1].SetAsInt("bin", this.minBin, this.maxBin);
+        this.numFields = 2;
+
+        //Setup row headers (row labels)
+        //
+        this.numRowLabels = dataMgr.HeightVar.hasRowHeaders ? dataMgr.HeightVar.numDataRows : 0;
+        this.rowLabels = new string[this.numRowLabels + 1];
+        //Copy
+        for( int i = 0; i < this.numRowLabels; i++)
+        {
+            this.rowLabels[i] = dataMgr.HeightVar.rowHeaders[i];
+        }
+
+        //Draw it!
+        this.NewShowData(); 
+
+        //Old code - need it for now at least
+        if (this.bScrollBin)
+        {
+            //Stauffer - show only ridges with this bin # (or all if currBin < 0)
+            //Why is this done here? As a refresh-type action?
+            this.VisBins(this.currBin);
+        }
+
+        this.dataChanged = false;
+        this.wantRedraw = false;
+        this.waitCount = 0;
+        //Stauffer - has to do with clicking on graph and showing details
+        this.pointedData.ready = false;
+        this.ShowPointedData();
+
+    }
+
+    /// <summary>
+    /// Stauffer - new. 
+    /// Get physical axes extents (num rows, columns and height range)
+    /// </summary>
+    public void NewGetAxisExtents()
+    {
+        //In DatasetSelected, the ranges get set for the optional subsequent int columns.
+        //
+        DataVariable heightVar = dataMgr.HeightVar;
+        this.minRow = 0;
+        this.maxRow = heightVar.numDataRows - 1;
+        this.minCol = 0;
+        this.maxCol = heightVar.numDataCols - 1;
+        this.minBin = 0; //Just always have 1 bin for now. Empirically, we want its number to be 0, otherwise a space for a phantom bin appears in render.
+        this.maxBin = 0;
+        this.minHeight = heightVar.MinValue;
+        this.maxHeight = heightVar.MaxValue;
+        this.numRows = (this.maxRow - this.minRow) + 1;
+        // debugging
+        if (this.maxCol > this.colLimit)
+        {
+            this.maxCol = this.colLimit;
+        }
+        this.numCols = (this.maxCol - this.minCol) + 1;
+        this.numBins = (this.maxBin - this.minBin) + 1;
+        this.heightRange = this.maxHeight - this.minHeight;
+    }
+    
+    
+    public virtual void NewShowData()
+    {
+        this.drawn = true;
+        if (!this.proto) // must be functioning only as user interface
+        {
+            return;
+        }
+        //Looks to be deleting old mesh/visualization
+        if (this.numRidges > 0)
+        {
+            int iridge = 0;
+            while (iridge < this.numRidges)
+            {
+                UnityEngine.Object.Destroy(this.xRidges[iridge].myMeshObject);
+                UnityEngine.Object.Destroy(this.xRidges[iridge].myLabel);
+                ++iridge;
+            }
+        }
+        this.numRidges = 0;
+
+        //Stauffer - this call should be fine for now with member vars we setup previously.
+        this.CalcDimensions();
+
+        this.xScale = 1f / this.numCols;
+        this.zScale = 1f / (this.maxHeight - this.minHeight);
+        this.xRidges = new XRidge[this.numRows * this.numBins];
+        // In case we have changed datasets
+        if (this.topColorChoice >= this.numFields)
+        {
+            this.topColorChoice = 0;
+        }
+        if (this.sideColorChoice >= this.numFields)
+        {
+            this.sideColorChoice = 0;
+        }
+        string extra1 = this.topColorChoice > 1 ? ", " + this.allVariableDescs[this.topColorChoice].name : ", 0";
+        string extra2 = this.sideColorChoice > 1 ? ", " + this.allVariableDescs[this.sideColorChoice].name : ", 0";
+
+        //For each row, setup data and draw a ridge
+        DataVariable hVar = dataMgr.HeightVar;
+        this.colVals = new int[this.numCols]; //As far as I understand, just an array of column numbers. I figure in case orig data has unusually numbering?
+        for (int c = 0; c < hVar.numDataCols; c++)
+            this.colVals[c] = c;
+        this.topVals = new int[this.numCols]; //vals get init'ed to 0
+        this.sideVals = new int[this.numCols];//vals get init'ed to 0
+
+        for ( int row = 0; row < hVar.numDataRows; row++)
+        {
+            //NOTE - these are class properties, that then get used in BuildRidge
+            this.heightVals = hVar.Data[row];
+            //this.topVals[xslot] = top; leave as 0 for now
+            //this.sideVals[xslot] = side; leave as 0 for now
+            this.BuildRidge(row, this.numCols, this.minBin);//always one bin for now
+        }
+    }
+    
     [UnityEngine.RPC]
     public virtual void DatasetSelected(string newDB, bool newBConnectX, bool newBExtendZ, bool newBInterpolateY, int newTopColorChoice, int newSideColorChoice, float newGraphHeight)
     {
@@ -2093,7 +2260,7 @@ public partial class HeatVRML : MonoBehaviour
         }
 
         //Stauffer - this simply get the value range for row, col, bin numbers, and height values. Simple
-        this.GetAxisExtents();
+        this.GetAxisExtentsOld();
 
         // Find the fields in this database
         //
@@ -2128,7 +2295,7 @@ public partial class HeatVRML : MonoBehaviour
         }
         this.reader.Close();
 
-        //Stauffer - now it's setting up the field description array with bin, height, and any additional fields it found above
+        //Stauffer - now it's setting up the field (variable) description array with bin, height, and any additional fields it found above
         thisField = 0;
         while (thisField < this.numFields)
         {
