@@ -37,6 +37,31 @@ public class DataVariable : CSVReaderData
         minMaxReady = false;
     }
 
+    /// <summary>
+    /// Run verification on this data variable. 
+    /// </summary>
+    /// <param name="error">Message when verification fails</param>
+    /// <returns>True if ok. False otherwise and puts message in 'error'</returns>
+    public bool VerifyData(out string error)
+    {
+        if( Data.Length <= 0) { error = "No data loaded"; return false; }
+        if( numDataCols <= 0) { error = "numDataCols <= 0"; return false; }
+        if( numDataRows <= 0) { error = "numDataRows <= 0"; return false; }
+        if( Data.Length != numDataRows) { error = "Number of rows in data array != numDataRows."; return false; }
+        if( hasColumnHeaders && columnHeaders.Count != numDataCols ) { error = "Number of available column headers != number expected."; return false; }
+        if (hasRowHeaders && rowHeaders.Count != numDataRows) { error = "Number of available row headers != number expected."; return false; }
+        for( int r = 0; r < _data.Length; r++)
+        {
+            if(_data[r].Length != numDataCols)
+            {
+                error = "Data array row " + r + " does not have expected number of rows: " + numDataCols;
+                return false;
+            }
+        }
+        error = "Data is valid.";
+        return true;
+    }
+
     private void CalcMinMax()
     {
         //Debug.Log("in CalcMinMax");

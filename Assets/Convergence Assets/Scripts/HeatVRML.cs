@@ -115,11 +115,12 @@ public partial class HeatVRML : MonoBehaviour
     private VariableDesc[] allVariableDescs;
 
     // data values for the current row
-    /// <summary> Stauffer. Seems to be an array of column numbers, used in BuildRidge. Gets shifted to start at 0 anyway, so not sure what the purpose is. </summary>
-    private int[] colVals;
     private float[] heightVals;
     private int[] topVals;
     private int[] sideVals;
+    // Stauffer. Seems to be an array of column numbers, used in BuildRidgeOld. Gets shifted to start at 0 anyway, so not sure what the purpose is. </summary>
+    // Not using in new code.
+    private int[] colVals;
 
     //RPC server network
     public string serverURL;
@@ -1356,7 +1357,7 @@ public partial class HeatVRML : MonoBehaviour
         float cubeHeight = this.xSceneSize * 0.05f;
     }
 
-    public virtual void ShowData()
+    public virtual void ShowDataOld()
     {
         int prow = 0; //Stauffer - previous row?
         int pbin = 0; //Stauffer - previous bin?
@@ -1420,14 +1421,14 @@ public partial class HeatVRML : MonoBehaviour
             // has encountered a new row #. It visualizes everything read into the arrays in the next block. Awkward
             if ((recNum > 0) && (row != prow))
             {
-                this.BuildRidge(prow, xslot, pbin - this.minBin);
+                this.BuildRidgeOld(prow, xslot, pbin - this.minBin);
                 prow = row;
                 xslot = 0; //reset this so the data read above will now start to fill arrays from begin below, for new row 
             }
             //Fill the data for a full row, one column at a time
             if (xslot < this.numCols)
             {
-                this.colVals[xslot] = col; //NOTE - these are class properties, that then get used in BuildRidge
+                this.colVals[xslot] = col; //NOTE - these are class properties, that then get used in BuildRidgeOld
                 this.heightVals[xslot] = hght;
                 this.topVals[xslot] = top;
                 this.sideVals[xslot] = side;
@@ -1435,15 +1436,15 @@ public partial class HeatVRML : MonoBehaviour
             }
             prow = row;
             pbin = abin;
-            ++recNum; //next record in the table. This is only used in the check above to decide when to call BuildRidge
+            ++recNum; //next record in the table. This is only used in the check above to decide when to call BuildRidgeOld
         }
         this.reader.Close();
-        this.BuildRidge(prow, xslot, pbin - this.minBin);
+        this.BuildRidgeOld(prow, xslot, pbin - this.minBin);
     }
 
     public bool doingEdges; //Stauffer - seems to determine if a bevel is drawn at top of column
     public float bevelFraction;
-    public virtual void BuildRidge(int row, int numx /*== num of columns*/, int binindex)
+    public virtual void BuildRidgeOld(int row, int numx /*== num of columns*/, int binindex)
     {
         Color thisColor = default(Color);
         Color sideColor = default(Color);
@@ -1809,6 +1810,7 @@ public partial class HeatVRML : MonoBehaviour
         return retColor;
     }
 
+    //Color Maps
     public virtual Color GreenRed(float inv, bool isSide)
     {
         float green = 0.0f;
@@ -2218,22 +2220,281 @@ public partial class HeatVRML : MonoBehaviour
 
         //For each row, setup data and draw a ridge
         DataVariable hVar = dataMgr.HeightVar;
-        this.colVals = new int[this.numCols]; //As far as I understand, just an array of column numbers. I figure in case orig data has unusually numbering?
-        for (int c = 0; c < hVar.numDataCols; c++)
-            this.colVals[c] = c;
         this.topVals = new int[this.numCols]; //vals get init'ed to 0
         this.sideVals = new int[this.numCols];//vals get init'ed to 0
 
         for ( int row = 0; row < hVar.numDataRows; row++)
         {
-            //NOTE - these are class properties, that then get used in BuildRidge
+            //NOTE - these are class properties, that then get used in BuildRidgeOld
             this.heightVals = hVar.Data[row];
             //this.topVals[xslot] = top; leave as 0 for now
             //this.sideVals[xslot] = side; leave as 0 for now
-            this.BuildRidge(row, this.numCols, this.minBin);//always one bin for now
+            this.NewBuildRidge(row, this.numCols, this.minBin);//always one bin for now
         }
     }
-    
+
+    public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
+    {
+        Color topColor = default(Color);
+        Color sideColor = default(Color);
+        float thisX = 0.0f;
+        float thisZ = 0.0f;
+        float prevX = 0.0f;
+        float prevZ = 0.0f;
+        float nextX = 0.0f;
+        float nextZ = 0.0f;
+        float leftZ = 0.0f;
+        float rightZ = 0.0f;
+        float leftX = 0.0f;
+        float rightX = 0.0f;
+        float front = 0.0f;
+        float back = 0.0f;
+        float edgeZ = 0.0f;
+        float yoff = (row - this.minRow) * this.rowIncrement;
+        if (this.bInterpolateY)
+        {
+            yoff = yoff + (binindex * this.binIncrement);
+        }
+        else
+        {
+            yoff = yoff + (binindex * this.plotIncrement);
+        }
+        //Stauffer - 'proto' is from protomesh prefab. It's a private global instanced above.
+        GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z + yoff), Quaternion.identity);
+        newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeight, this.tokenWidth);
+        Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
+        this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
+        IdentifyRidge idScript = (IdentifyRidge)newRidge.gameObject.GetComponent(typeof(IdentifyRidge));
+        idScript.row = row;
+        idScript.bin = binindex + this.minBin;
+
+        //Row labels
+        GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.xzySceneCorner.x + this.xSceneSize, this.xzySceneCorner.y + 1f, (this.xzySceneCorner.z + yoff) + (this.tokenWidth * 0.1f)), this.protolabel.transform.rotation);
+        if ((row > this.numRowLabels) || (this.rowLabels[row] == null))
+        {
+            ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = row.ToString();
+        }
+        else
+        {
+            ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = this.rowLabels[row];
+        }
+
+        {
+            float _39 = 
+            /*
+	        // The following causes an error in setting the sharedMesh whenever it traps an error
+	        try{
+		        newLabel.GetComponent(TextMesh).text = rowLabels[row];
+	        }
+	        catch(fair)
+	        {
+		        newLabel.GetComponent(TextMesh).text = row.ToString();
+	        }
+	        */
+            this.tokenWidth * 0.5f;
+            Vector3 _40 = newLabel.transform.localScale;
+            _40.x = _39;
+            newLabel.transform.localScale = _40;
+        }
+
+        {
+            float _41 = this.tokenWidth * 0.5f;
+            Vector3 _42 = newLabel.transform.localScale;
+            _42.y = _41;
+            newLabel.transform.localScale = _42;
+        }
+
+        {
+            float _43 = this.tokenWidth * 0.5f;
+            Vector3 _44 = newLabel.transform.localScale;
+            _44.x = _43;
+            newLabel.transform.localScale = _44;
+        }
+        float minZ = 0.1f;
+        int lastInd = numx - 1;
+        float slabZ = 0.006f;
+        float edgeBite = this.bevelFraction / this.numCols;
+        // Note: this makes a 45 degree bevel at the curreent graph height, but it will be a different angle when height is changed.
+        float topBite = (edgeBite * this.xSceneSize) / (this.zSceneSize * this.currGraphHeight);
+        MeshMaker mm = new MeshMaker();
+        
+        for (int i = 0; i < numx; i++) //loop over columns
+        {
+            if ((i % 2) == 0)
+            {
+                front = 0f;
+                back = 1f;
+            }
+            else
+            {
+                front = 0.001f;
+                back = 1.001f;
+            }
+            topColor = this.MakeColor(i, binindex, false);
+            sideColor = this.MakeColor(i, binindex, true);
+
+            //Height
+            if (i > 0)
+            {
+                prevX = thisX;
+                prevZ = thisZ;
+                thisX = nextX;
+                thisZ = nextZ;
+            }
+            else
+            {
+                thisX = ((0.5f) - this.minCol) * this.xScale;
+                thisZ = ((dataMgr.HeightVar.Data[row][0] - this.minHeight) * this.zScale) + minZ;
+                prevX = thisX - this.xScale;
+                prevZ = thisZ;
+            }
+            if (i < lastInd)
+            {
+                nextX = ((i + 1 + 0.5f) - this.minCol) * this.xScale;
+                nextZ = ((dataMgr.HeightVar.Data[row][i + 1] - this.minHeight) * this.zScale) + minZ;
+            }
+            else
+            {
+                nextX = nextX + this.xScale;
+            }
+            leftZ = (prevZ + thisZ) / 2f;
+            leftX = (prevX + thisX) / 2f;
+            rightZ = (thisZ + nextZ) / 2f;
+            rightX = (thisX + nextX) / 2f;
+
+            mm.SetColor(topColor);
+            if (this.bConnectX) // ribbon
+            {
+                mm.Verts(leftX, leftZ, front, 1, 0);
+                mm.Verts(leftX, leftZ, back, 0, 0);
+                mm.Verts(thisX, thisZ, front, 1, 1);
+                mm.Verts(thisX, thisZ, back, 0, 1);
+                mm.Verts(rightX, rightZ, front, 1, 0);
+                mm.Verts(rightX, rightZ, back, 0, 0);
+                mm.Tris(0, 1, 2, 2, 1, 3, 2, 3, 4, 5, 4, 3);
+                // make bottom
+                if (!this.bExtendZ)
+                {
+                    mm.Verts(leftX, leftZ - slabZ, front, 1, 0);
+                    mm.Verts(leftX, leftZ - slabZ, back, 0, 0);
+                    mm.Verts(thisX, thisZ - slabZ, front, 1, 1);
+                    mm.Verts(thisX, thisZ - slabZ, back, 0, 1);
+                    mm.Verts(rightX, rightZ - slabZ, front, 1, 0);
+                    mm.Verts(rightX, rightZ - slabZ, back, 0, 0);
+                    mm.Tris(2, 1, 0, 3, 1, 2, 4, 3, 2, 3, 4, 5);
+                }
+                // make sides
+                mm.SetColor(sideColor);
+                mm.Verts(leftX, leftZ, front, 0, 1);
+                mm.Verts(leftX, leftZ, back, 1, 1);
+                mm.Verts(leftX, this.bExtendZ ? 0f : leftZ - slabZ, front, 0, 0);
+                mm.Verts(leftX, this.bExtendZ ? 0f : leftZ - slabZ, back, 1, 0);
+                mm.Verts(thisX, thisZ, front, 0.5f, 1);
+                mm.Verts(thisX, thisZ, back, 0.5f, 1);
+                mm.Verts(thisX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0.5f, 0);
+                mm.Verts(thisX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0.5f, 0);
+                mm.Verts(rightX, rightZ, front, 0, 1);
+                mm.Verts(rightX, rightZ, back, 1, 1);
+                mm.Verts(rightX, this.bExtendZ ? 0f : rightZ - slabZ, front, 0, 0);
+                mm.Verts(rightX, this.bExtendZ ? 0f : rightZ - slabZ, back, 0, 0);
+                mm.Tris(0, 4, 6, 0, 6, 2, 1, 7, 5, 1, 3, 7);
+                mm.Tris(4, 10, 6, 4, 8, 10, 5, 7, 11, 5, 11, 9);
+            }
+            else
+            {
+                // tile
+                if (this.doingEdges) //Seems to mean draw a bevel
+                {
+                    edgeZ = thisZ - topBite;
+                    // draw top
+                    mm.SetColor(topColor);
+                    mm.Verts(leftX + edgeBite, thisZ, front, 1, 1);
+                    mm.Verts(leftX + edgeBite, thisZ, back, 0, 1);
+                    mm.Verts(rightX - edgeBite, thisZ, front, 1, 1);
+                    mm.Verts(rightX - edgeBite, thisZ, back, 0, 1);
+                    // draw bevel
+                    mm.Verts(leftX, edgeZ, front, 1, 0.9f);
+                    mm.Verts(leftX, edgeZ, back, 0, 0.9f);
+                    mm.Verts(rightX, edgeZ, front, 1, 0.9f);
+                    mm.Verts(rightX, edgeZ, back, 0, 0.9f);
+                    mm.Tris(0, 1, 2, 2, 1, 3);
+                    mm.Tris(4, 2, 6, 2, 4, 0, 6, 3, 7, 3, 6, 2);
+                    mm.Tris(7, 1, 5, 1, 7, 3, 5, 0, 4, 0, 5, 1);
+                    // draw bottom
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Tris(2, 1, 0, 3, 1, 2);
+                    // draw sides
+                    mm.SetColor(sideColor);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
+                    mm.Verts(leftX, edgeZ, front, 0, 0.9f);
+                    mm.Verts(rightX, edgeZ, front, 1, 0.9f);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
+                    mm.Verts(leftX, edgeZ, back, 1, 0.9f);
+                    mm.Verts(rightX, edgeZ, back, 0, 0.9f);
+                    mm.Tris(0, 2, 1, 1, 2, 3);
+                    mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
+                    mm.Tris(1, 3, 5, 3, 7, 5);
+                }
+                else
+                {
+                    edgeZ = thisZ;
+                    // draw top
+                    mm.SetColor(topColor);
+                    mm.Verts(leftX, edgeZ, front, 1, 1);
+                    mm.Verts(leftX, edgeZ, back, 0, 1);
+                    mm.Verts(rightX, edgeZ, front, 1, 1);
+                    mm.Verts(rightX, edgeZ, back, 0, 1);
+                    mm.Tris(0, 1, 2, 2, 1, 3);
+                    // draw bottom
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Tris(0, 1, 2, 2, 1, 3);
+                    // draw sides
+                    mm.SetColor(sideColor);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
+                    mm.Verts(leftX, edgeZ, front, 0, 1);
+                    mm.Verts(rightX, edgeZ, front, 1, 1);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
+                    mm.Verts(leftX, edgeZ, back, 1, 1);
+                    mm.Verts(rightX, edgeZ, back, 0, 1);
+                    mm.Tris(0, 2, 1, 1, 2, 3);
+                    mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
+                    mm.Tris(1, 3, 5, 3, 7, 5);
+                }
+            }
+        }
+        mm.Attach(amesh);
+
+        try
+        {
+            //Stauffer
+            //'sharedMesh' throws an error with #pragma strict - not a member of Collider.
+            //There is a MeshCollider::sharedMesh, so my guess is that this addition of
+            // amesh isn't doing anything in the original code.
+            //newRidge is of type 'protomesh' prefab from project. It has a Box Collider.
+            //Must be found by <Collider>, as it's presumably a sub-class. Is it also a subclass of MeshCollider? I guess not if it doesn't have sharedMesh member.
+            //
+            //Commenting out until can be sorted out
+            //newRidge.transform.GetComponent.< Collider > ().sharedMesh = amesh;
+        }
+        catch
+        {
+            //Debug.Log("Failed to set collider mesh in dataset " + selTable + " row " + row + ", bin " + binindex);
+        }
+        this.xRidges[this.numRidges].AddRidge(newRidge, amesh, binindex, row);
+        this.xRidges[this.numRidges++].AddLabel(newLabel);
+    }
+
+
     [UnityEngine.RPC]
     public virtual void DatasetSelected(string newDB, bool newBConnectX, bool newBExtendZ, bool newBInterpolateY, int newTopColorChoice, int newSideColorChoice, float newGraphHeight)
     {
@@ -2379,7 +2640,7 @@ public partial class HeatVRML : MonoBehaviour
         }
 
         //Draw it!
-        this.ShowData();
+        this.ShowDataOld();
 
         if (this.bScrollBin)
         {
