@@ -30,7 +30,10 @@ public partial class HeatVRML : MonoBehaviour
     //Data
     //New model of self-contained data objects
     DataManager dataMgr;
-
+    
+    //UI
+    UIManager uiMgr;
+    
     // window numbers
     private int DSwin;
     private int STYLEwin;
@@ -235,7 +238,12 @@ public partial class HeatVRML : MonoBehaviour
     public virtual void Start()
     {
         //--- New
-        dataMgr = new DataManager();
+        dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
+        if (dataMgr == null)
+            Debug.LogError("dataMgr == null");
+        uiMgr = GameObject.Find("UIManager").GetComponent<UIManager>();
+        if (uiMgr == null)
+            Debug.LogError("uiMgs == null");
         //---
 
         int i = 0;
@@ -387,7 +395,7 @@ public partial class HeatVRML : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.O))
         {
-            if (dataMgr.DebugQuickChooseAndLoadFile())
+            if (dataMgr.DebugQuickChooseLoadDisplayFile())
             {
                 //take the new data and draw it
                 Debug.Log("Loaded file with success");

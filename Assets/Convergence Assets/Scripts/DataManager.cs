@@ -22,10 +22,17 @@ public class DataVariable : CSVReaderData
 
     private bool minMaxReady;
 
+    /// <summary> Filename of the file used to load this variable </summary>
+    private string filename;
+    public string Filename { get { return filename; } set { filename = value; } }
+
+    /// <summary> A label for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
+    private string label;
+    public string Label { get { return label; } set { label = value; } }
+
     public DataVariable()
     {
         //(parameter-less) Base ctor is called implicitly
-
     }
 
     public override void Clear()
@@ -35,8 +42,19 @@ public class DataVariable : CSVReaderData
         MinValue = float.MinValue;
         MaxValue = float.MaxValue;
         minMaxReady = false;
+        label = "Unassigned";
+        filename = "None";
     }
 
+    /// <summary>
+    /// Run verification on this data variable without getting an error message return.
+    /// </summary>
+    /// <returns>True if ok. False otherwise.</returns>
+    public bool VerifyData()
+    {
+        string dummy;
+        return VerifyData(out dummy);
+    }
     /// <summary>
     /// Run verification on this data variable. 
     /// </summary>
@@ -94,73 +112,207 @@ public class DataVariable : CSVReaderData
 /// Data manager object. Singleton
 /// Holds data objects for individual variables, along with options and state.
 /// </summary>
-public class DataManager {
+public class DataManager : MonoBehaviour {
 
-    List<DataVariable> variables;
+    private UIManager uiMgr;
+
+    /// <summary>
+    /// List of loaded variables. These may or may not be assigned to visual parameters.
+    /// </summary>
+    private List<DataVariable> variables;
 
     /// <summary> Check if a variable has been assigned to the height param </summary>
-    public bool HeightVarIsAssigned { get { return(heightVarInd >= 0 && heightVarInd < variables.Count); } }
-    public bool TopColorVarIsAssigned { get { return (topColorVarInd >= 0 && topColorVarInd < variables.Count); } }
-    public bool SideColorVarIsAssigned { get { return (sideColorVarInd >= 0 && sideColorVarInd < variables.Count); } }
+    public bool HeightVarIsAssigned { get { return(HeightVar != null && HeightVar.VerifyData()); } }
+    public bool TopColorVarIsAssigned { get { return (TopColorVar != null && TopColorVar.VerifyData()); } }
+    public bool SideColorVarIsAssigned { get { return (SideColorVar != null && SideColorVar.VerifyData()); } }
 
-    /// <summary> Accessor to variable currently assigned to height param </summary>
-    public DataVariable HeightVar { get { return variables[heightVarInd]; } }
-    public DataVariable TopColorVar { get { return variables[topColorVarInd]; } }
-    public DataVariable SideColorVar { get { return variables[sideColorVarInd]; } }
-
-    //Index values for variable assignments to visual params
-    /// <summary> Index into array of variables of the var currently assigned to height param.
-    /// -1 if not set. </summary>
-    private int heightVarInd;
-    private int topColorVarInd;
-    private int sideColorVarInd;
-
-    public DataManager()
+    /// <summary> Accessor to variable currently assigned to height param 
+    /// Note - returns null if not assigned. </summary>
+    private DataVariable heightVar;
+    public DataVariable HeightVar
     {
+        get { return heightVar; }
+        set { if (!variables.Contains(value)) Debug.LogError("Assigning heightVar to variable not in list.");
+            heightVar = value;
+            Debug.Log("HeightVar set to var with label " + value.Label); }
+    }
+    private DataVariable topColorVar;
+    public DataVariable TopColorVar
+    {
+        get { return topColorVar; }
+        set { if (!variables.Contains(value)) Debug.LogError("Assigning topColorVar to variable not in list.");
+            topColorVar = value; }
+    }
+    private DataVariable sideColorVar;
+    public DataVariable SideColorVar
+    {
+        get { return sideColorVar; }
+        set { if (!variables.Contains(value)) Debug.LogError("Assigning sideColorVar to variable not in list.");
+            sideColorVar = value; }
+    }
+
+    public void AssignHeightVarByLabel(string label)
+    {
+        HeightVar = GetVariableByLabel(label);
+    }
+    public void AssignTopColorVarByLabel(string label)
+    {
+        TopColorVar = GetVariableByLabel(label);
+    }
+    public void AssignSideColorVarByLabel(string label)
+    {
+        SideColorVar = GetVariableByLabel(label);
+    }
+
+    /// <summary>
+    /// Return a loaded DataVariable by label.
+    /// Note that labels aren't guaranteed to be unique, so this returns first match.
+    /// </summary>
+    /// <param name="label"></param>
+    /// <returns>null if no match</returns>
+    public DataVariable GetVariableByLabel(string label)
+    {
+        foreach( DataVariable var in variables)
+        {
+            if (var.Label == label)
+                return var;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Return a list of labels for each loaded DataVariable
+    /// Note that labels aren't guaranteed to be unique.
+    /// </summary>
+    /// <returns>Empty string if none loaded</returns>
+    public List<string> GetLabels()
+    {
+        List<string> labels = new List<string>();
+        foreach(DataVariable var in variables)
+        {
+            labels.Add(var.Label);
+        }
+        return labels;
+    }
+
+    void Start()
+    {
+        uiMgr = GameObject.Find("UIManager").GetComponent<UIManager>();
+        if (uiMgr == null)
+            Debug.LogError("uiMgs == null");
         Clear();
     }
 
     private void Clear()
     {
         variables = new List<DataVariable>();
-        heightVarInd = -1;
-        topColorVarInd = -1;
-        sideColorVarInd = -1;
+        heightVar = null;
+        topColorVar = null;
+        sideColorVar = null;
     }
 
-    /// <summary>
-    /// Assign the passed DataVariable to be used for height
-    /// If invalid, the height var remains effectively unassigned.
-    /// </summary>
-    /// <param name="var"></param>
-    public void AssignHeightVar(DataVariable var)
+    public void Remove(DataVariable var)
     {
-        heightVarInd = variables.IndexOf(var); //-1 if not found
-    }
-    public void AssignTopColorVar(DataVariable var)
-    {
-        topColorVarInd = variables.IndexOf(var); //-1 if not found
-    }
-    public void AssignSideColorVar(DataVariable var)
-    {
-        sideColorVarInd = variables.IndexOf(var); //-1 if not found
+        if (var == null)
+            return;
+
+        if( variables.Contains(var))
+        {
+            variables.Remove(var);
+            if( heightVar == var)
+                heightVar = null;
+            if (topColorVar == var)
+                topColorVar = null;
+            if (sideColorVar == var)
+                sideColorVar = null;
+        }
+        else
+        {
+            Debug.LogWarning("Tried removing variable that's not in variable list.");
+        }
+
+        //Update UI
+        uiMgr.DataUpdated();
     }
 
     /// <summary>
     /// For Debugging. Choose and load a file and assign it to height param.
     /// </summary>
     /// <returns></returns>
-    public bool DebugQuickChooseAndLoadFile()
+    public bool DebugQuickChooseLoadDisplayFile()
     {
-        string[] path = StandaloneFileBrowser.OpenFilePanel("Open File", "", "", false/*mutli-select*/);
+        DataVariable dataVar;
+        bool cancelled;
+        bool success = ChooseAndReadFile(out dataVar, out cancelled);
+        if (success)
+        {
+            Debug.Log("Success choosing and loading file.");
+            variables.Add(dataVar);
+            HeightVar = dataVar;
+        }
+        else if (cancelled)
+        {
+            Debug.Log("User cancelled file choice.");
+        }
+        else
+            Debug.Log("Other error while reading file.");
+        return success;
+    }
+
+    /// <summary> Choose a file via file picker, try to load/read it, and add to variable list if successful. </summary>
+    /// <returns></returns>
+    public bool ChooseLoadAddFile(out DataVariable dataVar)
+    {
+        bool cancelled;
+        bool success = ChooseAndReadFile(out dataVar, out cancelled);
+        if (success)
+        {
+            Debug.Log("Success choosing and loading file.");
+            variables.Add(dataVar);
+            //Update UI
+            uiMgr.DataUpdated();
+        }
+        else
+        {
+            if (cancelled)
+            {
+                Debug.Log("User cancelled file choice.");
+            }
+            else
+            {
+                //Error message will have been reported by method above
+                Debug.Log("Other error while reading file.");
+            }
+        }
+        return success;
+    }
+
+    /// <summary>
+    /// Prompt user to choose a file with file picker.
+    /// If file is chosen, read it and assign to a new DataVariable.
+    /// </summary>
+    /// <param name="dataVariable">Returns a new DataVariable. Is valid but empty object if error or canceled.</param>
+    /// <param name="cancelled">Returns true if operation failed because user cancelled file picker.</param>
+    /// <returns>True on success. False if user cancels file picker or if there's an error.</returns>
+    public bool ChooseAndReadFile(out DataVariable dataVariable, out bool cancelled)
+    {
+        dataVariable = new DataVariable();
+        cancelled = false;
+        string[] path = StandaloneFileBrowser.OpenFilePanel("Open .csv or Tab-Delimited File", "", "", false/*mutli-select*/);
         if (path.Length == 0)
+        {
+            //User cancelled filepicker
+            cancelled = true;
             return false;
-        foreach (string s in path)
-            Debug.Log(s);
+        }
+
+        //foreach (string s in path)
+        //    Debug.Log(s);
 
         bool success = false;
         string errorMsg = "Unknown Error";
-        DataVariable dataVariable = new DataVariable();
+
+        //Cast to base class for reading in the file
         CSVReaderData data = (CSVReaderData)dataVariable; // new CSVReaderData();
         try
         {
@@ -173,8 +325,7 @@ public class DataManager {
         }
         if (success)
         {
-            variables.Add(dataVariable);
-            AssignHeightVar(dataVariable);
+            dataVariable.Filename = path[0];
         }
         else
         {
