@@ -394,20 +394,21 @@ public partial class HeatVRML : MonoBehaviour
     public virtual void Update()
     {
         if (Input.GetKeyDown(KeyCode.O))
-        {
+        {/*
             if (dataMgr.DebugQuickChooseLoadDisplayFile())
             {
                 //take the new data and draw it
                 Debug.Log("Loaded file with success");
                 NewPrepareAndDrawData();
             }
+            */
         }
 
-        if (Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.F5))
+        if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
         {
             this.allHidden = !this.allHidden;
         }
-        if (Input.GetKeyDown(KeyCode.H) || Input.GetKeyDown(KeyCode.F1))
+        if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
         {
             this.showHelp = !this.showHelp;
         }

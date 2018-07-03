@@ -77,7 +77,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
     {
         List<Dropdown.OptionData> list = new List<Dropdown.OptionData>();
 
-        foreach (string label in dataMgr.GetLabels()) //NOTE - I don't really like exposing variables property like this
+        foreach (string label in dataMgr.GetLabels())
         {
             Dropdown.OptionData od = new Dropdown.OptionData
             {

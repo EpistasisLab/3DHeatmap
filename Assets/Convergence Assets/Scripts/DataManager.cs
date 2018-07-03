@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -42,7 +43,7 @@ public class DataVariable : CSVReaderData
         MinValue = float.MinValue;
         MaxValue = float.MaxValue;
         minMaxReady = false;
-        label = "Unassigned";
+        label = "DefaultLabel";
         filename = "None";
     }
 
@@ -180,20 +181,6 @@ public class DataManager : MonoBehaviour {
         return null;
     }
 
-    /// <summary>
-    /// Return a list of labels for each loaded DataVariable
-    /// Note that labels aren't guaranteed to be unique.
-    /// </summary>
-    /// <returns>Empty string if none loaded</returns>
-    public List<string> GetLabels()
-    {
-        List<string> labels = new List<string>();
-        foreach(DataVariable var in variables)
-        {
-            labels.Add(var.Label);
-        }
-        return labels;
-    }
 
     void Start()
     {
@@ -236,6 +223,21 @@ public class DataManager : MonoBehaviour {
     }
 
     /// <summary>
+    /// Return a list of the label for each loaded DataVariable
+    /// Note that labels aren't guaranteed to be unique.
+    /// </summary>
+    /// <returns>Empty string if none loaded</returns>
+    public List<string> GetLabels()
+    {
+        List<string> labels = new List<string>();
+        foreach (DataVariable var in variables)
+        {
+            labels.Add(var.Label);
+        }
+        return labels;
+    }
+
+    /// <summary>
     /// For Debugging. Choose and load a file and assign it to height param.
     /// </summary>
     /// <returns></returns>
@@ -246,7 +248,7 @@ public class DataManager : MonoBehaviour {
         bool success = ChooseAndReadFile(out dataVar, out cancelled);
         if (success)
         {
-            Debug.Log("Success choosing and loading file.");
+            Debug.Log("DEBUG: Success choosing and loading file.");
             variables.Add(dataVar);
             HeightVar = dataVar;
         }
@@ -269,6 +271,8 @@ public class DataManager : MonoBehaviour {
         {
             Debug.Log("Success choosing and loading file.");
             variables.Add(dataVar);
+            //Get filename and set it to label as default
+            dataVar.Label = Path.GetFileNameWithoutExtension(dataVar.Filename);
             //Update UI
             uiMgr.DataUpdated();
         }
