@@ -2969,7 +2969,8 @@ public partial class HeatVRML : MonoBehaviour
         this.colWidth = 100;
         this.lineWidth = 20;
         this.scrollHeight = 112;
-        this.showHelp = true;
+        this.showHelp = false;
+        this.allHidden = true; //stauffer add - don't show old gui
         this.oldHelpPage = 1;
         this.menuScrollPos = new Vector2(0f, 0f);
         this.vrmlModelMM = 200f;

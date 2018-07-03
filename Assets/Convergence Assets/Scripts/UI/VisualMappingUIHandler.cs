@@ -53,9 +53,12 @@ public class VisualMappingUIHandler : MonoBehaviour {
         DataVariable var = dataMgr.GetVariableByLabel( label );
         if( var == null)
         {
-            Debug.LogError("null var returned for label " + label);
+            Debug.LogWarning("null var returned for label " + label);
             return;
         }
+        AssignVarsByCurrentChoices();
+        dataMgr.DebugDumpVariables(false);
+        /*
         if (dd == heightDropdown)
             dataMgr.AssignHeightVarByLabel(label);
         else if (dd == topColorDropdown)
@@ -64,6 +67,49 @@ public class VisualMappingUIHandler : MonoBehaviour {
             dataMgr.AssignSideColorVarByLabel(label);
         else
             Debug.LogError("Unmatched dropdown component");
+        */
+    }
+
+    /// <summary>
+    /// Take the current dropdown choices and use them to assign vars to visual mapping, if vars are valid
+    /// </summary>
+    private void AssignVarsByCurrentChoices()
+    {
+        string label;
+        label = heightDropdown.captionText.text;
+        if (dataMgr.GetVariableByLabel(label) != null)
+            dataMgr.AssignHeightVarByLabel(label);
+        label = topColorDropdown.captionText.text;
+        if (dataMgr.GetVariableByLabel(label) != null)
+            dataMgr.AssignTopColorVarByLabel(label);
+        label = sideColorDropdown.captionText.text;
+        if (dataMgr.GetVariableByLabel(label) != null)
+            dataMgr.AssignSideColorVarByLabel(label);
+    }
+
+    private void SetChoicesByCurrentVars()
+    {
+        SetChoiceIndexByVarLabel(heightDropdown, dataMgr.HeightVar);
+        SetChoiceIndexByVarLabel(topColorDropdown, dataMgr.TopColorVar);
+        SetChoiceIndexByVarLabel(sideColorDropdown, dataMgr.SideColorVar);
+    }
+
+    private void SetChoiceIndexByVarLabel(Dropdown dd, DataVariable var)
+    {
+        int index;
+        if (var == null)
+            index = 0;
+        else
+            //Look at each item in the choice list until we get a match
+            for ( index = 0; index < dd.options.Count; index++)
+            {
+                if (dd.options[index].text == var.Label)
+                    break;
+            }
+        //If no match, defaults to first item in dropdown
+        if (index == dd.options.Count)
+            index = 0;
+        dd.value = index;
     }
 
     /// <summary>
@@ -71,6 +117,12 @@ public class VisualMappingUIHandler : MonoBehaviour {
     public void RefreshUI()
     {
         PopulateDropdownItems();
+        //Since items in the dropdown may (probably) have changed, find ones that match
+        // current variable mappings and set the dropdown to match that.
+        SetChoicesByCurrentVars();
+        //Now call this since we want to make default assignments when a new
+        // var is added or only one var and can't use choice dropdown.
+        AssignVarsByCurrentChoices();
     }
 
     void PopulateDropdownItems()

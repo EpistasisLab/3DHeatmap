@@ -104,8 +104,10 @@ public class DataVariable : CSVReaderData
 
     public override void DumpNonData()
     {
-        base.DumpNonData();
+        Debug.Log("Label:    " + Label);
+        Debug.Log("Filename: " + Filename);
         Debug.Log("Min, Max: " + MinValue + ", " + MaxValue);
+        base.DumpNonData();
     }
 }
 
@@ -134,8 +136,9 @@ public class DataManager : MonoBehaviour {
     {
         get { return heightVar; }
         set { if (!variables.Contains(value)) Debug.LogError("Assigning heightVar to variable not in list.");
-            heightVar = value;
-            Debug.Log("HeightVar set to var with label " + value.Label); }
+                heightVar = value;
+                //Debug.Log("HeightVar set to var with label " + value.Label);
+            }
     }
     private DataVariable topColorVar;
     public DataVariable TopColorVar
@@ -237,30 +240,6 @@ public class DataManager : MonoBehaviour {
         return labels;
     }
 
-    /// <summary>
-    /// For Debugging. Choose and load a file and assign it to height param.
-    /// </summary>
-    /// <returns></returns>
-    public bool DebugQuickChooseLoadDisplayFile()
-    {
-        DataVariable dataVar;
-        bool cancelled;
-        bool success = ChooseAndReadFile(out dataVar, out cancelled);
-        if (success)
-        {
-            Debug.Log("DEBUG: Success choosing and loading file.");
-            variables.Add(dataVar);
-            HeightVar = dataVar;
-        }
-        else if (cancelled)
-        {
-            Debug.Log("User cancelled file choice.");
-        }
-        else
-            Debug.Log("Other error while reading file.");
-        return success;
-    }
-
     /// <summary> Choose a file via file picker, try to load/read it, and add to variable list if successful. </summary>
     /// <returns></returns>
     public bool ChooseLoadAddFile(out DataVariable dataVar)
@@ -338,4 +317,49 @@ public class DataManager : MonoBehaviour {
         }
         return success;
     }
+
+    public void DebugDumpVariables(bool verbose)
+    {
+        Debug.Log("============= Variable Mappings: ");
+        Debug.Log("HeightVar: " + HeightVar == null ? "unassigned" : HeightVar.Label);
+        Debug.Log("TopColorVar: " + TopColorVar == null ? "unassigned" : TopColorVar.Label);
+        Debug.Log("SideColorVar: " + SideColorVar == null ? "unassigned" : SideColorVar.Label);
+        Debug.Log("------------------------------");
+        Debug.Log("Dumping data variable headers: ");
+        foreach(DataVariable var in variables)
+        {
+            if (verbose)
+                var.DumpNonData();
+            else
+                Debug.Log("Label: " + var.Label);
+            if(verbose)
+                Debug.Log("------------------------------");
+        }
+        Debug.Log("=============================== end");
+    }
+
+    /// <summary>
+    /// For Debugging. Choose and load a file and assign it to height param.
+    /// </summary>
+    /// <returns></returns>
+    public bool DebugQuickChooseLoadDisplayFile()
+    {
+        DataVariable dataVar;
+        bool cancelled;
+        bool success = ChooseAndReadFile(out dataVar, out cancelled);
+        if (success)
+        {
+            Debug.Log("DEBUG: Success choosing and loading file.");
+            variables.Add(dataVar);
+            HeightVar = dataVar;
+        }
+        else if (cancelled)
+        {
+            Debug.Log("User cancelled file choice.");
+        }
+        else
+            Debug.Log("Other error while reading file.");
+        return success;
+    }
+
 }

@@ -9,8 +9,10 @@ public class UIManager : MonoBehaviour {
     private VisualMappingUIHandler visualMappingUIHandler;
     private GameObject toolTipPanel;
     private Text toolTipText;
+
     //The main object for the app
     private HeatVRML heatVRML;
+    private DataManager dataMgr;
 
 	// Use this for initialization
 	void Start () {
@@ -29,6 +31,9 @@ public class UIManager : MonoBehaviour {
         heatVRML = GameObject.Find("Prefab objectify").GetComponent<HeatVRML>();
         if (heatVRML == null)
             Debug.LogError("heatVRML == null");
+        dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
+        if (dataMgr == null)
+            Debug.LogError("dataMgr == null");
         TooltipHide();
 	}
 	
@@ -61,6 +66,8 @@ public class UIManager : MonoBehaviour {
     public void DataUpdated()
     {
         visualMappingUIHandler.RefreshUI();
+        //Debug
+        dataMgr.DebugDumpVariables(false/*verbose*/);   
     }
 
     public void OnRedrawButtonClick()
