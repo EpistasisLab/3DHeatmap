@@ -70,6 +70,15 @@ public class UIManager : MonoBehaviour {
         dataMgr.DebugDumpVariables(false/*verbose*/);   
     }
 
+    /// <summary>
+    /// Pass-thru func
+    /// </summary>
+    /// <returns></returns>
+    public int[] GetColorTableAssignments()
+    {
+        return visualMappingUIHandler.GetColorTableAssignments();
+    }
+
     public void OnRedrawButtonClick()
     {
         heatVRML.NewPrepareAndDrawData();

@@ -945,9 +945,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_IgnoreLayout: 0
-  m_MinWidth: 80
+  m_MinWidth: 40
   m_MinHeight: 25
-  m_PreferredWidth: 90
+  m_PreferredWidth: 40
   m_PreferredHeight: 30
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
@@ -1045,7 +1045,7 @@ MonoBehaviour:
   m_IgnoreLayout: 0
   m_MinWidth: 200
   m_MinHeight: 25
-  m_PreferredWidth: 240
+  m_PreferredWidth: 300
   m_PreferredHeight: 30
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
@@ -1204,7 +1204,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Source File
+  m_Text: File
 --- !u!114 &114594342909501582
 MonoBehaviour:
   m_ObjectHideFlags: 1

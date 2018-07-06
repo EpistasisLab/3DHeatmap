@@ -13,9 +13,9 @@ public class VisualMappingUIHandler : MonoBehaviour {
     private DataManager dataMgr;
 
     //Convenience refs to the dropdown UI elements for each visual mapping
-    private Dropdown heightDropdown;
-    private Dropdown topColorDropdown;
-    private Dropdown sideColorDropdown;
+    private Dropdown heightLabelDropdown;
+    private Dropdown topColorLabelDropdown;
+    private Dropdown sideColorLabelDropdown;
 
     // Use this for initialization
     void Start()
@@ -25,14 +25,15 @@ public class VisualMappingUIHandler : MonoBehaviour {
             Debug.LogError("dataMgr == null");
 
         //Assign the dropdown object refs. 
-        heightDropdown = transform.Find("HeightPanel").gameObject.GetComponentInChildren<Dropdown>();
-        if (heightDropdown == null)
+        //These seems like a clumsy way to handle this.
+        heightLabelDropdown = transform.Find("HeightPanel").transform.Find("LabelDropdown").gameObject.GetComponentInChildren<Dropdown>();
+        if (heightLabelDropdown == null)
             Debug.LogError("heightDropdown == null");
-        topColorDropdown = transform.Find("TopColorPanel").gameObject.GetComponentInChildren<Dropdown>();
-        if (topColorDropdown == null)
+        topColorLabelDropdown = transform.Find("TopColorPanel").transform.Find("LabelDropdown").gameObject.GetComponentInChildren<Dropdown>();
+        if (topColorLabelDropdown == null)
             Debug.LogError("topColorDropdown == null");
-        sideColorDropdown = transform.Find("SideColorPanel").gameObject.GetComponentInChildren<Dropdown>();
-        if (sideColorDropdown == null)
+        sideColorLabelDropdown = transform.Find("SideColorPanel").transform.Find("LabelDropdown").gameObject.GetComponentInChildren<Dropdown>();
+        if (sideColorLabelDropdown == null)
             Debug.LogError("sideColorDropdown == null");
     }
 
@@ -42,21 +43,33 @@ public class VisualMappingUIHandler : MonoBehaviour {
 	}
 
     /// <summary>
-    /// Receive a value change event from one of the dropdown elements in the panel.
+    /// Return color table assignments based on current dropdown states.
+    /// </summary>
+    /// <returns>An array of color table ID's, indexed via DataManager.Mapping values</returns>
+    public int[] GetColorTableAssignments()
+    {
+        int[] assigns = new int[3];
+        assigns[(int)DataManager.Mapping.Height] = -1; //N/A
+        assigns[(int)DataManager.Mapping.TopColor] = transform.Find("TopColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
+        assigns[(int)DataManager.Mapping.SideColor] = transform.Find("SideColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
+        return assigns;
+    }
+
+    /// <summary>
+    /// Receive a value change event from one of the label dropdown elements in the panel.
     /// </summary>
     /// <param name="go"></param>
-    public void OnValueChange(GameObject go)
+    public void OnLabelValueChange(GameObject go)
     {
-        Debug.Log("Value Change. go.GetInstanceID() " + go.GetInstanceID());
-        Dropdown dd = go.GetComponentInChildren<Dropdown>();
-        string label = dd.captionText.text;
+        //Debug.Log("Value Change. go.GetInstanceID() " + go.GetInstanceID());
+        string label = go.GetComponentInChildren<Dropdown>().captionText.text;
         DataVariable var = dataMgr.GetVariableByLabel( label );
         if( var == null)
         {
             Debug.LogWarning("null var returned for label " + label);
             return;
         }
-        AssignVarsByCurrentChoices();
+        AssignVarsByCurrentLabelChoices();
         dataMgr.DebugDumpVariables(false);
         /*
         if (dd == heightDropdown)
@@ -73,28 +86,42 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// <summary>
     /// Take the current dropdown choices and use them to assign vars to visual mapping, if vars are valid
     /// </summary>
-    private void AssignVarsByCurrentChoices()
+    private void AssignVarsByCurrentLabelChoices()
     {
+        
+        dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
+        dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
+        dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
+        /*
         string label;
-        label = heightDropdown.captionText.text;
-        if (dataMgr.GetVariableByLabel(label) != null)
-            dataMgr.AssignHeightVarByLabel(label);
+        //label = heightDropdown.captionText.text;
+        //if (dataMgr.GetVariableByLabel(label) != null)
+        //    dataMgr.AssignHeightVarByLabel(label);
         label = topColorDropdown.captionText.text;
         if (dataMgr.GetVariableByLabel(label) != null)
             dataMgr.AssignTopColorVarByLabel(label);
         label = sideColorDropdown.captionText.text;
         if (dataMgr.GetVariableByLabel(label) != null)
             dataMgr.AssignSideColorVarByLabel(label);
+        */
     }
 
-    private void SetChoicesByCurrentVars()
+    private void SetLabelChoicesByCurrentVars()
     {
-        SetChoiceIndexByVarLabel(heightDropdown, dataMgr.HeightVar);
-        SetChoiceIndexByVarLabel(topColorDropdown, dataMgr.TopColorVar);
-        SetChoiceIndexByVarLabel(sideColorDropdown, dataMgr.SideColorVar);
+        SetLabelChoiceIndexByVarLabel(heightLabelDropdown, dataMgr.HeightVar);
+        SetLabelChoiceIndexByVarLabel(topColorLabelDropdown, dataMgr.TopColorVar);
+        SetLabelChoiceIndexByVarLabel(sideColorLabelDropdown, dataMgr.SideColorVar);
     }
 
-    private void SetChoiceIndexByVarLabel(Dropdown dd, DataVariable var)
+    /// <summary>
+    /// Set the UI dropdown choice (Value) according to data variable label.
+    /// This lets us change the dropdown options/list and set the
+    /// choice back to what it was pointing at before (or the default if
+    /// its variable was removed).
+    /// </summary>
+    /// <param name="dd"></param>
+    /// <param name="var"></param>
+    private void SetLabelChoiceIndexByVarLabel(Dropdown dd, DataVariable var)
     {
         int index;
         if (var == null)
@@ -116,16 +143,16 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// Queries the DataManager for available variables and fills the dropdowns. </summary>
     public void RefreshUI()
     {
-        PopulateDropdownItems();
+        PopulateLabelDropdownItems();
         //Since items in the dropdown may (probably) have changed, find ones that match
         // current variable mappings and set the dropdown to match that.
-        SetChoicesByCurrentVars();
+        SetLabelChoicesByCurrentVars();
         //Now call this since we want to make default assignments when a new
         // var is added or only one var and can't use choice dropdown.
-        AssignVarsByCurrentChoices();
+        AssignVarsByCurrentLabelChoices();
     }
 
-    void PopulateDropdownItems()
+    void PopulateLabelDropdownItems()
     {
         List<Dropdown.OptionData> list = new List<Dropdown.OptionData>();
 

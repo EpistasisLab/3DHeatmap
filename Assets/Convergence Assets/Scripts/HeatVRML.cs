@@ -1739,6 +1739,49 @@ public partial class HeatVRML : MonoBehaviour
 
     // Stauffer - NOTE this seems to work with the currently-loaded row data,
     //   by accessing the HeatVRML class properties topVals[] and sideVals[]
+    //Skipping 'bin' stuff for now
+    public virtual Color NewMakeColor(DataManager.Mapping mapping, int row, int column)
+    {
+        bool isSide = mapping == DataManager.Mapping.SideColor;
+
+        DataVariable var = dataMgr.GetVariableByMapping(mapping);
+        int colorTableID = dataMgr.GetColorTableIdByMapping(mapping);
+        float inv = 0f;
+
+        float value = var.Data[row][column];
+        inv = (value - var.MinValue) / var.Range;
+
+        Color retColor;
+        switch (colorTableID)
+        {
+            case 0:
+                retColor = this.GreenRed(inv, isSide);
+                break;
+            case 1:
+                retColor = this.Rainbow(inv, isSide);
+                break;
+            case 2:
+                retColor = this.YellowBlue(inv, isSide);
+                break;
+            case 3:
+                retColor = this.GrayScale(inv, isSide);
+                break;
+            case 4:
+                retColor = this.ConstantColor(inv, isSide);
+                break;
+            default:
+                retColor = this.GreenRed(inv, isSide);
+                Debug.LogWarning("Unmatched color table ID: " + colorTableID);
+                break;
+        }
+        return retColor;
+    }
+
+
+
+
+    // Stauffer - NOTE this seems to work with the currently-loaded row data,
+    //   by accessing the HeatVRML class properties topVals[] and sideVals[]
     public virtual Color MakeColor(int col, int bin, bool isSide)
     {
         float inv = 0.0f;
@@ -2108,7 +2151,13 @@ public partial class HeatVRML : MonoBehaviour
         //TODO 
         // some verification of data, so we don't have to check things every time we access dataMgr
         // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
-
+        string errorMsg;
+        if( ! dataMgr.PrepareAndVerify(out errorMsg))
+        {
+            Debug.LogError("Error with data prep and verification: \n" + errorMsg);
+            return;
+        }
+        
         //Axis extents
         NewGetAxisExtents();
 
@@ -2229,15 +2278,11 @@ public partial class HeatVRML : MonoBehaviour
 
         //For each row, setup data and draw a ridge
         DataVariable hVar = dataMgr.HeightVar;
-        this.topVals = new int[this.numCols]; //vals get init'ed to 0
-        this.sideVals = new int[this.numCols];//vals get init'ed to 0
 
         for ( int row = 0; row < hVar.numDataRows; row++)
         {
             //NOTE - these are class properties, that then get used in BuildRidgeOld
             this.heightVals = hVar.Data[row];
-            //this.topVals[xslot] = top; leave as 0 for now
-            //this.sideVals[xslot] = side; leave as 0 for now
             this.NewBuildRidge(row, this.numCols, this.minBin);//always one bin for now
         }
     }
@@ -2327,9 +2372,9 @@ public partial class HeatVRML : MonoBehaviour
         float topBite = (edgeBite * this.xSceneSize) / (this.zSceneSize * this.currGraphHeight);
         MeshMaker mm = new MeshMaker();
         
-        for (int i = 0; i < numx; i++) //loop over columns
+        for (int colNum = 0; colNum < numx; colNum++) //loop over columns
         {
-            if ((i % 2) == 0)
+            if ((colNum % 2) == 0)
             {
                 front = 0f;
                 back = 1f;
@@ -2339,11 +2384,11 @@ public partial class HeatVRML : MonoBehaviour
                 front = 0.001f;
                 back = 1.001f;
             }
-            topColor = this.MakeColor(i, binindex, false);
-            sideColor = this.MakeColor(i, binindex, true);
+            topColor = this.NewMakeColor(DataManager.Mapping.TopColor, row, colNum);
+            sideColor = this.NewMakeColor(DataManager.Mapping.SideColor, row, colNum);
 
             //Height
-            if (i > 0)
+            if (colNum > 0)
             {
                 prevX = thisX;
                 prevZ = thisZ;
@@ -2357,10 +2402,10 @@ public partial class HeatVRML : MonoBehaviour
                 prevX = thisX - this.xScale;
                 prevZ = thisZ;
             }
-            if (i < lastInd)
+            if (colNum < lastInd)
             {
-                nextX = ((i + 1 + 0.5f) - this.minCol) * this.xScale;
-                nextZ = ((dataMgr.HeightVar.Data[row][i + 1] - this.minHeight) * this.zScale) + minZ;
+                nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.xScale;
+                nextZ = ((dataMgr.HeightVar.Data[row][colNum + 1] - this.minHeight) * this.zScale) + minZ;
             }
             else
             {

@@ -20,6 +20,8 @@ public class DataVariable : CSVReaderData
     private float maxValue;
     public float MinValue { get { if(!minMaxReady) CalcMinMax(); return minValue; } private set { minValue = value; } }
     public float MaxValue { get { if(!minMaxReady) CalcMinMax(); return maxValue; } private set { maxValue = value; } }
+    private float range;
+    public float Range { get { return range; } }
 
     private bool minMaxReady;
 
@@ -42,6 +44,7 @@ public class DataVariable : CSVReaderData
         base.Clear();
         MinValue = float.MinValue;
         MaxValue = float.MaxValue;
+        range = 0f;
         minMaxReady = false;
         label = "DefaultLabel";
         filename = "None";
@@ -98,6 +101,10 @@ public class DataVariable : CSVReaderData
                 }
             MaxValue = max;
             MinValue = min;
+            float t = 0.001f;
+            if (max - min < t)
+                Debug.LogWarning("Variable range is tiny: " + (max-min));
+            range = Mathf.Max( max - min, t); //just make sure it's not 0
             minMaxReady = true;
         }
     }
@@ -106,10 +113,12 @@ public class DataVariable : CSVReaderData
     {
         Debug.Log("Label:    " + Label);
         Debug.Log("Filename: " + Filename);
-        Debug.Log("Min, Max: " + MinValue + ", " + MaxValue);
+        Debug.Log("Min, Max, Range: " + MinValue + ", " + MaxValue + ", " + range);
         base.DumpNonData();
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 /// <summary>
 /// Data manager object. Singleton
@@ -117,44 +126,86 @@ public class DataVariable : CSVReaderData
 /// </summary>
 public class DataManager : MonoBehaviour {
 
+    public enum Mapping { Height, TopColor, SideColor };
+
     private UIManager uiMgr;
 
     /// <summary>
     /// List of loaded variables. These may or may not be assigned to visual parameters.
+    /// This list is separate from variableMappings to allow for > 3 variables to be loaded at once.
     /// </summary>
     private List<DataVariable> variables;
+    
+    /// <summary>
+    /// List that holds mappings of variable to visual params. Index via enum DataManagerMapping.
+    /// </summary>
+    private List<DataVariable> variableMappings;
+
+    /// <summary>
+    /// Color table IDs for the various mapping (initially just top and side colors).
+    /// Use the Mapping enums to index this for simplicity, and just ignore the value at Mapping.Height index.
+    /// </summary>
+    private int[] variableColorTableIDs;
 
     /// <summary> Check if a variable has been assigned to the height param </summary>
     public bool HeightVarIsAssigned { get { return(HeightVar != null && HeightVar.VerifyData()); } }
     public bool TopColorVarIsAssigned { get { return (TopColorVar != null && TopColorVar.VerifyData()); } }
     public bool SideColorVarIsAssigned { get { return (SideColorVar != null && SideColorVar.VerifyData()); } }
 
+    public int TopColorColorTableID { get { return variableColorTableIDs[(int)Mapping.TopColor]; } }
+    public int SideColorColorTableID { get { return variableColorTableIDs[(int)Mapping.SideColor]; } }
+
+    public DataVariable GetVariableByMapping(Mapping mapping)
+    {
+        return variableMappings[(int)mapping];
+    }
+
+    public int GetColorTableIdByMapping(Mapping mapping)
+    {
+        return variableColorTableIDs[(int)mapping];
+    }
+
     /// <summary> Accessor to variable currently assigned to height param 
     /// Note - returns null if not assigned. </summary>
     private DataVariable heightVar;
     public DataVariable HeightVar
     {
-        get { return heightVar; }
+        get { return variableMappings[(int)Mapping.Height]; }
         set { if (!variables.Contains(value)) Debug.LogError("Assigning heightVar to variable not in list.");
-                heightVar = value;
+                variableMappings[(int)Mapping.Height] = value;
                 //Debug.Log("HeightVar set to var with label " + value.Label);
             }
     }
     private DataVariable topColorVar;
     public DataVariable TopColorVar
     {
-        get { return topColorVar; }
+        get { return variableMappings[(int)Mapping.TopColor]; }
         set { if (!variables.Contains(value)) Debug.LogError("Assigning topColorVar to variable not in list.");
-            topColorVar = value; }
+            variableMappings[(int)Mapping.TopColor] = value; }
     }
     private DataVariable sideColorVar;
     public DataVariable SideColorVar
     {
-        get { return sideColorVar; }
+        get { return variableMappings[(int)Mapping.SideColor]; }
         set { if (!variables.Contains(value)) Debug.LogError("Assigning sideColorVar to variable not in list.");
-            sideColorVar = value; }
+            variableMappings[(int)Mapping.SideColor] = value; }
     }
 
+    public void AssignVariableMapping(Mapping mapping, DataVariable var)
+    {
+        //Silent return makes it easier to call this when we know sometimes
+        // var will be unset.
+        if (var == null)
+            return;
+        variableMappings[(int)mapping] = var;
+    }
+
+    public void AssignVariableMappingByLabel(Mapping mapping, string label)
+    {
+        AssignVariableMapping(mapping, GetVariableByLabel(label));
+    }
+
+    /* orig method - can be removed soon
     public void AssignHeightVarByLabel(string label)
     {
         HeightVar = GetVariableByLabel(label);
@@ -167,6 +218,7 @@ public class DataManager : MonoBehaviour {
     {
         SideColorVar = GetVariableByLabel(label);
     }
+    */
 
     /// <summary>
     /// Return a loaded DataVariable by label.
@@ -196,7 +248,13 @@ public class DataManager : MonoBehaviour {
     private void Clear()
     {
         variables = new List<DataVariable>();
-        heightVar = null;
+        variableMappings = new List<DataVariable>();
+        foreach (Mapping map in Enum.GetValues(typeof(Mapping)))
+        {
+            //Make sure these starts as null to indicate no mapping
+            variableMappings.Add(null);
+        }
+        variableColorTableIDs = new int[Enum.GetValues(typeof(Mapping)).Length];
         topColorVar = null;
         sideColorVar = null;
     }
@@ -209,8 +267,8 @@ public class DataManager : MonoBehaviour {
         if( variables.Contains(var))
         {
             variables.Remove(var);
-            if( heightVar == var)
-                heightVar = null;
+            if( HeightVar == var)
+                HeightVar = null;
             if (topColorVar == var)
                 topColorVar = null;
             if (sideColorVar == var)
@@ -238,6 +296,68 @@ public class DataManager : MonoBehaviour {
             labels.Add(var.Label);
         }
         return labels;
+    }
+
+    /// <summary>
+    /// Call before drawing/rendering.
+    /// Pulls any changed vals from UI as needed.
+    /// Runs data verification
+    /// </summary>
+    /// <returns>True if ready. False if some issue. Error message returned in errorMsg</returns>
+    public bool PrepareAndVerify(out string errorMsg)
+    {
+        errorMsg = "no error";
+
+        //get color table ids
+        //pull these from UI instead of pushing from UI so we don't
+        // have to handle when there's not an assigned var mapping.
+        //awkward
+        variableColorTableIDs = uiMgr.GetColorTableAssignments();
+
+        //Verify the data
+        bool result = VerifyData(out errorMsg);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Verify that data is ready for drawing
+    /// </summary>
+    /// <param name="errorMsg">Holds an error message when returns failed/false.</param>
+    /// <returns>True on success. False on fail.</returns>
+    private bool VerifyData(out string errorMsg)
+    {
+        if( ! HeightVarIsAssigned)
+        {
+            errorMsg = "HeightVar unassigned or invalid";
+            return false;
+        }
+        //Top and side color vars should always be set, even if just set to same as heigh.
+        if (!TopColorVarIsAssigned)
+        {
+            errorMsg = "TopColorVar unassigned or invalid";
+            return false;
+        }
+        if (!SideColorVarIsAssigned)
+        {
+            errorMsg = "SideColorVar unassigned or invalid";
+            return false;
+        }
+
+        if ( variableColorTableIDs.Length != Enum.GetValues(typeof(Mapping)).Length)
+        {
+            errorMsg = "Error with color tables. Incorrect array length.";
+            return false;
+        }
+
+        //TODO
+        //
+        //Check for duplicate data variable labels. Error if found.
+        //
+        //Check that all data has same dims
+
+        errorMsg = "no error";
+        return true;
     }
 
     /// <summary> Choose a file via file picker, try to load/read it, and add to variable list if successful. </summary>
@@ -299,7 +419,7 @@ public class DataManager : MonoBehaviour {
         CSVReaderData data = (CSVReaderData)dataVariable; // new CSVReaderData();
         try
         {
-            success = CSVReader.Read(path[0], true, true, ref data, out errorMsg);
+            success = CSVReader.Read(path[0], false, false, ref data, out errorMsg);
         }
         catch (Exception e)
         {
