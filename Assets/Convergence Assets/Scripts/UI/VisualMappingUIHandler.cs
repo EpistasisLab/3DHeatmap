@@ -158,16 +158,12 @@ public class VisualMappingUIHandler : MonoBehaviour {
 
         foreach (string label in dataMgr.GetLabels())
         {
-            Dropdown.OptionData od = new Dropdown.OptionData
-            {
-                text = label
-            };
+            Dropdown.OptionData od = new Dropdown.OptionData();
+            od.text = label;
             list.Add(od);
         }
-        Dropdown[] dds = transform.GetComponentsInChildren<Dropdown>(); //is recursive
-        foreach( Dropdown dd in dds)
-        {
-            dd.options = list;
-        }
+        heightLabelDropdown.options = list;
+        topColorLabelDropdown.options = list;
+        sideColorLabelDropdown.options = list;
     }
 }
