@@ -105,6 +105,16 @@ public class DataVarUIHandler : MonoBehaviour {
         return inputField.text;
     }
 
+    public void OnLoadClick()
+    {
+
+    }
+
+    public void OnHeaderChoice()
+    {
+
+    }
+
     /// <summary> Handle button to choose and load file </summary>
     public void OnFileChooseClick()
     {

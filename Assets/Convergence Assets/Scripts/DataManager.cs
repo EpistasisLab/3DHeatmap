@@ -360,12 +360,11 @@ public class DataManager : MonoBehaviour {
         return true;
     }
 
-    /// <summary> Choose a file via file picker, try to load/read it, and add to variable list if successful. </summary>
+    /// <summary> Given a path, try to load/read it, and add to variable list if successful. </summary>
     /// <returns></returns>
-    public bool ChooseLoadAddFile(out DataVariable dataVar)
+    public bool LoadAddFile(string path, bool hasRowHeaders, bool hasColumnHeaders, out DataVariable dataVar, out string errorMsg)
     {
-        bool cancelled;
-        bool success = ChooseAndReadFile(out dataVar, out cancelled);
+        bool success = LoadFile(path, hasRowHeaders, hasColumnHeaders, out dataVar, out errorMsg);
         if (success)
         {
             Debug.Log("Success choosing and loading file.");
@@ -377,58 +376,59 @@ public class DataManager : MonoBehaviour {
         }
         else
         {
-            if (cancelled)
-            {
-                Debug.Log("User cancelled file choice.");
-            }
-            else
-            {
-                //Error message will have been reported by method above
-                Debug.Log("Other error while reading file.");
-            }
+            //Error message will have been reported by method above
+            Debug.Log("Other error while reading file.");
         }
         return success;
     }
 
     /// <summary>
-    /// Prompt user to choose a file with file picker.
-    /// If file is chosen, read it and assign to a new DataVariable.
+    /// Choose a file via file picker
     /// </summary>
-    /// <param name="dataVariable">Returns a new DataVariable. Is valid but empty object if error or canceled.</param>
-    /// <param name="cancelled">Returns true if operation failed because user cancelled file picker.</param>
-    /// <returns>True on success. False if user cancels file picker or if there's an error.</returns>
-    public bool ChooseAndReadFile(out DataVariable dataVariable, out bool cancelled)
+    /// <returns>Path, or "" if cancelled or some other issue.</returns>
+    public string ChooseFile()
     {
-        dataVariable = new DataVariable();
-        cancelled = false;
         string[] path = StandaloneFileBrowser.OpenFilePanel("Open .csv or Tab-Delimited File", "", "", false/*mutli-select*/);
         if (path.Length == 0)
         {
-            //User cancelled filepicker
-            cancelled = true;
-            return false;
+            return "";
         }
+        return path[0];
+    }
+
+    /// <summary>
+    /// Load a file path into a DataVariable. Does NOT add it to the DataManager
+    /// </summary>
+    /// <param name="hasRowHeaders">Flag. Set if data file is expected to have row headers.</param>
+    /// <param name="hasColumnHeaders">Flag. Set if data file is expected to have column headers.</param>
+    /// <param name="dataVariable">Returns a new DataVariable. Is valid but empty object if error or canceled.</param>
+    /// <param name="errorMsg">Contains an error message on failure.</param>
+    /// <returns>True on success. False if user cancels file picker or if there's an error.</returns>
+    public bool LoadFile(string path, bool hasRowHeaders, bool hasColumnHeaders, out DataVariable dataVariable, out string errorMsg)
+    {
+        dataVariable = new DataVariable();
 
         //foreach (string s in path)
         //    Debug.Log(s);
 
         bool success = false;
-        string errorMsg = "Unknown Error";
+        errorMsg = "No Error";
 
         //Cast to base class for reading in the file
         CSVReaderData data = (CSVReaderData)dataVariable; // new CSVReaderData();
         try
         {
-            success = CSVReader.Read(path[0], false, false, ref data, out errorMsg);
+            success = CSVReader.Read(path, hasColumnHeaders, hasRowHeaders, ref data, out errorMsg);
         }
         catch (Exception e)
         {
-            Debug.Log("Exception caugt: " + e.ToString());
+            errorMsg = "Exception caught: " + e.ToString();
+            Debug.Log(errorMsg);
             return false;
         }
         if (success)
         {
-            dataVariable.Filename = path[0];
+            dataVariable.Filename = path;
         }
         else
         {
