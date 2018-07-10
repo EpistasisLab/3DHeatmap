@@ -2181,6 +2181,11 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 2013444372}
     m_Modifications:
+    - target: {fileID: 114313171941677762, guid: 8b542fe1513dfd84d8879ebe5c183494,
+        type: 2}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 224405848063692452, guid: 8b542fe1513dfd84d8879ebe5c183494,
         type: 2}
       propertyPath: m_LocalPosition.x
@@ -2515,6 +2520,31 @@ Prefab:
         type: 2}
       propertyPath: m_SizeDelta.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114313171941677762, guid: 8b542fe1513dfd84d8879ebe5c183494,
+        type: 2}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114313171941677762, guid: 8b542fe1513dfd84d8879ebe5c183494,
+        type: 2}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114313171941677762, guid: 8b542fe1513dfd84d8879ebe5c183494,
+        type: 2}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1866647035}
+    - target: {fileID: 114313171941677762, guid: 8b542fe1513dfd84d8879ebe5c183494,
+        type: 2}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnHeaderChoice
+      objectReference: {fileID: 0}
+    - target: {fileID: 114313171941677762, guid: 8b542fe1513dfd84d8879ebe5c183494,
+        type: 2}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8b542fe1513dfd84d8879ebe5c183494, type: 2}
@@ -8790,6 +8820,12 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1863480522}
+--- !u!114 &1866647035 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114625022558086550, guid: 8b542fe1513dfd84d8879ebe5c183494,
+    type: 2}
+  m_PrefabInternal: {fileID: 355975527}
+  m_Script: {fileID: 11500000, guid: bd90e8f2d2cdcf74fb3df7317c3d2531, type: 3}
 --- !u!1 &1869494419
 GameObject:
   m_ObjectHideFlags: 0

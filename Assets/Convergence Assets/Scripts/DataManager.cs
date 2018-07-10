@@ -137,7 +137,7 @@ public class DataManager : MonoBehaviour {
     private List<DataVariable> variables;
 
     /// <summary>
-    /// List that holds mappings of variable to visual params. Index via enum DataManagerMapping.
+    /// List that holds mappings of variable to visual params. Indexed via enum DataManagerMapping.
     /// </summary>
     private List<DataVariable> variableMappings;
 
@@ -167,7 +167,6 @@ public class DataManager : MonoBehaviour {
 
     /// <summary> Accessor to variable currently assigned to height param 
     /// Note - returns null if not assigned. </summary>
-    private DataVariable heightVar;
     public DataVariable HeightVar
     {
         get { return variableMappings[(int)Mapping.Height]; }
@@ -176,14 +175,12 @@ public class DataManager : MonoBehaviour {
             //Debug.Log("HeightVar set to var with label " + value.Label);
         }
     }
-    private DataVariable topColorVar;
     public DataVariable TopColorVar
     {
         get { return variableMappings[(int)Mapping.TopColor]; }
         set { if (value != null && !variables.Contains(value)) Debug.LogError("Assigning topColorVar to variable not in list.");
             variableMappings[(int)Mapping.TopColor] = value; }
     }
-    private DataVariable sideColorVar;
     public DataVariable SideColorVar
     {
         get { return variableMappings[(int)Mapping.SideColor]; }
@@ -255,8 +252,6 @@ public class DataManager : MonoBehaviour {
             variableMappings.Add(null);
         }
         variableColorTableIDs = new int[Enum.GetValues(typeof(Mapping)).Length];
-        topColorVar = null;
-        sideColorVar = null;
     }
 
     public void Remove(DataVariable var)
@@ -267,12 +262,13 @@ public class DataManager : MonoBehaviour {
         if (variables.Contains(var))
         {
             variables.Remove(var);
-            if (HeightVar == var)
-                HeightVar = null;
-            if (topColorVar == var)
-                topColorVar = null;
-            if (sideColorVar == var)
-                sideColorVar = null;
+
+            //Remove possible variable mapping 
+            foreach(Mapping mapping in Enum.GetValues(typeof(Mapping)))
+            {
+                if (variableMappings[(int)mapping] == var)
+                    variableMappings[(int)mapping] = null;
+            }
         }
         else
         {
@@ -453,9 +449,12 @@ public class DataManager : MonoBehaviour {
     public void DebugDumpVariables(bool verbose)
     {
         Debug.Log("============= Variable Mappings: ");
-        Debug.Log("HeightVar: " + HeightVar == null ? "unassigned" : HeightVar.Label);
-        Debug.Log("TopColorVar: " + TopColorVar == null ? "unassigned" : TopColorVar.Label);
-        Debug.Log("SideColorVar: " + SideColorVar == null ? "unassigned" : SideColorVar.Label);
+        foreach(Mapping mapping in Enum.GetValues(typeof(Mapping)))
+        {
+            DataVariable var = variableMappings[(int)mapping];
+            string label = var == null ? "unassigned" : var.Label; //Note - make this string separately instead of directly in the Debug.Log call below, or else seems to evaluate both options of the ? operator and then fails
+            Debug.Log(Enum.GetName(typeof(Mapping), mapping) + ": " + label);
+        }
         Debug.Log("------------------------------");
         Debug.Log("Dumping data variable headers: ");
         foreach(DataVariable var in variables)

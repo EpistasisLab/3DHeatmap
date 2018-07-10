@@ -92,18 +92,6 @@ public class VisualMappingUIHandler : MonoBehaviour {
         dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
         dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
         dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
-        /*
-        string label;
-        //label = heightDropdown.captionText.text;
-        //if (dataMgr.GetVariableByLabel(label) != null)
-        //    dataMgr.AssignHeightVarByLabel(label);
-        label = topColorDropdown.captionText.text;
-        if (dataMgr.GetVariableByLabel(label) != null)
-            dataMgr.AssignTopColorVarByLabel(label);
-        label = sideColorDropdown.captionText.text;
-        if (dataMgr.GetVariableByLabel(label) != null)
-            dataMgr.AssignSideColorVarByLabel(label);
-        */
     }
 
     private void SetLabelChoicesByCurrentVars()

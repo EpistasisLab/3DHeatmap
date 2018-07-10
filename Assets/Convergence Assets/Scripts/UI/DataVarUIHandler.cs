@@ -121,9 +121,14 @@ public class DataVarUIHandler : MonoBehaviour {
 
     public void OnHeaderChoice()
     {
-        SetFileNeedsLoading(true);
+        if( filepathLocal != "")
+            SetFileNeedsLoading(true);
     }
 
+    /// <summary>
+    /// Do what's needed to alert user when something changes that requires a file reload.
+    /// </summary>
+    /// <param name="needsIt"></param>
     public void SetFileNeedsLoading(bool needsIt)
     {
         ColorBlock cb = loadButton.colors;
@@ -180,8 +185,10 @@ public class DataVarUIHandler : MonoBehaviour {
             dataVar = newDataVar;
         }
         else
+        {
             Debug.LogError("Error loading file " + filepathLocal + ". \n" + errorMsg);
-        SetFileNeedsLoading(false);
+}
+        SetFileNeedsLoading(!success);
         RefreshUI();
     }
 
