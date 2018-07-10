@@ -25,9 +25,16 @@ public class DataVarUIHandler : MonoBehaviour {
     //Internal convenience ref
     private InputField inputField;
 
+    /// <summary> Filename/path that's been selected but not necessarily loaded </summary>
+    private string filepathLocal;
+
     private bool filenameTextMouseHovering;
     private float filenameTextMouseEnterTime;
     private bool filenameTextTooltipShowing;
+
+    private Button loadButton;
+    private Color loadButtonNormalColor;
+    private Color loadButtonNeedsLoadingColor;
 
     // Use this for initialization
     void Start () {
@@ -44,6 +51,11 @@ public class DataVarUIHandler : MonoBehaviour {
         if (inputField == null)
             Debug.LogError("inputField == null");
 
+        loadButton = transform.Find("FilePanel").transform.Find("LoadButton").GetComponent<Button>();
+        if (loadButton == null)
+            Debug.LogError("loadButton == null");
+        loadButtonNormalColor = loadButton.colors.normalColor;
+
         Clear();
 	}
 
@@ -55,6 +67,9 @@ public class DataVarUIHandler : MonoBehaviour {
         filenameTextMouseHovering = false;
         filenameTextMouseEnterTime = float.MaxValue;
         filenameTextTooltipShowing = false;
+        //Empty string indicates not yet specified
+        filepathLocal = "";
+        SetFileNeedsLoading(false);
         RefreshUI();
     }
 
@@ -63,11 +78,10 @@ public class DataVarUIHandler : MonoBehaviour {
     {
         //Update according to DataVariable
         string label = "_unassigned_";
-        string filename = "None loaded";
+        string filename = Path.GetFileName(filepathLocal);
         if( dataVar != null)
         {
             label = dataVar.Label;
-            filename = Path.GetFileName(dataVar.Filename);
         }
         //There are multiple Text components in the whole panel, so seems I have to do this. Probably there is a better way...
         //And from what I read, transform.Find doesn't recurse, so you have to do this to go down beyond immeditate children.
@@ -83,7 +97,7 @@ public class DataVarUIHandler : MonoBehaviour {
             if( (Time.time - filenameTextMouseEnterTime) > 0.3f)
             {
                 filenameTextTooltipShowing = true;
-                string path = dataVar != null ? dataVar.Filename : "none";
+                string path = dataVar != null ? dataVar.Filepath : filepathLocal;
                 Vector3[] corners = new Vector3[4];
                 transform.GetComponent<RectTransform>().GetWorldCorners(corners);
                 Vector3 pos = corners[3]; //0th is lower-left, then 
@@ -105,25 +119,57 @@ public class DataVarUIHandler : MonoBehaviour {
         return inputField.text;
     }
 
-    public void OnLoadClick()
-    {
-
-    }
-
     public void OnHeaderChoice()
     {
-
+        SetFileNeedsLoading(true);
     }
 
-    /// <summary> Handle button to choose and load file </summary>
+    public void SetFileNeedsLoading(bool needsIt)
+    {
+        ColorBlock cb = loadButton.colors;
+        cb.normalColor = needsIt ? new Color(0.1f,0.6f,0.1f) : loadButtonNormalColor;
+        loadButton.colors = cb;
+    }
+
+    /// <summary> Handle button to choose (but not load/read) a file</summary>
     public void OnFileChooseClick()
     {
-        //Debug.Log("OnFileChooseClick. this.GetInstanceID(): " + this.GetInstanceID());
-        //filename = "button clicked";
+        string result = dataMgr.ChooseFile();
+        if (result == "") //Cancelled
+            return;
+        if( dataVar != null)
+        {
+            dataMgr.Remove(dataVar);
+        }
+        filepathLocal = result;
+        SetFileNeedsLoading(true);
+        RefreshUI();
+    }
 
-        //Choose filename and try reading into a new DataVariable
+    private void GetHeaderSelection(out bool hasRowHeaders, out bool hasColumnHeaders)
+    {
+        //Dropdown selction options:
+        //{No Headers, Row Only, Column Only, Both}
+        int selection = transform.Find("FilePanel").transform.Find("HeadersDropdown").GetComponent<Dropdown>().value;
+        hasRowHeaders = (selection == 1 || selection == 3);
+        hasColumnHeaders = (selection == 2 || selection == 3);
+    }
+
+    public void OnLoadClick()
+    {
+        //Debug.Log("OnFileChooseClick. this.GetInstanceID(): " + this.GetInstanceID());
+
+        //Make sure we've chosen a filepath already
+        if (filepathLocal == "")
+            return;
+
+        //Try reading into a new DataVariable
         DataVariable newDataVar;
-        bool success = dataMgr.ChooseLoadAddFile(out newDataVar);
+        string errorMsg;
+        //Read the currently selected option for headers
+        bool hasRowHeaders, hasColumnHeaders;
+        GetHeaderSelection(out hasRowHeaders, out hasColumnHeaders);
+        bool success = dataMgr.LoadAddFile(filepathLocal, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
         if (success)
         {
             //dataVar already added to variable list by above method call
@@ -133,7 +179,9 @@ public class DataVarUIHandler : MonoBehaviour {
             dataMgr.Remove(dataVar);
             dataVar = newDataVar;
         }
-
+        else
+            Debug.LogError("Error loading file " + filepathLocal + ". \n" + errorMsg);
+        SetFileNeedsLoading(false);
         RefreshUI();
     }
 

@@ -1400,11 +1400,11 @@ MonoBehaviour:
     m_Options:
     - m_Text: No Headers
       m_Image: {fileID: 0}
-    - m_Text: Row Hdrs
+    - m_Text: Row Only
       m_Image: {fileID: 0}
-    - m_Text: Column Hdrs
+    - m_Text: Column Only
       m_Image: {fileID: 0}
-    - m_Text: Both Hdrs
+    - m_Text: 'Both '
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1953,7 +1953,7 @@ MonoBehaviour:
   m_LineType: 0
   m_HideMobileInput: 0
   m_CharacterValidation: 0
-  m_CharacterLimit: 30
+  m_CharacterLimit: 40
   m_OnEndEdit:
     m_PersistentCalls:
       m_Calls:
@@ -2197,7 +2197,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 114089948315565256}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 114625022558086550}
+        m_MethodName: OnLoadClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &114759963553247844
@@ -3008,8 +3019,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 224814578868842066}
   - {fileID: 224512568647663272}
+  - {fileID: 224814578868842066}
   - {fileID: 224399654932145694}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -3090,7 +3101,7 @@ RectTransform:
   - {fileID: 224991728597352626}
   - {fileID: 224701533987858976}
   m_Father: {fileID: 224405848063692452}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -3281,7 +3292,7 @@ RectTransform:
   - {fileID: 224220639275011996}
   - {fileID: 224025583248028364}
   m_Father: {fileID: 224405848063692452}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}

@@ -27,7 +27,7 @@ public class DataVariable : CSVReaderData
 
     /// <summary> Filename of the file used to load this variable </summary>
     private string filename;
-    public string Filename { get { return filename; } set { filename = value; } }
+    public string Filepath { get { return filename; } set { filename = value; } }
 
     /// <summary> A label for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
     private string label;
@@ -112,7 +112,7 @@ public class DataVariable : CSVReaderData
     public override void DumpNonData()
     {
         Debug.Log("Label:    " + Label);
-        Debug.Log("Filename: " + Filename);
+        Debug.Log("Filename: " + Filepath);
         Debug.Log("Min, Max, Range: " + MinValue + ", " + MaxValue + ", " + range);
         base.DumpNonData();
     }
@@ -135,7 +135,7 @@ public class DataManager : MonoBehaviour {
     /// This list is separate from variableMappings to allow for > 3 variables to be loaded at once.
     /// </summary>
     private List<DataVariable> variables;
-    
+
     /// <summary>
     /// List that holds mappings of variable to visual params. Index via enum DataManagerMapping.
     /// </summary>
@@ -148,7 +148,7 @@ public class DataManager : MonoBehaviour {
     private int[] variableColorTableIDs;
 
     /// <summary> Check if a variable has been assigned to the height param </summary>
-    public bool HeightVarIsAssigned { get { return(HeightVar != null && HeightVar.VerifyData()); } }
+    public bool HeightVarIsAssigned { get { return (HeightVar != null && HeightVar.VerifyData()); } }
     public bool TopColorVarIsAssigned { get { return (TopColorVar != null && TopColorVar.VerifyData()); } }
     public bool SideColorVarIsAssigned { get { return (SideColorVar != null && SideColorVar.VerifyData()); } }
 
@@ -171,23 +171,23 @@ public class DataManager : MonoBehaviour {
     public DataVariable HeightVar
     {
         get { return variableMappings[(int)Mapping.Height]; }
-        set { if (!variables.Contains(value)) Debug.LogError("Assigning heightVar to variable not in list.");
-                variableMappings[(int)Mapping.Height] = value;
-                //Debug.Log("HeightVar set to var with label " + value.Label);
-            }
+        set { if (value != null && !variables.Contains(value)) Debug.LogError("Assigning heightVar to variable not in list.");
+            variableMappings[(int)Mapping.Height] = value;
+            //Debug.Log("HeightVar set to var with label " + value.Label);
+        }
     }
     private DataVariable topColorVar;
     public DataVariable TopColorVar
     {
         get { return variableMappings[(int)Mapping.TopColor]; }
-        set { if (!variables.Contains(value)) Debug.LogError("Assigning topColorVar to variable not in list.");
+        set { if (value != null && !variables.Contains(value)) Debug.LogError("Assigning topColorVar to variable not in list.");
             variableMappings[(int)Mapping.TopColor] = value; }
     }
     private DataVariable sideColorVar;
     public DataVariable SideColorVar
     {
         get { return variableMappings[(int)Mapping.SideColor]; }
-        set { if (!variables.Contains(value)) Debug.LogError("Assigning sideColorVar to variable not in list.");
+        set { if (value != null && !variables.Contains(value)) Debug.LogError("Assigning sideColorVar to variable not in list.");
             variableMappings[(int)Mapping.SideColor] = value; }
     }
 
@@ -228,7 +228,7 @@ public class DataManager : MonoBehaviour {
     /// <returns>null if no match</returns>
     public DataVariable GetVariableByLabel(string label)
     {
-        foreach( DataVariable var in variables)
+        foreach (DataVariable var in variables)
         {
             if (var.Label == label)
                 return var;
@@ -264,10 +264,10 @@ public class DataManager : MonoBehaviour {
         if (var == null)
             return;
 
-        if( variables.Contains(var))
+        if (variables.Contains(var))
         {
             variables.Remove(var);
-            if( HeightVar == var)
+            if (HeightVar == var)
                 HeightVar = null;
             if (topColorVar == var)
                 topColorVar = null;
@@ -327,7 +327,7 @@ public class DataManager : MonoBehaviour {
     /// <returns>True on success. False on fail.</returns>
     private bool VerifyData(out string errorMsg)
     {
-        if( ! HeightVarIsAssigned)
+        if (!HeightVarIsAssigned)
         {
             errorMsg = "HeightVar unassigned or invalid";
             return false;
@@ -344,17 +344,29 @@ public class DataManager : MonoBehaviour {
             return false;
         }
 
-        if ( variableColorTableIDs.Length != Enum.GetValues(typeof(Mapping)).Length)
+        if (variableColorTableIDs.Length != Enum.GetValues(typeof(Mapping)).Length)
         {
             errorMsg = "Error with color tables. Incorrect array length.";
             return false;
         }
 
+        //Check that all data has same dims
+        int m = HeightVar.numDataRows;
+        int n = HeightVar.numDataCols;
+        if (TopColorVar.numDataRows != m ||
+            TopColorVar.numDataCols != n ||
+            SideColorVar.numDataRows != m ||
+            SideColorVar.numDataCols != n)
+        {
+            string msg = "Data variables do not have same dimensions: " + String.Format("{0}: {1}x{2} {3}: {4}x{5} {6}: {7}x{8}", HeightVar.Label, m, n, TopColorVar.Label, TopColorVar.numDataRows, TopColorVar.numDataCols, SideColorVar.Label, SideColorVar.numDataRows, SideColorVar.numDataCols);
+            errorMsg = msg;
+            return false;
+        }
+        
         //TODO
         //
         //Check for duplicate data variable labels. Error if found.
         //
-        //Check that all data has same dims
 
         errorMsg = "no error";
         return true;
@@ -370,7 +382,7 @@ public class DataManager : MonoBehaviour {
             Debug.Log("Success choosing and loading file.");
             variables.Add(dataVar);
             //Get filename and set it to label as default
-            dataVar.Label = Path.GetFileNameWithoutExtension(dataVar.Filename);
+            dataVar.Label = Path.GetFileNameWithoutExtension(dataVar.Filepath);
             //Update UI
             uiMgr.DataUpdated();
         }
@@ -428,11 +440,11 @@ public class DataManager : MonoBehaviour {
         }
         if (success)
         {
-            dataVariable.Filename = path;
+            dataVariable.Filepath = path;
         }
         else
         {
-            Debug.Log("Error msg from csv read: ");
+            Debug.Log("Error msg from csv read: \n");
             Debug.Log(errorMsg);
         }
         return success;
@@ -465,20 +477,24 @@ public class DataManager : MonoBehaviour {
     public bool DebugQuickChooseLoadDisplayFile()
     {
         DataVariable dataVar;
-        bool cancelled;
-        bool success = ChooseAndReadFile(out dataVar, out cancelled);
+
+        string path = ChooseFile();
+        if( path == "")
+        {
+            Debug.Log("User cancelled file choice.");
+            return false;
+        }
+
+        string errorMsg;
+        bool success = LoadAddFile(path, true, true, out dataVar, out errorMsg);
         if (success)
         {
             Debug.Log("DEBUG: Success choosing and loading file.");
             variables.Add(dataVar);
             HeightVar = dataVar;
         }
-        else if (cancelled)
-        {
-            Debug.Log("User cancelled file choice.");
-        }
         else
-            Debug.Log("Other error while reading file.");
+            Debug.Log("Other error while reading file: \n" + errorMsg);
         return success;
     }
 
