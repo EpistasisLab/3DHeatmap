@@ -27,12 +27,20 @@ public partial class HeatVRML : MonoBehaviour
     // Version
     public string programVersion;
 
+    //// Stauffer new managers
+    
     //Data
     //New model of self-contained data objects
     DataManager dataMgr;
     
     //UI
     UIManager uiMgr;
+
+    //Camera
+    CameraManager cameraMgr;
+
+    //// end
+
     
     // window numbers
     private int DSwin;
@@ -89,11 +97,17 @@ public partial class HeatVRML : MonoBehaviour
     private float scrollAmount;
 
     // scene related
+    //Stauffer - plotting area width in scene units. Row width. Seems hardcoded
     public float xSceneSize;
-    public float ySceneSize;
-    public float zSceneSize;
-    public Vector3 xzySceneCorner;
+    //Stauffer - full plotting area DEPTH in scene units, including possible multiple bins and bin increment
+    //(Named with "Y" and not "Z" since coder swapped y & z in variable naming). Gets updated when data is redrawn.
     private float fullYSceneSize;
+    //Stauffer - plotting area DEPTH in scene units, for single bin
+    public float ySceneSize;
+    //Stauffer - plotting area HEIGHT in scene units. Gets updated when data is redrawn.
+    public float zSceneSize;
+    //Stauffer - starting corner of plot area in scene units. The left/front, 1st row/1st column
+    public Vector3 xzySceneCorner;
     public int maxXs;
 
     // Database related
@@ -219,7 +233,7 @@ public partial class HeatVRML : MonoBehaviour
     private int helpCount;
 
     // Components
-    public Camera myCamera; //Stauffer - add declare as type Camera
+    public Camera myCameraOld; //Stauffer - add declare as type Camera
     public GameObject myController;
 
     // VRML
@@ -244,6 +258,9 @@ public partial class HeatVRML : MonoBehaviour
         uiMgr = GameObject.Find("UIManager").GetComponent<UIManager>();
         if (uiMgr == null)
             Debug.LogError("uiMgs == null");
+        cameraMgr = GameObject.Find("Camera").GetComponent<CameraManager>();
+        if (cameraMgr == null)
+            Debug.LogError("cameraMgr == null");
         //---
 
         int i = 0;
@@ -317,8 +334,10 @@ public partial class HeatVRML : MonoBehaviour
         this.connection = new SqliteConnection(this.connStrn);
         this.connection.Open();
         this.dbcmd = this.connection.CreateCommand();
-        this.myCamera = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
-        this.currFOV = (this.lowFOVRange + this.highFOVRange) - this.myCamera.fieldOfView; // hokey, but we want currFOV to increase as fieldOfView decreases
+        //this.myCameraOld = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
+        //Stauffer - change this to my new camera for now while new camera controls are implemented
+        this.myCameraOld = GameObject.Find("Camera").GetComponent<Camera>() as Camera; 
+        this.currFOV = (this.lowFOVRange + this.highFOVRange) - this.myCameraOld.fieldOfView; // hokey, but we want currFOV to increase as fieldOfView decreases
         this.myController = GameObject.Find("FPC");
         this.allVariableDescs = new VariableDesc[2];
         this.allVariableDescs[0] = new VariableDesc();
@@ -1344,6 +1363,7 @@ public partial class HeatVRML : MonoBehaviour
 
     public virtual void CalcDimensions()//	baseCube.transform.position = Vector3(xzySceneCorner.x - 1.0, xzySceneCorner.y - (cubeHeight * 0.9), xzySceneCorner.z - 1.0);
     {
+        //Stauffer xSceneSize is set to fixed val (400) during init
         this.tokenWidth = (this.xSceneSize * Mathf.Pow(2, this.currThick)) / this.numCols;
         this.binIncrement = this.tokenWidth * this.currSep;
         if (this.bInterpolateY)
@@ -2142,6 +2162,15 @@ public partial class HeatVRML : MonoBehaviour
         }
     }
 
+
+    //Stauffer
+    //Return the scene/plot center in scene units.
+    public Vector3 GetPlotCenter()
+    {
+        Debug.Log("xzySceneCorner: " + xzySceneCorner);
+        return new Vector3(xzySceneCorner.x + xSceneSize / 2f, 0f, xzySceneCorner.z + fullYSceneSize / 2f);
+    }
+
     /// <summary>
     /// Stauffer. New routine. Prep and draw data loaded in DataManager.
     /// Replacing functionality of DatasetSelected()
@@ -2190,7 +2219,10 @@ public partial class HeatVRML : MonoBehaviour
         }
 
         //Draw it!
-        this.NewShowData(); 
+        this.NewShowData();
+
+        //Point the camera to the middle of the plot 
+        cameraMgr.LookAt(GetPlotCenter());
 
         //Old code - need it for now at least
         if (this.bScrollBin)
@@ -2259,6 +2291,7 @@ public partial class HeatVRML : MonoBehaviour
         this.numRidges = 0;
 
         //Stauffer - this call should be fine for now with member vars we setup previously.
+        //Calculates dimensions of full plot in unity scene units, among other things.
         this.CalcDimensions();
 
         this.xScale = 1f / this.numCols;
@@ -2315,6 +2348,8 @@ public partial class HeatVRML : MonoBehaviour
         }
         //Stauffer - 'proto' is from protomesh prefab. It's a private global instanced above.
         GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z + yoff), Quaternion.identity);
+        //Stauffer these vals used to set localScale are calc'ed in CalcDimensions, I believe.
+        //NOTE z is used in variable names for up, i.e. y in unity.
         newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeight, this.tokenWidth);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
@@ -2723,7 +2758,7 @@ public partial class HeatVRML : MonoBehaviour
     public virtual void FOVSelected(float newFOV)
     {
         this.currFOV = newFOV;
-        this.myCamera.fieldOfView = this.lowFOVRange + (this.highFOVRange - this.currFOV);
+        this.myCameraOld.fieldOfView = this.lowFOVRange + (this.highFOVRange - this.currFOV);
     }
 
     [UnityEngine.RPC]
@@ -2756,7 +2791,7 @@ public partial class HeatVRML : MonoBehaviour
         float myY = 0.0f;
         float myZ = 0.0f;
         float hFOV = 0.0f;
-        hFOV = Mathf.Atan((Screen.width * Mathf.Tan((this.myCamera.fieldOfView * Mathf.PI) / 360f)) / Screen.height);
+        hFOV = Mathf.Atan((Screen.width * Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f)) / Screen.height);
         switch (newZip)
         {
             case 0:
@@ -2764,9 +2799,9 @@ public partial class HeatVRML : MonoBehaviour
                 myX = this.xzySceneCorner.x + (this.xSceneSize / 2f);
                 //Debug.Log("xzySceneCorner.y is " + xzySceneCorner.y);
                 //Debug.Log("(zSceneSize * currGraphHeight) is " + (zSceneSize * currGraphHeight));
-                //Debug.Log("myCamera.fieldOfView is " + myCamera.fieldOfView);
-                //Debug.Log("Mathf.Tan(myCamera.fieldOfView / 2.0) is " + Mathf.Tan(myCamera.fieldOfView * Mathf.PI / 360.0));
-                myZ = (this.xzySceneCorner.y + (this.zSceneSize * this.currGraphHeight)) + ((this.ySceneSize / 2f) / Mathf.Tan((this.myCamera.fieldOfView * Mathf.PI) / 360f));
+                //Debug.Log("myCameraOld.fieldOfView is " + myCameraOld.fieldOfView);
+                //Debug.Log("Mathf.Tan(myCameraOld.fieldOfView / 2.0) is " + Mathf.Tan(myCameraOld.fieldOfView * Mathf.PI / 360.0));
+                myZ = (this.xzySceneCorner.y + (this.zSceneSize * this.currGraphHeight)) + ((this.ySceneSize / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
                 //Debug.Log("myZ is " + myZ);
                 Fly.NewRotation(0f, -90f);
                 break;

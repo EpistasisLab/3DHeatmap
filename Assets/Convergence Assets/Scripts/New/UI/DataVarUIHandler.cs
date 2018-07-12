@@ -132,7 +132,7 @@ public class DataVarUIHandler : MonoBehaviour {
     public void SetFileNeedsLoading(bool needsIt)
     {
         ColorBlock cb = loadButton.colors;
-        cb.normalColor = needsIt ? new Color(0.1f,0.6f,0.1f) : loadButtonNormalColor;
+        cb.normalColor = needsIt ? new Color(0.5f,0.8f,0.4f) : loadButtonNormalColor;
         loadButton.colors = cb;
     }
 

@@ -15,6 +15,7 @@ public class XRidge : object
     public Renderer myRenderer;
     public int myBin;
     public int myRow;
+    /* Stauffer - unused 
     public virtual void AddRidge(GameObject aMeshObject, float[] passColors, Mesh amesh, int bin, int row)
     {
         this.myMeshObject = aMeshObject;
@@ -24,7 +25,7 @@ public class XRidge : object
         this.vertexColors = passColors;
         this.myBin = bin;
         this.myRow = row;
-    }
+    }*/
 
     public virtual void AddRidge(GameObject aMeshObject, Mesh amesh, int bin, int row)
     {
@@ -41,6 +42,7 @@ public class XRidge : object
         this.myLabel = alabel;
     }
 
+    /* Stauffer - unused 
     public virtual void PositionRidge(Vector3 location, Vector3 extent, int numSlots, int whichSlot)
     {
         float newWidth = extent.z / numSlots;
@@ -54,7 +56,7 @@ public class XRidge : object
             _58.z = _57;
             this.trans.localScale = _58;
         }
-    }
+    }*/
 
     public virtual void NewHeight(float nh)
     {
@@ -73,6 +75,7 @@ public class XRidge : object
         this.myRenderer.enabled = doShow;
     }
 
+    //Stauffer - seems unused
     public virtual void AdvanceUV(Vector2 newUV, Vector2 adv)
     {
         int i = 0;
@@ -87,6 +90,7 @@ public class XRidge : object
         this.myMesh.uv = uv;
     }
 
+    //Stauffer - seems unused
     public virtual void ReleaseRidge()
     {
         Debug.Log("Destroying in ReleaseRidge");
