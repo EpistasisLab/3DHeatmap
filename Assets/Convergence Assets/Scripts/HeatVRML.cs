@@ -347,6 +347,10 @@ public partial class HeatVRML : MonoBehaviour
         this.numFields = 2;
         this.xray = new Texture2D(Screen.width / 2, Screen.height / 2);
         //SpreadBalls(16, 10.0);
+
+        //Stauffer
+        //Quick intro message with instructions
+        uiMgr.ShowIntroMessage();
     }
 
     private bool haveBalls;
@@ -422,14 +426,18 @@ public partial class HeatVRML : MonoBehaviour
             }
             */
         }
-
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            NewPrepareAndDrawData();
+        }
         if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
         {
             this.allHidden = !this.allHidden;
         }
         if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
         {
-            this.showHelp = !this.showHelp;
+            //this.showHelp = !this.showHelp;
+            uiMgr.ShowIntroMessage();
         }
         if (Const.menuScrolling && (Time.time > (this.lastScrollTime + this.minScrollSecs)))
         {
@@ -2183,7 +2191,9 @@ public partial class HeatVRML : MonoBehaviour
         string errorMsg;
         if( ! dataMgr.PrepareAndVerify(out errorMsg))
         {
-            Debug.LogError("Error with data prep and verification: \n" + errorMsg);
+            string msg = "Error with data prep and verification: \n\n" + errorMsg;
+            Debug.LogError(msg);
+            uiMgr.ShowMessageDialog(msg);
             return;
         }
         
@@ -2752,6 +2762,18 @@ public partial class HeatVRML : MonoBehaviour
         this.currGraphHeight = newGraphHeight;
         this.ScaleRidges(this.currGraphHeight);
         this.ShowPointedData();
+    }
+    /// <summary>
+    /// Stauffer added
+    /// Let's us call this func from UI with a [0,1] fractional value
+    /// </summary>
+    /// <param name="frac"></param>
+    public virtual void SetNewGraphHeightAndRedraw(float frac)
+    {
+        float newHeight = this.lowGraphHeightRange + (this.highGraphHeightRange - this.lowGraphHeightRange) * frac;
+        GraphHeightSelected(newHeight);
+        if(dataMgr.DataIsLoaded)
+            NewPrepareAndDrawData();
     }
 
     [UnityEngine.RPC]

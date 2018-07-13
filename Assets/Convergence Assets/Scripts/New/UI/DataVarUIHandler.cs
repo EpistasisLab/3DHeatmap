@@ -186,8 +186,10 @@ public class DataVarUIHandler : MonoBehaviour {
         }
         else
         {
-            Debug.LogError("Error loading file " + filepathLocal + ". \n" + errorMsg);
-}
+            string msg = "Error loading file \n\n" + filepathLocal + ". \n\n" + errorMsg;
+            Debug.LogError(msg);
+            uiMgr.ShowMessageDialog(msg);
+        }
         SetFileNeedsLoading(!success);
         RefreshUI();
     }

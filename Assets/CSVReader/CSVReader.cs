@@ -240,7 +240,7 @@ public class CSVReader
                             ex = "Wasn't expecting first row to be headers. But is it maybe? ";
                         else if (fileCol == 0 && !rowHeadersExpected)
                             ex = "Wasn't expecting first columns to be headers. But is it maybe? ";
-                        errorMsg = ex + "Expected a number but got non-numeric value: " + value + ". At row, col: " + fileRow + ", " + fileCol + ". Aborting.";
+                        errorMsg = ex + "Expected a number but got non-numeric value '" + value + "', at row, col: " + fileRow + ", " + fileCol + ". Aborting.";
                         Debug.Log(errorMsg);
                         result.Clear();
                         return false;

@@ -147,6 +147,9 @@ public class DataManager : MonoBehaviour {
     /// </summary>
     private int[] variableColorTableIDs;
 
+    /// <summary> Returns true if one or more data variables are loaded. Does NOT verify data or variable mappings. </summary>
+    public bool DataIsLoaded { get { return variables.Count > 0; } }
+
     /// <summary> Check if a variable has been assigned to the height param </summary>
     public bool HeightVarIsAssigned { get { return (HeightVar != null && HeightVar.VerifyData()); } }
     public bool TopColorVarIsAssigned { get { return (TopColorVar != null && TopColorVar.VerifyData()); } }
@@ -202,21 +205,6 @@ public class DataManager : MonoBehaviour {
         AssignVariableMapping(mapping, GetVariableByLabel(label));
     }
 
-    /* orig method - can be removed soon
-    public void AssignHeightVarByLabel(string label)
-    {
-        HeightVar = GetVariableByLabel(label);
-    }
-    public void AssignTopColorVarByLabel(string label)
-    {
-        TopColorVar = GetVariableByLabel(label);
-    }
-    public void AssignSideColorVarByLabel(string label)
-    {
-        SideColorVar = GetVariableByLabel(label);
-    }
-    */
-
     /// <summary>
     /// Return a loaded DataVariable by label.
     /// Note that labels aren't guaranteed to be unique, so this returns first match.
@@ -225,6 +213,8 @@ public class DataManager : MonoBehaviour {
     /// <returns>null if no match</returns>
     public DataVariable GetVariableByLabel(string label)
     {
+        if (variables.Count == 0)
+            return null;
         foreach (DataVariable var in variables)
         {
             if (var.Label == label)
@@ -354,7 +344,7 @@ public class DataManager : MonoBehaviour {
             SideColorVar.numDataRows != m ||
             SideColorVar.numDataCols != n)
         {
-            string msg = "Data variables do not have same dimensions: " + String.Format("{0}: {1}x{2} {3}: {4}x{5} {6}: {7}x{8}", HeightVar.Label, m, n, TopColorVar.Label, TopColorVar.numDataRows, TopColorVar.numDataCols, SideColorVar.Label, SideColorVar.numDataRows, SideColorVar.numDataCols);
+            string msg = "Data variables do not have same dimensions: \n" + String.Format("{0}: {1}x{2}\n {3}: {4}x{5}\n {6}: {7}x{8}", HeightVar.Label, m, n, TopColorVar.Label, TopColorVar.numDataRows, TopColorVar.numDataCols, SideColorVar.Label, SideColorVar.numDataRows, SideColorVar.numDataCols);
             errorMsg = msg;
             return false;
         }
