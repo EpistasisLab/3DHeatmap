@@ -7,8 +7,12 @@ public class UIManager : MonoBehaviour {
 
     //The UI canvas
     private GameObject canvas;
+    //A bunch of refs to various elements
+    private GameObject dataTopPanel;
+    private GameObject optionsTopPanel;
     private GameObject visualMappingPanel;
     private VisualMappingUIHandler visualMappingUIHandler;
+    private GameObject dataVarsTopPanel;
     private GameObject toolTipPanel;
     private Text toolTipText;
     public GameObject messageDialogPrefab;
@@ -29,20 +33,27 @@ public class UIManager : MonoBehaviour {
     /// </summary>
     private int toolTipHackState;
 
+    private GameObject GetAndCheckGameObject(string name)
+    {
+        GameObject go = GameObject.Find(name);
+        if (go == null)
+            Debug.LogError("gamobject not found: " + name);
+        return go;
+    }
 	// Use this for initialization
 	void Awake () {
-        canvas = GameObject.Find("Canvas");
-        if (canvas == null)
-            Debug.LogError("canvas == null");
-        visualMappingPanel = GameObject.Find("VisualMappingPanel");
-        if (visualMappingPanel == null)
-            Debug.LogError("visualMappingPanel == null");
+        canvas = GetAndCheckGameObject("Canvas");
+        //Main panels
+        dataTopPanel = GetAndCheckGameObject("DataTopPanel");
+        optionsTopPanel = GetAndCheckGameObject("OptionsTopPanel");
+
+        //Sub panels and components
+        visualMappingPanel = GetAndCheckGameObject("VisualMappingPanel");
         visualMappingUIHandler = visualMappingPanel.GetComponent<VisualMappingUIHandler>();
         if (visualMappingUIHandler == null)
             Debug.LogError("visualMappingUIHandler == null");
-        toolTipPanel = GameObject.Find("ToolTipPanel");
-        if (toolTipPanel == null)
-            Debug.LogError("toolTipPanel == null");
+        toolTipPanel = GetAndCheckGameObject("ToolTipPanel");
+        dataVarsTopPanel = GetAndCheckGameObject("DataVarsTopPanel");
         toolTipText = toolTipPanel.transform.Find("ToolTipText").GetComponent<Text>();
         if( toolTipText == null)
             Debug.LogError("toolTipText == null");
@@ -72,6 +83,40 @@ public class UIManager : MonoBehaviour {
 	}
 
     /// <summary>
+    /// Disables and greys out the main UI elements, i.e. data selection and mapping panels, and options panels.
+    /// Meant for use when a message dialog or similar is shown, and you want to prevent other UI action.
+    /// Does NOT do SetActive(False). Instead, uses a CanvasGroup and makes no interactable
+    /// </summary>
+    public void DisableMainUI()
+    {
+        MainUIEnableDisable(false);
+    }
+
+    /// <summary>
+    /// Opposite of DisableMainUI
+    /// </summary>
+    public void EnableMainUI()
+    {
+        MainUIEnableDisable(true);
+    }
+
+    private void MainUIEnableDisable(bool enable)
+    {
+        float alpha = enable ? 1f : 0.5f;
+        bool interactable = enable;
+
+        //Top data panel
+        CanvasGroup cg = dataTopPanel.GetComponent<CanvasGroup>();
+        cg.alpha = alpha;
+        cg.interactable = interactable;
+
+        //Options top panel
+        cg = optionsTopPanel.GetComponent<CanvasGroup>();
+        cg.alpha = alpha;
+        cg.interactable = interactable;
+    }
+
+    /// <summary>
     /// Show a simple message dialog. \n in string should be recognized as newline
     /// </summary>
     /// <param name="message"></param>
@@ -82,6 +127,17 @@ public class UIManager : MonoBehaviour {
         //Debug.Log("in ShowMessageDialog");
         GameObject go = Instantiate(messageDialogPrefab, canvas.GetComponent<RectTransform>());
         go.GetComponent<MessageDialog>().ShowMessage(message, preferredWidth, leftAlign);
+
+        //disable main UI
+        DisableMainUI();
+    }
+
+    /// <summary>
+    /// MessageDialog component should call this when it closes.
+    /// </summary>
+    public void OnMessageDialogDone()
+    {
+        EnableMainUI();
     }
 
     /// <summary>
@@ -131,6 +187,19 @@ public class UIManager : MonoBehaviour {
     {
         float frac = go.GetComponent<Slider>().value;
         heatVRML.SetNewGraphHeightAndRedraw(frac);
+    }
+
+    public void OnShowDataVarsButtonClick(GameObject go)
+    {
+        //Show-hide all the data variable panels.
+        
+        //Single panel contains them all
+        bool setActive = !dataVarsTopPanel.activeInHierarchy;
+        dataVarsTopPanel.SetActive(setActive);
+
+        //Change this button's +/- text
+        string text = setActive ? "-" : "+";
+        go.GetComponentInChildren<Text>().text = text;
     }
 
     /// <summary>

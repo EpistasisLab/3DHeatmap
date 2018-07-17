@@ -315,18 +315,18 @@ public class DataManager : MonoBehaviour {
     {
         if (!HeightVarIsAssigned)
         {
-            errorMsg = "HeightVar unassigned or invalid";
+            errorMsg = "Height Variable unassigned or invalid";
             return false;
         }
         //Top and side color vars should always be set, even if just set to same as heigh.
         if (!TopColorVarIsAssigned)
         {
-            errorMsg = "TopColorVar unassigned or invalid";
+            errorMsg = "Top Color Variable unassigned or invalid";
             return false;
         }
         if (!SideColorVarIsAssigned)
         {
-            errorMsg = "SideColorVar unassigned or invalid";
+            errorMsg = "Side Color Variable unassigned or invalid";
             return false;
         }
 

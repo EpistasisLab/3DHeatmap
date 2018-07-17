@@ -8,6 +8,7 @@ using UnityEngine.UI;
 /// Handler for the DataVariablePanel UI element.
 /// Handles events for all children.
 /// Tracks DataVariable that it's assigned to.
+/// NOTE - this is a separate handler for each DataVariablePanel
 /// </summary>
 public class DataVarUIHandler : MonoBehaviour {
 
