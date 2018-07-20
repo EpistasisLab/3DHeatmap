@@ -8,30 +8,23 @@ public class UIManager : MonoBehaviour {
     //The UI canvas
     private GameObject canvas;
     //A bunch of refs to various elements
+    //A bunch of refs to various elements
+    //Public ones to set in inspector. Probably should
+    // all just be this way for clarity.
+    public GameObject toolTipPanel;
+    public GameObject statusPanel;
+    //private ones
     private GameObject dataTopPanel;
     private GameObject optionsTopPanel;
     private GameObject visualMappingPanel;
     private VisualMappingUIHandler visualMappingUIHandler;
     private GameObject dataVarsTopPanel;
-    private GameObject toolTipPanel;
     private Text toolTipText;
     public GameObject messageDialogPrefab;
 
     //The main object for the app
     private HeatVRML heatVRML;
     private DataManager dataMgr;
-
-    /// <summary>
-    /// Hack for odd UI behavior. When we switch tooltip text to new string in TooltipShow()
-    /// and make the panel active, the panel doesn't resize properly, and instead retains
-    /// the size of the previous time tooltip was shown. If we leave the object that's
-    /// generating the tooltip and then go right back to it, it then takes on the correct size.
-    /// So this hack sets this works in Update to make inactive and the active again, and
-    /// it then properly resizes.
-    /// Might work better to instantiate a prefab, since that's what I do with MessageDialog and 
-    /// I'm not having this same issue.
-    /// </summary>
-    private int toolTipHackState;
 
     private GameObject GetAndCheckGameObject(string name)
     {
@@ -42,17 +35,23 @@ public class UIManager : MonoBehaviour {
     }
 	// Use this for initialization
 	void Awake () {
+        //UI Canvas
         canvas = GetAndCheckGameObject("Canvas");
         //Main panels
         dataTopPanel = GetAndCheckGameObject("DataTopPanel");
         optionsTopPanel = GetAndCheckGameObject("OptionsTopPanel");
 
         //Sub panels and components
+        //assigned thru inspector
+        if (toolTipPanel == null)
+            Debug.LogError("toolTipPanel == null");
+        if (statusPanel == null)
+            Debug.LogError("statusPanel == null");
+        //find and get ref
         visualMappingPanel = GetAndCheckGameObject("VisualMappingPanel");
         visualMappingUIHandler = visualMappingPanel.GetComponent<VisualMappingUIHandler>();
         if (visualMappingUIHandler == null)
             Debug.LogError("visualMappingUIHandler == null");
-        toolTipPanel = GetAndCheckGameObject("ToolTipPanel");
         dataVarsTopPanel = GetAndCheckGameObject("DataVarsTopPanel");
         toolTipText = toolTipPanel.transform.Find("ToolTipText").GetComponent<Text>();
         if( toolTipText == null)
@@ -65,21 +64,10 @@ public class UIManager : MonoBehaviour {
             Debug.LogError("dataMgr == null");
         TooltipHide();
 
-        toolTipHackState = 0;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-        if (toolTipHackState == 1)
-        {
-            toolTipPanel.SetActive(false);
-            toolTipHackState++;
-        }
-        else if(toolTipHackState == 2)
-        {
-            toolTipPanel.SetActive(true);
-            toolTipHackState = 0;
-        }
 	}
 
     /// <summary>
@@ -144,19 +132,15 @@ public class UIManager : MonoBehaviour {
     /// Show a tool tip. Caller must also call TooltipHide() when done.
     /// </summary>
     /// <param name="tip"></param>
-    /// <param name="position">Desired position of middle left of tooltip window</param>
-    public void TooltipShow(string tip, Vector3 position)
+    /// <param name="txf">The transform of the gameObject we want the tooltip placed next to</param>
+    public void TooltipShow(string tip, Transform txf)
     {
-        position.x += toolTipPanel.GetComponent<RectTransform>().rect.width/2;
-        toolTipPanel.transform.position = position;
-        toolTipText.text = tip;
-        toolTipPanel.SetActive(true);
-        toolTipHackState = 1;
+        toolTipPanel.GetComponent<ToolTipHandler>().ToolTipShow(tip, txf);
     }
 
     public void TooltipHide()
-    { 
-        toolTipPanel.SetActive(false);
+    {
+        toolTipPanel.GetComponent<ToolTipHandler>().ToolTipHide();
     }
 
     /// <summary>

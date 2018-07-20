@@ -98,11 +98,10 @@ public class DataVarUIHandler : MonoBehaviour {
             if( (Time.time - filenameTextMouseEnterTime) > 0.3f)
             {
                 filenameTextTooltipShowing = true;
+                //If the file hasn't yet been loaded, and thus the dataVar not setup, just
+                // show filepathLocal
                 string path = dataVar != null ? dataVar.Filepath : filepathLocal;
-                Vector3[] corners = new Vector3[4];
-                transform.GetComponent<RectTransform>().GetWorldCorners(corners);
-                Vector3 pos = corners[3]; //0th is lower-left, then 
-                uiMgr.TooltipShow(path, pos);
+                uiMgr.TooltipShow(path, transform);
             }
         }
 	}
