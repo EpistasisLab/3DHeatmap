@@ -189,19 +189,6 @@ public class UIManager : MonoBehaviour {
         heatVRML.SetNewGraphHeightAndRedraw(frac);
     }
 
-    public void OnShowDataVarsButtonClick(GameObject go)
-    {
-        //Show-hide all the data variable panels.
-        
-        //Single panel contains them all
-        bool setActive = !dataVarsTopPanel.activeInHierarchy;
-        dataVarsTopPanel.SetActive(setActive);
-
-        //Change this button's +/- text
-        string text = setActive ? "-" : "+";
-        go.GetComponentInChildren<Text>().text = text;
-    }
-
     /// <summary>
     /// Hack this in here for now.
     /// Show an intro message dialog with basic usage instructions.
