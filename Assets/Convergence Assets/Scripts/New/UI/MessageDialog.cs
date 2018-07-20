@@ -33,6 +33,16 @@ public class MessageDialog : MonoBehaviour {
         //Default alignment is middle
         if(leftAlign)
             messageObj.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
+
+        //Does NOT work to simply call this here.
+        //Have to do the hack in Update().
+        //Interestingly in ToolTipHandler, it does work to simply
+        // do resize from this equivalent part of the code/process.
+        //
+        //** NOTE maybe try this:
+        //  LayoutRebuilder.ForceRebuildLayoutImmediate
+        //
+        //ResizeBasedOnText();
     }
 
     /// <summary>

@@ -26,6 +26,8 @@ public class UIManager : MonoBehaviour {
     private HeatVRML heatVRML;
     private DataManager dataMgr;
 
+    private List<int> debugStatusPanelID;
+
     private GameObject GetAndCheckGameObject(string name)
     {
         GameObject go = GameObject.Find(name);
@@ -64,11 +66,51 @@ public class UIManager : MonoBehaviour {
             Debug.LogError("dataMgr == null");
         TooltipHide();
 
-	}
+        debugStatusPanelID = new List<int>();
+    }
 	
 	// Update is called once per frame
 	void Update () {
-	}
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            //Test status panel
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                //Debug.Log("left shift down");
+                StatusComplete(debugStatusPanelID[debugStatusPanelID.Count - 1]);
+                debugStatusPanelID.RemoveAt(debugStatusPanelID.Count - 1);
+            }
+            else
+            {
+                int id = debugStatusPanelID.Count == 0 ? 1 : debugStatusPanelID[debugStatusPanelID.Count - 1];
+                debugStatusPanelID.Add(StatusShow("Test status panel. Previous id: " + id));
+            }
+        }
+
+    }
+
+        /// <summary>
+    /// Post a message to the Status Panel/Window
+    /// Meant for short messages, like "Loading file..."
+    /// Store the return value (messageID) and pass it
+    /// to StatusComplete() when done.
+    /// </summary>
+    /// <param name="tip">message to show</param>
+    /// <returns></returns>
+    public int StatusShow(string tip)
+    {
+        return statusPanel.GetComponent<StatusHandler>().StatusShow(tip);
+    }
+
+    /// <summary>
+    /// Remove a status message.
+    /// Pass the id value that was returned from the call to StatusShow
+    /// </summary>
+    /// <param name="messageID"></param>
+    public void StatusComplete(int messageID)
+    {
+        statusPanel.GetComponent<StatusHandler>().StatusComplete(messageID);
+    }
 
     /// <summary>
     /// Disables and greys out the main UI elements, i.e. data selection and mapping panels, and options panels.
@@ -150,7 +192,7 @@ public class UIManager : MonoBehaviour {
     {
         visualMappingUIHandler.RefreshUI();
         //Debug
-        dataMgr.DebugDumpVariables(false/*verbose*/);   
+        //dataMgr.DebugDumpVariables(false/*verbose*/);   
     }
 
     /// <summary>
