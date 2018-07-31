@@ -90,8 +90,9 @@ public class CameraManager : MonoBehaviour {
     {
         float vertButton = Input.GetAxisRaw("Vertical");
         float horzButton = Input.GetAxisRaw("Horizontal");
-        float turnButton = Input.GetAxisRaw("Turn");
-        float spaceButton = Input.GetAxisRaw("Jump");
+        //These two were used in orig code, but I'm not using, at least not at this point.
+        //float turnButton = Input.GetAxisRaw("Turn");
+        //float spaceButton = Input.GetAxisRaw("Jump");
 
         //Forward / backward translation parallel to ground plane.
         //NOT movement along camera-forward

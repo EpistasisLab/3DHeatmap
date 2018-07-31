@@ -61,7 +61,7 @@ public class MessageDialog : MonoBehaviour {
     private void ResizeBasedOnText()
     {
         Rect textRect = transform.Find("Scroll View/Viewport/Content/Message").GetComponent<RectTransform>().rect;
-        Debug.Log("Resize: message obj rect: " + textRect.ToString());
+        //Debug.Log("Resize: message obj rect: " + textRect.ToString());
 
         //Resize if we're getting close to filling the screen
         float height = Mathf.Min(Screen.height * 0.85f, textRect.height) + 12;

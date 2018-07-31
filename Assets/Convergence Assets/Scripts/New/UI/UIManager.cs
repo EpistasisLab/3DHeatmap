@@ -18,7 +18,7 @@ public class UIManager : MonoBehaviour {
     private GameObject optionsTopPanel;
     private GameObject visualMappingPanel;
     private VisualMappingUIHandler visualMappingUIHandler;
-    private GameObject dataVarsTopPanel;
+    //private GameObject dataVarsTopPanel; not using here currently
     private Text toolTipText;
     public GameObject messageDialogPrefab;
 
@@ -54,7 +54,7 @@ public class UIManager : MonoBehaviour {
         visualMappingUIHandler = visualMappingPanel.GetComponent<VisualMappingUIHandler>();
         if (visualMappingUIHandler == null)
             Debug.LogError("visualMappingUIHandler == null");
-        dataVarsTopPanel = GetAndCheckGameObject("DataVarsTopPanel");
+        //dataVarsTopPanel = GetAndCheckGameObject("DataVarsTopPanel");
         toolTipText = toolTipPanel.transform.Find("ToolTipText").GetComponent<Text>();
         if( toolTipText == null)
             Debug.LogError("toolTipText == null");

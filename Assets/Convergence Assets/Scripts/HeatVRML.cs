@@ -43,7 +43,7 @@ public partial class HeatVRML : MonoBehaviour
 
     
     // window numbers
-    private int DSwin;
+    private int DSwin = 0;
     private int STYLEwin;
     private int ZIPwin;
     private int SLwin;
@@ -139,10 +139,6 @@ public partial class HeatVRML : MonoBehaviour
     // Not using in new code.
     private int[] colVals;
 
-    //RPC server network
-    public string serverURL;
-    public bool beServer; //Stauffer - Flag to make RPC calls (but why, since its presumably saying we're running on the server?). It's always true, set during class init. 
-
     // feature inclusion
     public bool includeVRML;
     public bool includeBalls;
@@ -152,7 +148,7 @@ public partial class HeatVRML : MonoBehaviour
     private bool bInterpolateY;
     private bool bConnectX; //Draw ribbon. Flag
     private bool bExtendZ;
-    private bool bHaveLabels;
+    private bool bHaveLabels = false; //Stauffer - set default val to suppress warning
     private bool bShowLabels;
     private int topColorChoice;
     private int sideColorChoice;
@@ -161,7 +157,7 @@ public partial class HeatVRML : MonoBehaviour
     private GameObject protolabel;
     private bool drawn;
     private XRidge[] xRidges;
-    private int shaveCount;
+    //private int shaveCount; Stauffer - never used
     private int numRidges;
     private float tokenWidth; // Y dimension of tokens used to represent values
     private float xScale;
@@ -185,10 +181,10 @@ public partial class HeatVRML : MonoBehaviour
     private int maxMarker;
     private int numMarkers;
     private int currBin;
-    private bool bScrollBin;
+    private bool bScrollBin = false; //Stauffer - compiler says this val never changes from default of false, so set it to false explicitly
     private float lastScrollTime; //Stauffer mod
     public float minScrollSecs; // minimum time between changes of scrolling value
-    private int choiceHeight;
+    private int choiceHeight = 0; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     private int choiceFOV;
     private int choiceThick;
     private int choiceSep;
@@ -207,10 +203,10 @@ public partial class HeatVRML : MonoBehaviour
     private float lowThickRange;
     private float highThickRange;
     private float currThick;
-    private float lowSepRange;
-    private float highSepRange;
+    private float lowSepRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
+    private float highSepRange =0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     private float currSep;
-    private float lowGapRange;
+    private float lowGapRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     private float highGapRange;
     private float currGap;
     private PointedData pointedData;
@@ -297,20 +293,7 @@ public partial class HeatVRML : MonoBehaviour
         this.closefunc = this.DoClosedWind;
         // Can't figure out how to have ArrayFromQuery re-allocate these, so pick a big size
         this.dbChoices = new string[100];
-        if (this.beServer)
-        {
-            if (Network.InitializeServer(40, 25000) != NetworkConnectionError.NoError)
-            {
-                ErrorGUI.ShowError("Could not initialize server");
-            }
-        }
-        else
-        {
-            if (Network.Connect(this.serverURL, 25000) != NetworkConnectionError.NoError)
-            {
-            }
-        }
-        //ErrorGUI.ShowError("Could not connect to server");
+
         // If the falling ball feature is present, we want to have a small scene so gravity looks more realistic
         if (!this.includeBalls)
         {
@@ -388,31 +371,6 @@ public partial class HeatVRML : MonoBehaviour
         }
         this.haveBalls = true;
     }
-
-    /*
-	var i : int;
-	for(i = 0; i < numRidges; ++i)
-	{
-		var adv : Vector2 = Vector2(i / 100028.0, (i % 30) / 100028.0);
-		xRidges[i].AdvanceUV(Vector2(i * 0.1 / numRidges, (i % 6) / 360.0), adv);
-	}
-	*//*
-	if(bScrollBin && (scrollAmount != 0))
-	{
-		if(currBin < 0) currBin = 0;
-		var oldBin : int = currBin;
-		if(scrollAmount < 0) ++currBin;
-		if(scrollAmount > 0) --currBin;
-		scrollAmount = 0;
-		if(currBin < 0) currBin = numBins - 1;
-		if(currBin >= numBins) currBin = 0;
-		if(currBin != oldBin)
-		{
-			if(beServer) networkView.RPC("VisBins", RPCMode.All, currBin);
-			else VisBins(currBin);
-		}
-	}
-	*/
 
     public virtual void Update()
     {
@@ -707,17 +665,7 @@ public partial class HeatVRML : MonoBehaviour
         GUI.DragWindow();
         if (this.dataChanged && (++this.waitCount > 4))
         {
-            if (false/*this.beServer*/) //testing
-            {
-                //Stauffer - THIS gets called, not the direct call below.
-                // Why does it use RPC if we are the server?
-                this.GetComponent<NetworkView>().RPC("DatasetSelected", RPCMode.All, new object[] { this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight });
-            }
-            else
-            {
-                //OK, this works too, i.e. force false above and come here instead of doing the RPC call.
-                this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight);
-            }
+            this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight);
         }
     }
 
@@ -734,6 +682,7 @@ public partial class HeatVRML : MonoBehaviour
         GUILayout.EndVertical();
         GUILayout.BeginVertical(new GUILayoutOption[] { });
         this.bExtendZ = GUILayout.Toggle(this.bExtendZ, "Fill", Const.realToggle, new GUILayoutOption[] { });
+        //Stauffer - note that bHaveLabels is never assigned to, and will always have default value of false
         if (this.bHaveLabels)
         {
             this.bShowLabels = GUILayout.Toggle(this.bShowLabels, "Show Labels", Const.realToggle, new GUILayoutOption[] { });
@@ -827,36 +776,15 @@ public partial class HeatVRML : MonoBehaviour
         GUI.DragWindow();
         if (this.wantRedraw && (++this.waitCount > 4))
         {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("DatasetSelected", RPCMode.All, new object[] { this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight });
-            }
-            else
-            {
-                this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight);
-            }
+            this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.bInterpolateY, this.topColorChoice, this.sideColorChoice, this.currGraphHeight);
         }
         if (this.wantVRML && (++this.waitCount > 4))
         {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("DrawVRML", RPCMode.All, new object[] { });
-            }
-            else
-            {
-                this.DrawVRML();
-            }
+            this.DrawVRML();
         }
         if (this.wantTriangles && (++this.waitCount > 4))
         {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("DrawTriangle", RPCMode.All, new object[] { });
-            }
-            else
-            {
-                this.DrawVRML();
-            }
+            this.DrawVRML();
         }
     }
 
@@ -894,83 +822,35 @@ public partial class HeatVRML : MonoBehaviour
         GUI.DragWindow();
         if (oldScrollChoice != this.scrollChoice)
         {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("ScrollingSelected", RPCMode.All, new object[] { this.scrollChoice });
-            }
-            else
-            {
-                this.ScrollingSelected(this.scrollChoice);
-            }
+            this.ScrollingSelected(this.scrollChoice);
+
             if (oldScrollChoice == this.choiceBin)
             {
-                if (this.beServer)
-                {
-                    this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] { -1 });
-                }
-                else
-                {
-                    //Shows all ridges, regardless of bin #
-                    this.VisBins(-1);
-                }
+                //Shows all ridges, regardless of bin #
+                this.VisBins(-1);
             }
             if (this.scrollChoice == this.choiceBin)
-            {
-                if (this.beServer)
-                {
-                    this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] { this.currBin });
-                }
-                else
-                {
-                    //Show only ridges with this bin #
-                    this.VisBins(this.currBin);
-                }
-            }
-        }
-        if (oldGraphHeight != this.currGraphHeight)
-        {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("GraphHeightSelected", RPCMode.All, new object[] { this.currGraphHeight });
-            }
-            else
-            {
-                this.GraphHeightSelected(this.currGraphHeight);
-            }
-        }
-        if (oldFOV != this.currFOV)
-        {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("FOVSelected", RPCMode.All, new object[] { this.currFOV });
-            }
-            else
-            {
-                this.FOVSelected(this.currFOV);
-            }
-        }
-        if (((this.currThick != oldThick) || (this.currSep != oldSep)) || (this.currGap != oldGap))
-        {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("Redistribute", RPCMode.All, new object[] { this.currThick, this.currSep, this.currGap });
-            }
-            else
-            {
-                this.Redistribute(this.currThick, this.currSep, this.currGap);
-            }
-        }
-        if (this.currBin != oldBin)
-        {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("VisBins", RPCMode.All, new object[] { this.currBin });
-            }
-            else
             {
                 //Show only ridges with this bin #
                 this.VisBins(this.currBin);
             }
+        }
+        if (oldGraphHeight != this.currGraphHeight)
+        {
+            this.GraphHeightSelected(this.currGraphHeight);
+        }
+        if (oldFOV != this.currFOV)
+        {
+            this.FOVSelected(this.currFOV);
+        }
+        if (((this.currThick != oldThick) || (this.currSep != oldSep)) || (this.currGap != oldGap))
+        {
+            this.Redistribute(this.currThick, this.currSep, this.currGap);
+        }
+        if (this.currBin != oldBin)
+        {
+            //Show only ridges with this bin #
+            this.VisBins(this.currBin);
         }
         Const.menuScrolling = this.scrollChoice >= 0;
     }
@@ -1100,14 +980,7 @@ public partial class HeatVRML : MonoBehaviour
         GUILayout.EndHorizontal();
         if (zipChoice >= 0)
         {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("ZipSelected", RPCMode.All, new object[] { zipChoice });
-            }
-            else
-            {
-                this.ZipSelected(zipChoice);
-            }
+            this.ZipSelected(zipChoice);
         }
         GUILayout.Label("Look", Const.littleCenterLabel, new GUILayoutOption[] { });
         if (GUILayout.Button("Down", Const.buttonToggle, new GUILayoutOption[] { }))
@@ -1136,14 +1009,7 @@ public partial class HeatVRML : MonoBehaviour
         GUILayout.EndHorizontal();
         if (lookChoice >= 0)
         {
-            if (this.beServer)
-            {
-                this.GetComponent<NetworkView>().RPC("LookSelected", RPCMode.All, new object[] { lookChoice });
-            }
-            else
-            {
-                this.LookSelected(lookChoice);
-            }
+            this.LookSelected(lookChoice);
         }
         GUI.DragWindow();
     }
@@ -1330,7 +1196,7 @@ public partial class HeatVRML : MonoBehaviour
         int anint = 0;
         this.dbcmd.CommandText = (("SELECT count(" + field) + ") ") + fromClause;
         //Debug.Log("Query is " + dbcmd.CommandText);
-        object numvals = this.dbcmd.ExecuteScalar();
+        //object numvals = this.dbcmd.ExecuteScalar();
         //Debug.Log("numvals is " + numvals);
         //inarray = new String[numvals];
         this.dbcmd.CommandText = (("SELECT " + field) + " ") + fromClause;
@@ -1391,7 +1257,7 @@ public partial class HeatVRML : MonoBehaviour
             this.plotIncrement = this.ySceneSize + this.binIncrement;
             this.fullYSceneSize = (this.ySceneSize * this.numBins) + ((this.numBins - 1) * this.binIncrement);
         }
-        float cubeHeight = this.xSceneSize * 0.05f;
+        //float cubeHeight = this.xSceneSize * 0.05f;
     }
 
     public virtual void ShowDataOld()
@@ -1555,11 +1421,9 @@ public partial class HeatVRML : MonoBehaviour
             _44.x = _43;
             newLabel.transform.localScale = _44;
         }
-        float passColor = 0f;
+        //float passColor = 0f;
         float minZ = 0.1f;
         int lastInd = numx - 1;
-        bool isFirst = true;
-        bool isLast = false;
         float slabZ = 0.006f;
         float edgeBite = this.bevelFraction / this.numCols;
         // Note: this makes a 45 degree bevel at the curreent graph height, but it will be a different angle when height is changed.
@@ -1582,7 +1446,6 @@ public partial class HeatVRML : MonoBehaviour
             sideColor = this.MakeColor(i, binindex, true);
             if (i > 0)
             {
-                isFirst = false;
                 prevX = thisX;
                 prevZ = thisZ;
                 thisX = nextX;
@@ -1603,7 +1466,6 @@ public partial class HeatVRML : MonoBehaviour
             }
             else
             {
-                isLast = true;
                 nextX = nextX + this.xScale;
             }
             leftZ = (prevZ + thisZ) / 2f;
@@ -2052,7 +1914,6 @@ public partial class HeatVRML : MonoBehaviour
         this.showXRay = true;
     }
 
-    [UnityEngine.RPC]//VisBins(-1);
     public virtual void ScrollingSelected(int newScroll)
     {
         this.scrollChoice = newScroll;
@@ -2067,7 +1928,6 @@ public partial class HeatVRML : MonoBehaviour
         }
     }
 
-    [UnityEngine.RPC]
     public virtual void Redistribute(float newThick, float newSep, float newGap)
     {
         int i = 0;
@@ -2134,14 +1994,13 @@ public partial class HeatVRML : MonoBehaviour
             }
             ++i;
         }
-        float cubeHeight = this.xSceneSize * 0.05f;
+        //float cubeHeight = this.xSceneSize * 0.05f;
         //baseCube.transform.localScale = Vector3(xSceneSize + 2.0, cubeHeight, fullYSceneSize + 2.0);
         //baseCube.transform.position = Vector3(xzySceneCorner.x - 1.0, xzySceneCorner.y - (cubeHeight * 0.9), xzySceneCorner.z - 1.0);
         this.ShowPointedData();
     }
 
     // if selBin < 0, all bins visible
-    [UnityEngine.RPC]
     public virtual void VisBins(int selBin)
     {
         int i = 0;
@@ -2175,7 +2034,7 @@ public partial class HeatVRML : MonoBehaviour
     //Return the scene/plot center in scene units.
     public Vector3 GetPlotCenter()
     {
-        Debug.Log("xzySceneCorner: " + xzySceneCorner);
+        //Debug.Log("xzySceneCorner: " + xzySceneCorner);
         return new Vector3(xzySceneCorner.x + xSceneSize / 2f, 0f, xzySceneCorner.z + fullYSceneSize / 2f);
     }
 
@@ -2234,13 +2093,14 @@ public partial class HeatVRML : MonoBehaviour
         //Point the camera to the middle of the plot 
         cameraMgr.LookAt(GetPlotCenter());
 
-        //Old code - need it for now at least
+        /* Stauffer - this code is never reached because bScrollBin never changes from its default val of false
         if (this.bScrollBin)
         {
             //Stauffer - show only ridges with this bin # (or all if currBin < 0)
             //Why is this done here? As a refresh-type action?
             this.VisBins(this.currBin);
         }
+        */
 
         this.dataChanged = false;
         this.wantRedraw = false;
@@ -2316,12 +2176,14 @@ public partial class HeatVRML : MonoBehaviour
         {
             this.sideColorChoice = 0;
         }
-        string extra1 = this.topColorChoice > 1 ? ", " + this.allVariableDescs[this.topColorChoice].name : ", 0";
-        string extra2 = this.sideColorChoice > 1 ? ", " + this.allVariableDescs[this.sideColorChoice].name : ", 0";
+        //Stauffer - commented out these lines, the vars are unused. What are they for originally?
+        //string extra1 = this.topColorChoice > 1 ? ", " + this.allVariableDescs[this.topColorChoice].name : ", 0";
+        //string extra2 = this.sideColorChoice > 1 ? ", " + this.allVariableDescs[this.sideColorChoice].name : ", 0";
 
         //For each row, setup data and draw a ridge
         DataVariable hVar = dataMgr.HeightVar;
 
+        //Build the ridges
         for ( int row = 0; row < hVar.numDataRows; row++)
         {
             //NOTE - these are class properties, that then get used in BuildRidgeOld
@@ -2594,7 +2456,6 @@ public partial class HeatVRML : MonoBehaviour
     }
 
 
-    [UnityEngine.RPC]
     public virtual void DatasetSelected(string newDB, bool newBConnectX, bool newBExtendZ, bool newBInterpolateY, int newTopColorChoice, int newSideColorChoice, float newGraphHeight)
     {
         int i = 0;
@@ -2756,7 +2617,6 @@ public partial class HeatVRML : MonoBehaviour
         this.ShowPointedData();
     }
 
-    [UnityEngine.RPC]
     public virtual void GraphHeightSelected(float newGraphHeight)
     {
         this.currGraphHeight = newGraphHeight;
@@ -2776,14 +2636,12 @@ public partial class HeatVRML : MonoBehaviour
             NewPrepareAndDrawData();
     }
 
-    [UnityEngine.RPC]
     public virtual void FOVSelected(float newFOV)
     {
         this.currFOV = newFOV;
         this.myCameraOld.fieldOfView = this.lowFOVRange + (this.highFOVRange - this.currFOV);
     }
 
-    [UnityEngine.RPC]
     public virtual void LookSelected(int newLook)
     {
         switch (newLook)
@@ -2806,7 +2664,6 @@ public partial class HeatVRML : MonoBehaviour
         }
     }
 
-    [UnityEngine.RPC]
     public virtual void ZipSelected(int newZip)
     {
         float myX = 0.0f;
@@ -2861,7 +2718,6 @@ public partial class HeatVRML : MonoBehaviour
 
     private StreamWriter vrout;
     private float vrmlScale;
-    [UnityEngine.RPC]
     public virtual void DrawVRML()
     {
         int r = 0;
@@ -2884,7 +2740,6 @@ public partial class HeatVRML : MonoBehaviour
     }
 
     private StreamWriter trout;
-    [UnityEngine.RPC]
     public virtual void DrawTriangle()
     {
         int r = 0;
@@ -3041,12 +2896,10 @@ public partial class HeatVRML : MonoBehaviour
         this.maxXs = 1800;
         this.dbPos = new Vector2(0, 0);
         this.currDB = -1;
-        this.serverURL = "draco.dhcp.hitchcock.org";
-        this.beServer = true;
         this.includeTriangles = true;
         this.bExtendZ = true;
         this.bShowLabels = true;
-        this.shaveCount = 3;
+        //this.shaveCount = 3;
         this.minScrollSecs = 0.1f;
         this.choiceFOV = 1;
         this.choiceThick = 2;
