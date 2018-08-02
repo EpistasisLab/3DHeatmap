@@ -18,6 +18,7 @@ public class ShowHideHeaderHandler : MonoBehaviour {
 
     public void OnShowHideButtonClick(GameObject button)
     {
+        //Debug.Log("OnShowHideButtonClick. Obj name: " + button.name);
         //Show-hide all items assigned to this header.
         if( itemsToShowHide == null || itemsToShowHide.Count < 1)
         {

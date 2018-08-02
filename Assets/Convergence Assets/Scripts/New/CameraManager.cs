@@ -12,8 +12,12 @@ public class CameraManager : MonoBehaviour {
     public float translationScaleMouse = 8f;
     public float rotationScale = 1f;
     public float zoomScale = 1f;
+    public Vector3 defaultPosition;
 
     private Camera ourCamera;
+
+    //The main object for the app
+    private HeatVRML heatVRML;
 
     /// <summary> The look-at target for the camera </summary>
     private Vector3 lookAtTarget;
@@ -24,6 +28,9 @@ public class CameraManager : MonoBehaviour {
         ourCamera = transform.GetComponent<Camera>() as Camera;
         if (ourCamera == null)
             Debug.LogError("camera == null");
+        heatVRML = GameObject.Find("Prefab objectify").GetComponent<HeatVRML>();
+        if (heatVRML == null)
+            Debug.LogError("heatVRML == null");
 
         lookAtTarget = Vector3.zero;
     }
@@ -35,14 +42,27 @@ public class CameraManager : MonoBehaviour {
         lookAtTarget = _target;
     }
 
-    private void TranslateView(float lateralStep, float longitudinalStep)
+    /// <summary> Reset the camera view to the default view. </summary>
+    public void ResetView()
+    {
+        Vector3 center = heatVRML.GetPlotCenter();
+        ourCamera.transform.position = new Vector3(center.x, defaultPosition.y, defaultPosition.z);
+        LookAt(center);
+    }
+
+    public void OnResetViewButtonClick()
+    {
+        ResetView();
+    }
+
+    private void TranslateView(float lateralStep, float forwardsStep)
     {
         //Move both the camera and lookat target
         Vector3 lateral = ourCamera.transform.right * lateralStep;
         //Move fwd/back only parallel to ground plane
-        Vector3 longitudinal = new Vector3(ourCamera.transform.forward.x, 0f, ourCamera.transform.forward.z).normalized * longitudinalStep;
-        lookAtTarget += lateral + longitudinal;
-        ourCamera.transform.position += lateral + longitudinal;
+        Vector3 forwards = new Vector3(ourCamera.transform.forward.x, 0f, ourCamera.transform.forward.z).normalized * forwardsStep;
+        lookAtTarget += lateral + forwards;
+        ourCamera.transform.position += lateral + forwards;
     }
 
     private void RotateView(float rotXstep, float rotYstep)
