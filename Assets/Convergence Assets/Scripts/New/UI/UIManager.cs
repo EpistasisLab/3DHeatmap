@@ -99,7 +99,9 @@ public class UIManager : MonoBehaviour {
     /// <returns></returns>
     public int StatusShow(string tip)
     {
-        return statusPanel.GetComponent<StatusHandler>().StatusShow(tip);
+        int id = statusPanel.GetComponent<StatusHandler>().StatusShow(tip);
+        statusPanel.transform.SetAsLastSibling();
+        return id;
     }
 
     /// <summary>
@@ -204,15 +206,25 @@ public class UIManager : MonoBehaviour {
         return visualMappingUIHandler.GetColorTableAssignments();
     }
 
+    IEnumerator RedrawCoroutine(bool quiet = false)
+    {
+        int statusID = StatusShow("Drawing...");
+        yield return null;
+        heatVRML.NewPrepareAndDrawData(quiet);
+        StatusComplete(statusID);
+    }
+
     public void OnRedrawButtonClick()
     {
-        heatVRML.NewPrepareAndDrawData();
+        StartCoroutine(RedrawCoroutine());
     }
 
     public void OnMaxHeightSlider(GameObject go)
     {
         float frac = go.GetComponent<Slider>().value;
-        heatVRML.SetNewGraphHeightAndRedraw(frac);
+        heatVRML.SetNewGraphHeight(frac);
+        //Don't need to redraw to see new height
+        //StartCoroutine(RedrawCoroutine(true));
     }
 
     /// <summary>

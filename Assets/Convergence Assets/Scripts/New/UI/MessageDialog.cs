@@ -34,6 +34,8 @@ public class MessageDialog : MonoBehaviour {
         if(leftAlign)
             messageObj.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
 
+        transform.SetAsLastSibling();
+
         //Does NOT work to simply call this here.
         //Have to do the hack in Update().
         //Interestingly in ToolTipHandler, it does work to simply
@@ -86,6 +88,7 @@ public class MessageDialog : MonoBehaviour {
         //The first time we come in here it seems to be in same frame as when we
         // instantiate the dialog above, so we can't get the text element dimensions.
         //So the second time in here, we act.
+        //Could do via coroutine?
         if (updateCount == 1)
         {
             ResizeBasedOnText();

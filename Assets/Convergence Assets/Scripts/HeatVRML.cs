@@ -2066,7 +2066,8 @@ public partial class HeatVRML : MonoBehaviour
     /// Stauffer. New routine. Prep and draw data loaded in DataManager.
     /// Replacing functionality of DatasetSelected()
     /// </summary>
-    public virtual void NewPrepareAndDrawData()
+    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
+    public virtual void NewPrepareAndDrawData(bool quiet = false)
     {
         //TODO 
         // some verification of data, so we don't have to check things every time we access dataMgr
@@ -2074,9 +2075,12 @@ public partial class HeatVRML : MonoBehaviour
         string errorMsg;
         if( ! dataMgr.PrepareAndVerify(out errorMsg))
         {
-            string msg = "Error with data prep and verification: \n\n" + errorMsg;
-            Debug.LogError(msg);
-            uiMgr.ShowMessageDialog(msg);
+            if( ! quiet)
+            {
+                string msg = "Error with data prep and verification: \n\n" + errorMsg;
+                Debug.LogError(msg);
+                uiMgr.ShowMessageDialog(msg);
+            }
             return;
         }
         
@@ -2641,23 +2645,28 @@ public partial class HeatVRML : MonoBehaviour
         this.ShowPointedData();
     }
 
+    /// <summary>
+    /// Set new graph height value.
+    /// Does NOT require a redraw of the graph since it scales the ridges using transform scaling.
+    /// See SetNewGraphheight to adjust using [0,1] value.
+    /// </summary>
+    /// <param name="newGraphHeight"></param>
     public virtual void GraphHeightSelected(float newGraphHeight)
     {
         this.currGraphHeight = newGraphHeight;
         this.ScaleRidges(this.currGraphHeight);
         this.ShowPointedData();
     }
+
     /// <summary>
     /// Stauffer added
     /// Let's us call this func from UI with a [0,1] fractional value
     /// </summary>
     /// <param name="frac"></param>
-    public virtual void SetNewGraphHeightAndRedraw(float frac)
+    public virtual void SetNewGraphHeight(float frac)
     {
         float newHeight = this.lowGraphHeightRange + (this.highGraphHeightRange - this.lowGraphHeightRange) * frac;
         GraphHeightSelected(newHeight);
-        if(dataMgr.DataIsLoaded)
-            NewPrepareAndDrawData();
     }
 
     public virtual void FOVSelected(float newFOV)

@@ -160,8 +160,24 @@ public class DataVarUIHandler : MonoBehaviour {
         hasColumnHeaders = (selection == 2 || selection == 3);
     }
 
+    /// <summary> Coroutine allows us to show the status window by yielding a frame so it gets drawn,
+    /// then call the method to do the actual loading. </summary>
+    IEnumerator LoadCoroutine()
+    {
+        int statusID = uiMgr.StatusShow("Loading...");
+        yield return null;
+        LoadHandler();
+        uiMgr.StatusComplete(statusID);
+    }
+
     public void OnLoadClick()
     {
+        //Start a coroutine to do the loading
+        StartCoroutine("LoadCoroutine");
+    }
+
+    /// <summary> Do the actual loading, based on class fields. </summary>
+    private void LoadHandler() { 
         //Debug.Log("OnFileChooseClick. this.GetInstanceID(): " + this.GetInstanceID());
 
         //Make sure we've chosen a filepath already
