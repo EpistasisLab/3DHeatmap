@@ -109,7 +109,7 @@ public class StatusHandler : MonoBehaviour {
 
     /// <summary>
     /// Manually resize the panel cuz it's not happening automatically
-    /// when I change the text in ToolTipShow().
+    /// when I change the text in StatusShow().
     /// </summary>
     private void ResizeBasedOnText()
     {

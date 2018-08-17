@@ -89,7 +89,7 @@ public class UIManager : MonoBehaviour {
 
     }
 
-        /// <summary>
+    /// <summary>
     /// Post a message to the Status Panel/Window
     /// Meant for short messages, like "Loading file..."
     /// Store the return value (messageID) and pass it
