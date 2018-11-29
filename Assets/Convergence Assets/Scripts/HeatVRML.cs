@@ -410,6 +410,11 @@ public partial class HeatVRML : MonoBehaviour
             //this.showHelp = !this.showHelp;
             uiMgr.ShowIntroMessage();
         }
+        if (Input.GetKeyDown(KeyCode.F12))
+        {
+            //Debugging
+            uiMgr.ShowNextUIActionPrompt();
+        }
         if (Const.menuScrolling && (Time.time > (this.lastScrollTime + this.minScrollSecs)))
         {
             this.scrollAmount = Input.GetAxis("Mouse ScrollWheel");

@@ -31,9 +31,9 @@ public class StatusHandler : MonoBehaviour {
     /// <summary>
     /// Post a new message to the status window. Will overwrite a current message
     /// if there is one. 
-    /// Store the returned messageID and pass it to StatusComplete when you want the
+    /// Calling method should store the returned messageID and pass it to StatusComplete when you want the
     /// message gone. 
-    /// When a message is complete and hidden, the class will look for the most
+    /// When a message is completed by StatusComplete, the class will look for the most
     /// recent still-active message, if any, that was hidden by the recently completed
     /// message, and show if found. 
     /// Thus, it allows for nested messages.

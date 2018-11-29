@@ -28,6 +28,12 @@ public class UIManager : MonoBehaviour {
 
     private List<int> debugStatusPanelID;
 
+    /// <summary> The UI object that's currently being highlighted in some way </summary>
+    private int currentUIActionPromptee;
+    /// <summary> List of UI elements to use for prompting user action, in order of
+    /// which they should be activated </summary>
+    public GameObject[] UIActionPromptees;
+
     private GameObject GetAndCheckGameObject(string name)
     {
         GameObject go = GameObject.Find(name);
@@ -64,13 +70,17 @@ public class UIManager : MonoBehaviour {
         dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
         if (dataMgr == null)
             Debug.LogError("dataMgr == null");
+
         TooltipHide();
+
+        currentUIActionPromptee = -1;
 
         debugStatusPanelID = new List<int>();
     }
 	
 	// Update is called once per frame
 	void Update () {
+        /*
         if (Input.GetKeyDown(KeyCode.T))
         {
             //Test status panel
@@ -86,7 +96,7 @@ public class UIManager : MonoBehaviour {
                 debugStatusPanelID.Add(StatusShow("Test status panel. Previous id: " + id));
             }
         }
-
+        */
     }
 
     /// <summary>
@@ -94,6 +104,10 @@ public class UIManager : MonoBehaviour {
     /// Meant for short messages, like "Loading file..."
     /// Store the return value (messageID) and pass it
     /// to StatusComplete() when done.
+    /// The goal of this two-step process is to be able to overwrite the 
+    /// current message in the panel, while also being able to have the
+    /// previous message return automatically if it hasn't yet been completed.
+    /// For asynchronous message updating.
     /// </summary>
     /// <param name="tip">message to show</param>
     /// <returns></returns>
@@ -214,7 +228,7 @@ public class UIManager : MonoBehaviour {
         StatusComplete(statusID);
     }
 
-    public void OnRedrawButtonClick()
+    public void OnRedrawButtonClick(GameObject button)
     {
         StartCoroutine(RedrawCoroutine());
     }
@@ -225,6 +239,44 @@ public class UIManager : MonoBehaviour {
         heatVRML.SetNewGraphHeight(frac);
         //Don't need to redraw to see new height
         //StartCoroutine(RedrawCoroutine(true));
+    }
+
+    /// <summary>
+    /// Start prompting the user for which UI item should be
+    /// (typically) used next. Currently it flashes the item.
+    /// </summary>
+    /// <param name="index">Index of UI object to start showing prompt for. Pass -1 to just stop anything currently showing a prompt.</param>
+    private void ShowUIActionPrompt(int index)
+    {
+        //Stop whatever currently is prompting
+        if (currentUIActionPromptee >= 0 && currentUIActionPromptee < UIActionPromptees.Length)
+            UIActionPromptees[currentUIActionPromptee].GetComponent<UIElementFlasher>().StopFlashing();
+        currentUIActionPromptee = -1;
+        if (index < 0)
+            return;
+        if (index >= UIActionPromptees.Length)
+        {
+            Debug.LogWarning("ShowUIActionPrompt: index out of range: " + index);
+            return;
+        }
+
+        GameObject uiObj = UIActionPromptees[index];
+        if( uiObj == null || uiObj.GetComponent<UIElementFlasher>() == null)
+        {
+            Debug.LogWarning("ShowUIActionPrompt: passed UI is null or doesn't have UIElementFlasher");
+            return;
+        }
+
+        Debug.Log("calling StartFlashing. index: " + index);
+        uiObj.GetComponent<UIElementFlasher>().StartFlashing();
+        currentUIActionPromptee = index;
+    }
+
+    /// <summary> Start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
+    public void ShowNextUIActionPrompt()
+    {
+        int newIndex = currentUIActionPromptee < UIActionPromptees.Length - 1 ? currentUIActionPromptee+1 : -1; //-1 will tell the system to stop
+        ShowUIActionPrompt(newIndex);
     }
 
     /// <summary>
