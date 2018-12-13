@@ -70,17 +70,8 @@ public class VisualMappingUIHandler : MonoBehaviour {
             return;
         }
         AssignVarsByCurrentLabelChoices();
-        dataMgr.DebugDumpVariables(false);
-        /*
-        if (dd == heightDropdown)
-            dataMgr.AssignHeightVarByLabel(label);
-        else if (dd == topColorDropdown)
-            dataMgr.AssignTopColorVarByLabel(label);
-        else if (dd == sideColorDropdown)
-            dataMgr.AssignSideColorVarByLabel(label);
-        else
-            Debug.LogError("Unmatched dropdown component");
-        */
+        UIManager.Instance.ShowNextUIActionPromptIfPrompting(go);
+        //dataMgr.DebugDumpVariables(false);
     }
 
     /// <summary>
@@ -88,7 +79,6 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// </summary>
     private void AssignVarsByCurrentLabelChoices()
     {
-        
         dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
         dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
         dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);

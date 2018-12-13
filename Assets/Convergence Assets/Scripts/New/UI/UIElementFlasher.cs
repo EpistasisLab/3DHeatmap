@@ -23,9 +23,10 @@ public class UIElementFlasher : MonoBehaviour {
         isFlashing = false;
 	}
 	
+    //co-routine
     IEnumerator Flash()
     {
-        Debug.Log("Starting Flash coroutine. imageComp: " + imageComp.GetInstanceID());
+        //Debug.Log("Starting Flash coroutine. imageComp: " + imageComp.GetInstanceID());
         while (isFlashing)
         {
             float phase = Mathf.Abs((Time.time - flashStartTime + 0.5f) % 1f - 0.5f);
@@ -53,7 +54,7 @@ public class UIElementFlasher : MonoBehaviour {
 
     public void StopFlashing()
     {
-        Debug.Log("StopFlashing called. imageComp: " + imageComp.GetInstanceID());
+        //Debug.Log("StopFlashing called. imageComp: " + imageComp.GetInstanceID());
         isFlashing = false;
     }
 

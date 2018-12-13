@@ -128,8 +128,6 @@ public class DataManager : MonoBehaviour {
 
     public enum Mapping { Height, TopColor, SideColor };
 
-    private UIManager uiMgr;
-
     /// <summary>
     /// List of loaded variables. These may or may not be assigned to visual parameters.
     /// This list is separate from variableMappings to allow for > 3 variables to be loaded at once.
@@ -226,9 +224,6 @@ public class DataManager : MonoBehaviour {
 
     void Start()
     {
-        uiMgr = GameObject.Find("UIManager").GetComponent<UIManager>();
-        if (uiMgr == null)
-            Debug.LogError("uiMgs == null");
         Clear();
     }
 
@@ -266,7 +261,7 @@ public class DataManager : MonoBehaviour {
         }
 
         //Update UI
-        uiMgr.DataUpdated();
+        UIManager.Instance.DataUpdated();
     }
 
     /// <summary>
@@ -298,7 +293,7 @@ public class DataManager : MonoBehaviour {
         //pull these from UI instead of pushing from UI so we don't
         // have to handle when there's not an assigned var mapping.
         //awkward
-        variableColorTableIDs = uiMgr.GetColorTableAssignments();
+        variableColorTableIDs = UIManager.Instance.GetColorTableAssignments();
 
         //Verify the data
         bool result = VerifyData(out errorMsg);
@@ -370,7 +365,7 @@ public class DataManager : MonoBehaviour {
             //Get filename and set it to label as default
             dataVar.Label = Path.GetFileNameWithoutExtension(dataVar.Filepath);
             //Update UI
-            uiMgr.DataUpdated();
+            UIManager.Instance.DataUpdated();
         }
         else
         {

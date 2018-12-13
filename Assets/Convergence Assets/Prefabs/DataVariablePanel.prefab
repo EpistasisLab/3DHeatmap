@@ -602,6 +602,7 @@ GameObject:
   - component: {fileID: 114571244525968346}
   - component: {fileID: 114622324129156590}
   - component: {fileID: 114920924709830310}
+  - component: {fileID: 114217326605193624}
   m_Layer: 5
   m_Name: InputField
   m_TagString: Untagged
@@ -1211,6 +1212,17 @@ MonoBehaviour:
     m_TypeName: UnityEngine.UI.Toggle+ToggleEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
   m_IsOn: 1
+--- !u!114 &114217326605193624
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1932526110773046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d3e5a413e5d15c4ea9e9dcbb4a58a3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114227903567112850
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1412,6 +1424,8 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
+    - m_Text: Headers...
+      m_Image: {fileID: 0}
     - m_Text: No Headers
       m_Image: {fileID: 0}
     - m_Text: Row Only
@@ -1425,10 +1439,10 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 114625022558086550}
         m_MethodName: OnHeaderChoice
-        m_Mode: 1
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 1525638171229030}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -1520,7 +1534,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: No Headers
+  m_Text: Headers...
 --- !u!114 &114397936777171600
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1995,10 +2009,10 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 114625022558086550}
         m_MethodName: OnLabelEdit
-        m_Mode: 1
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 1932526110773046}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -2236,10 +2250,10 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 114625022558086550}
         m_MethodName: OnLoadClick
-        m_Mode: 1
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 1376888363292746}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -2288,10 +2302,10 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 114625022558086550}
         m_MethodName: OnFileChooseClick
-        m_Mode: 1
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 1543085505590010}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 

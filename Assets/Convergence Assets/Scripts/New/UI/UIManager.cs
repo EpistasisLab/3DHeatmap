@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UIManager : MonoBehaviour {
+public class UIManager : MonoBehaviorSingleton<UIManager>
+{
 
     //The UI canvas
     private GameObject canvas;
@@ -41,8 +42,9 @@ public class UIManager : MonoBehaviour {
             Debug.LogError("gamobject not found: " + name);
         return go;
     }
-	// Use this for initialization
-	void Awake () {
+    // Use this for initialization instead of Awake, since this is MonoBehaviorSingleton
+    //void Awake () {
+    protected override void Initialize() { 
         //UI Canvas
         canvas = GetAndCheckGameObject("Canvas");
         //Main panels
@@ -77,9 +79,15 @@ public class UIManager : MonoBehaviour {
 
         debugStatusPanelID = new List<int>();
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    private void Start()
+    {
+        //Start the sequence of UI prompts to help user know what to do.
+        StartUIActionPrompts();    
+    }
+
+    // Update is called once per frame
+    void Update () {
         /*
         if (Input.GetKeyDown(KeyCode.T))
         {
@@ -231,6 +239,9 @@ public class UIManager : MonoBehaviour {
     public void OnRedrawButtonClick(GameObject button)
     {
         StartCoroutine(RedrawCoroutine());
+        //This is the last UI prompt we do, so stop the whole process if we get here,
+        // which also handles the case when user jumps ahead of the prompts to here.
+        StopAllUIActionPrompts();
     }
 
     public void OnMaxHeightSlider(GameObject go)
@@ -245,37 +256,64 @@ public class UIManager : MonoBehaviour {
     /// Start prompting the user for which UI item should be
     /// (typically) used next. Currently it flashes the item.
     /// </summary>
-    /// <param name="index">Index of UI object to start showing prompt for. Pass -1 to just stop anything currently showing a prompt.</param>
-    private void ShowUIActionPrompt(int index)
+    /// <param name="newIndex">Index of UI object to start showing prompt for. Pass -1 to just stop anything currently showing a prompt.</param>
+    private void ShowUIActionPrompt(int newIndex)
     {
         //Stop whatever currently is prompting
         if (currentUIActionPromptee >= 0 && currentUIActionPromptee < UIActionPromptees.Length)
             UIActionPromptees[currentUIActionPromptee].GetComponent<UIElementFlasher>().StopFlashing();
         currentUIActionPromptee = -1;
-        if (index < 0)
+        if (newIndex < 0)
             return;
-        if (index >= UIActionPromptees.Length)
+        if (newIndex >= UIActionPromptees.Length)
         {
-            Debug.LogWarning("ShowUIActionPrompt: index out of range: " + index);
+            Debug.LogWarning("ShowUIActionPrompt: newIndex out of range: " + newIndex);
             return;
         }
 
-        GameObject uiObj = UIActionPromptees[index];
+        GameObject uiObj = UIActionPromptees[newIndex];
         if( uiObj == null || uiObj.GetComponent<UIElementFlasher>() == null)
         {
             Debug.LogWarning("ShowUIActionPrompt: passed UI is null or doesn't have UIElementFlasher");
             return;
         }
 
-        Debug.Log("calling StartFlashing. index: " + index);
+        //Debug.Log("calling StartFlashing. index: " + index);
         uiObj.GetComponent<UIElementFlasher>().StartFlashing();
-        currentUIActionPromptee = index;
+        currentUIActionPromptee = newIndex;
+    }
+
+    /// <summary> Start the sequence of UI action prompts </summary>
+    public void StartUIActionPrompts()
+    {
+        ShowUIActionPrompt(0);
+    }
+
+    /// <summary> Stop the sequence of UI action prompting </summary>
+    public void StopAllUIActionPrompts()
+    {
+        ShowUIActionPrompt(-1);
+    }
+    
+    /// <summary> If the passed Gameobject is currently prompting, then stop it and start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
+    public void ShowNextUIActionPromptIfPrompting(GameObject go)
+    {
+        if (currentUIActionPromptee < 0 || currentUIActionPromptee >= UIActionPromptees.Length)
+            return;
+        if ( go == null)
+        {
+            Debug.LogError("Passed go is null. Returning.");
+            return;
+        }
+        if (go == UIActionPromptees[currentUIActionPromptee])
+            ShowNextUIActionPrompt();
     }
 
     /// <summary> Start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
     public void ShowNextUIActionPrompt()
     {
-        int newIndex = currentUIActionPromptee < UIActionPromptees.Length - 1 ? currentUIActionPromptee+1 : -1; //-1 will tell the system to stop
+        int newIndex = currentUIActionPromptee < UIActionPromptees.Length - 1 ? currentUIActionPromptee+1 : -1; //-1 will tell the system to stop, kinda awkward
+        //This will first stop anything that's currently prompting.
         ShowUIActionPrompt(newIndex);
     }
 

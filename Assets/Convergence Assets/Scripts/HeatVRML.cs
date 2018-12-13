@@ -33,9 +33,6 @@ public partial class HeatVRML : MonoBehaviour
     //New model of self-contained data objects
     DataManager dataMgr;
     
-    //UI
-    UIManager uiMgr;
-
     //Camera
     CameraManager cameraMgr;
 
@@ -264,9 +261,6 @@ public partial class HeatVRML : MonoBehaviour
         dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
         if (dataMgr == null)
             Debug.LogError("dataMgr == null");
-        uiMgr = GameObject.Find("UIManager").GetComponent<UIManager>();
-        if (uiMgr == null)
-            Debug.LogError("uiMgs == null");
         cameraMgr = GameObject.Find("Camera").GetComponent<CameraManager>();
         if (cameraMgr == null)
             Debug.LogError("cameraMgr == null");
@@ -346,7 +340,7 @@ public partial class HeatVRML : MonoBehaviour
 
         //Stauffer
         //Quick intro message with instructions
-        uiMgr.ShowIntroMessage();
+        UIManager.Instance.ShowIntroMessage();
     }
 
     private bool haveBalls;
@@ -408,12 +402,12 @@ public partial class HeatVRML : MonoBehaviour
         if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
         {
             //this.showHelp = !this.showHelp;
-            uiMgr.ShowIntroMessage();
+            UIManager.Instance.ShowIntroMessage();
         }
         if (Input.GetKeyDown(KeyCode.F12))
         {
             //Debugging
-            uiMgr.ShowNextUIActionPrompt();
+            UIManager.Instance.StartUIActionPrompts();
         }
         if (Const.menuScrolling && (Time.time > (this.lastScrollTime + this.minScrollSecs)))
         {
@@ -2084,7 +2078,7 @@ public partial class HeatVRML : MonoBehaviour
             {
                 string msg = "Error with data prep and verification: \n\n" + errorMsg;
                 Debug.LogError(msg);
-                uiMgr.ShowMessageDialog(msg);
+                UIManager.Instance.ShowMessageDialog(msg);
             }
             return;
         }
