@@ -228,20 +228,9 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         return visualMappingUIHandler.GetColorTableAssignments();
     }
 
-    IEnumerator RedrawCoroutine(bool quiet = false)
-    {
-        int statusID = StatusShow("Drawing...");
-        yield return null;
-        heatVRML.NewPrepareAndDrawData(quiet);
-        StatusComplete(statusID);
-    }
-
     public void OnRedrawButtonClick(GameObject button)
     {
-        StartCoroutine(RedrawCoroutine());
-        //This is the last UI prompt we do, so stop the whole process if we get here,
-        // which also handles the case when user jumps ahead of the prompts to here.
-        StopAllUIActionPrompts();
+        heatVRML.Redraw();
     }
 
     public void OnMaxHeightSlider(GameObject go)

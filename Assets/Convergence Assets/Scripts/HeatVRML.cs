@@ -3,9 +3,10 @@ using System;
 using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 [System.Serializable]
-public partial class HeatVRML : MonoBehaviour
+public class HeatVRML : MonoBehaviour
 {
     /*
 	Heatmap.js Contains almost all code for interacting with user and drawing 3D heatmaps.  Coded by Douglas P. Hill.
@@ -27,15 +28,12 @@ public partial class HeatVRML : MonoBehaviour
     // Version
     public string programVersion;
 
-    //// Stauffer new managers
+    //Stauffer - Data
+    //See DataManager singleton - new model of self-contained data objects
     
-    //Data
-    //See DataManager singleton - snw model of self-contained data objects
-    
-    //Camera
+    //Stauffer - Camera
     CameraManager cameraMgr;
 
-    //// end
 
     
     // window numbers
@@ -389,7 +387,7 @@ public partial class HeatVRML : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            NewPrepareAndDrawData();
+            Redraw();
         }
         if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
         {
@@ -2057,12 +2055,33 @@ public partial class HeatVRML : MonoBehaviour
         return new Vector3(xzySceneCorner.x + xSceneSize / 2f, 0f, xzySceneCorner.z + ySceneSizeFull / 2f);
     }
 
+    IEnumerator RedrawCoroutine(bool quiet = false)
+    {
+        int statusID = UIManager.Instance.StatusShow("Drawing...");
+        yield return null;
+        NewPrepareAndDrawData(quiet);
+        UIManager.Instance.StatusComplete(statusID);
+    }
+
     /// <summary>
-    /// Stauffer. New routine. Prep and draw data loaded in DataManager.
-    /// Replacing functionality of DatasetSelected()
+    /// Start redrawing the data.
     /// </summary>
     /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
-    public virtual void NewPrepareAndDrawData(bool quiet = false)
+    public void Redraw(bool quiet = false)
+    {
+        StartCoroutine(RedrawCoroutine());
+        //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
+        // which also handles the case when user jumps ahead of the prompts to here.
+        UIManager.Instance.StopAllUIActionPrompts();
+    }
+
+    /// <summary>
+    /// Stauffer. New routine. Prep and draw data loaded in DataManager.
+    /// Replacing functionality of DatasetSelected().
+    /// Should generally not be called directly. See Redraw().
+    /// </summary>
+    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
+    private void NewPrepareAndDrawData(bool quiet = false)
     {
         //TODO 
         // some verification of data, so we don't have to check things every time we access dataMgr
