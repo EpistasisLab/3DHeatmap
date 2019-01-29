@@ -121,10 +121,11 @@ public class DataVariable : CSVReaderData
 ///////////////////////////////////////////////////////////////////////////////
 
 /// <summary>
-/// Data manager object. Singleton
+/// Singleton class for managing much of the data stuff.
+/// See MonoBehaviorSingleton class for usage as a singleton.
 /// Holds data objects for individual variables, along with options and state.
 /// </summary>
-public class DataManager : MonoBehaviour {
+public class DataManager : MonoBehaviorSingleton<DataManager> {
 
     public enum Mapping { Height, TopColor, SideColor };
 
@@ -221,6 +222,11 @@ public class DataManager : MonoBehaviour {
         return null;
     }
 
+    // Use this for initialization instead of Awake, since this is MonoBehaviorSingleton
+    //void Awake () {
+    protected override void Initialize()
+    {
+    }
 
     void Start()
     {

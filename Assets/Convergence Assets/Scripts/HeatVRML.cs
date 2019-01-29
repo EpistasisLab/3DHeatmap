@@ -30,8 +30,7 @@ public partial class HeatVRML : MonoBehaviour
     //// Stauffer new managers
     
     //Data
-    //New model of self-contained data objects
-    DataManager dataMgr;
+    //See DataManager singleton - snw model of self-contained data objects
     
     //Camera
     CameraManager cameraMgr;
@@ -258,9 +257,6 @@ public partial class HeatVRML : MonoBehaviour
     public virtual void Start()
     {
         //--- New
-        dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
-        if (dataMgr == null)
-            Debug.LogError("dataMgr == null");
         cameraMgr = GameObject.Find("Camera").GetComponent<CameraManager>();
         if (cameraMgr == null)
             Debug.LogError("cameraMgr == null");
@@ -383,7 +379,7 @@ public partial class HeatVRML : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.O))
         {/*
-            if (dataMgr.DebugQuickChooseLoadDisplayFile())
+            if (DataManager.Instance.DebugQuickChooseLoadDisplayFile())
             {
                 //take the new data and draw it
                 Debug.Log("Loaded file with success");
@@ -1655,8 +1651,8 @@ public partial class HeatVRML : MonoBehaviour
     {
         bool isSide = mapping == DataManager.Mapping.SideColor;
 
-        DataVariable var = dataMgr.GetVariableByMapping(mapping);
-        int colorTableID = dataMgr.GetColorTableIdByMapping(mapping);
+        DataVariable var = DataManager.Instance.GetVariableByMapping(mapping);
+        int colorTableID = DataManager.Instance.GetColorTableIdByMapping(mapping);
         float inv = 0f;
 
         float value = var.Data[row][column];
@@ -2072,7 +2068,7 @@ public partial class HeatVRML : MonoBehaviour
         // some verification of data, so we don't have to check things every time we access dataMgr
         // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
         string errorMsg;
-        if( ! dataMgr.PrepareAndVerify(out errorMsg))
+        if( ! DataManager.Instance.PrepareAndVerify(out errorMsg))
         {
             if( ! quiet)
             {
@@ -2106,12 +2102,12 @@ public partial class HeatVRML : MonoBehaviour
 
         //Setup row headers (row labels)
         //
-        this.numRowLabels = dataMgr.HeightVar.hasRowHeaders ? dataMgr.HeightVar.numDataRows : 0;
+        this.numRowLabels = DataManager.Instance.HeightVar.hasRowHeaders ? DataManager.Instance.HeightVar.numDataRows : 0;
         this.rowLabels = new string[this.numRowLabels + 1];
         //Copy
         for( int i = 0; i < this.numRowLabels; i++)
         {
-            this.rowLabels[i] = dataMgr.HeightVar.rowHeaders[i];
+            this.rowLabels[i] = DataManager.Instance.HeightVar.rowHeaders[i];
         }
 
         //Draw it!
@@ -2146,7 +2142,7 @@ public partial class HeatVRML : MonoBehaviour
     {
         //In DatasetSelected, the ranges get set for the optional subsequent int columns.
         //
-        DataVariable heightVar = dataMgr.HeightVar;
+        DataVariable heightVar = DataManager.Instance.HeightVar;
         this.minRow = 0;
         this.maxRow = heightVar.numDataRows - 1;
         this.minCol = 0;
@@ -2208,7 +2204,7 @@ public partial class HeatVRML : MonoBehaviour
         //string extra2 = this.sideColorChoice > 1 ? ", " + this.allVariableDescs[this.sideColorChoice].name : ", 0";
 
         //For each row, setup data and draw a ridge
-        DataVariable hVar = dataMgr.HeightVar;
+        DataVariable hVar = DataManager.Instance.HeightVar;
 
         //Build the ridges
         for ( int row = 0; row < hVar.numDataRows; row++)
@@ -2332,14 +2328,14 @@ public partial class HeatVRML : MonoBehaviour
             else
             {
                 thisX = ((0.5f) - this.minCol) * this.xScale;
-                thisZ = ((dataMgr.HeightVar.Data[row][0] - this.minHeight) * this.zScale) + minZ;
+                thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minHeight) * this.zScale) + minZ;
                 prevX = thisX - this.xScale;
                 prevZ = thisZ;
             }
             if (colNum < lastInd)
             {
                 nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.xScale;
-                nextZ = ((dataMgr.HeightVar.Data[row][colNum + 1] - this.minHeight) * this.zScale) + minZ;
+                nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minHeight) * this.zScale) + minZ;
             }
             else
             {

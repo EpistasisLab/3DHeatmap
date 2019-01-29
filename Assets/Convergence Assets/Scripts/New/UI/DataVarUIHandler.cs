@@ -19,9 +19,6 @@ public class DataVarUIHandler : MonoBehaviour {
     /// <summary> Return true if this UI panel is currently assigned to a DataVariable </summary>
     public bool IsAssigned { get { return dataVar != null; } }
 
-    //Ref to manager objects from the scene
-    private DataManager dataMgr;
-
     //Internal convenience ref
     private InputField inputField;
 
@@ -38,10 +35,6 @@ public class DataVarUIHandler : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
-        if (dataMgr == null)
-            Debug.LogError("dataMgr == null");
-
         //There's only one comp. of type InputField, so this is easy...
         inputField = transform.GetComponentInChildren<InputField>(); //should recurse
         if (inputField == null)
@@ -136,12 +129,12 @@ public class DataVarUIHandler : MonoBehaviour {
     /// <summary> Handle button to choose (but not load/read) a file</summary>
     public void OnFileChooseClick(GameObject go)
     {
-        string result = dataMgr.ChooseFile();
+        string result = DataManager.Instance.ChooseFile();
         if (result == "") //Cancelled
             return;
         if( dataVar != null)
         {
-            dataMgr.Remove(dataVar);
+            DataManager.Instance.Remove(dataVar);
         }
         filepathLocal = result;
         SetFileNeedsLoading(true);
@@ -201,14 +194,14 @@ public class DataVarUIHandler : MonoBehaviour {
         bool hasRowHeaders, hasColumnHeaders;
         if (!GetHeaderSelection(out hasRowHeaders, out hasColumnHeaders))
             return;
-        bool success = dataMgr.LoadAddFile(filepathLocal, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
+        bool success = DataManager.Instance.LoadAddFile(filepathLocal, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
         if (success)
         {
             //dataVar already added to variable list by above method call
             //Error handling and reporting handled by ChooseLoadAddFile()
             Debug.Log("Success: file loaded.");
             //If this already had a data var assigned, remove it. (Ignores if null)
-            dataMgr.Remove(dataVar);
+            DataManager.Instance.Remove(dataVar);
             dataVar = newDataVar;
             //Switch prompting behavior to the next UI element if this element is currently prompting.
             UIManager.Instance.ShowNextUIActionPromptIfPrompting(loadButton.gameObject);

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Singleton class for managing much of the UI stuff.
+/// See MonoBehaviorSingleton class for usage as a singleton.
+/// </summary>
 public class UIManager : MonoBehaviorSingleton<UIManager>
 {
 
@@ -25,7 +29,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     //The main object for the app
     private HeatVRML heatVRML;
-    private DataManager dataMgr;
 
     private List<int> debugStatusPanelID;
 
@@ -69,9 +72,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         heatVRML = GameObject.Find("Prefab objectify").GetComponent<HeatVRML>();
         if (heatVRML == null)
             Debug.LogError("heatVRML == null");
-        dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
-        if (dataMgr == null)
-            Debug.LogError("dataMgr == null");
 
         TooltipHide();
 

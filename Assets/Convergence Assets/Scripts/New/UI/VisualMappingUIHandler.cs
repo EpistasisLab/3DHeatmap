@@ -8,10 +8,6 @@ using UnityEngine.UI;
 /// </summary>
 public class VisualMappingUIHandler : MonoBehaviour {
 
-
-    //Ref to DataManager object from the scene
-    private DataManager dataMgr;
-
     //Convenience refs to the dropdown UI elements for each visual mapping
     private Dropdown heightLabelDropdown;
     private Dropdown topColorLabelDropdown;
@@ -20,10 +16,6 @@ public class VisualMappingUIHandler : MonoBehaviour {
     // Use this for initialization
     void Start()
     {
-        dataMgr = GameObject.Find("DataManager").GetComponent<DataManager>();
-        if (dataMgr == null)
-            Debug.LogError("dataMgr == null");
-
         //Assign the dropdown object refs. 
         //These seems like a clumsy way to handle this.
         heightLabelDropdown = transform.Find("HeightPanel").transform.Find("LabelDropdown").gameObject.GetComponentInChildren<Dropdown>();
@@ -63,7 +55,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
     {
         //Debug.Log("Value Change. go.GetInstanceID() " + go.GetInstanceID());
         string label = go.GetComponentInChildren<Dropdown>().captionText.text;
-        DataVariable var = dataMgr.GetVariableByLabel( label );
+        DataVariable var = DataManager.Instance.GetVariableByLabel( label );
         if( var == null)
         {
             Debug.LogWarning("null var returned for label " + label);
@@ -71,7 +63,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
         }
         AssignVarsByCurrentLabelChoices();
         UIManager.Instance.ShowNextUIActionPromptIfPrompting(go);
-        //dataMgr.DebugDumpVariables(false);
+        //DataManager.Instance.DebugDumpVariables(false);
     }
 
     /// <summary>
@@ -79,16 +71,16 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// </summary>
     private void AssignVarsByCurrentLabelChoices()
     {
-        dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
-        dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
-        dataMgr.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
+        DataManager.Instance.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
+        DataManager.Instance.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
+        DataManager.Instance.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
     }
 
     private void SetLabelChoicesByCurrentVars()
     {
-        SetLabelChoiceIndexByVarLabel(heightLabelDropdown, dataMgr.HeightVar);
-        SetLabelChoiceIndexByVarLabel(topColorLabelDropdown, dataMgr.TopColorVar);
-        SetLabelChoiceIndexByVarLabel(sideColorLabelDropdown, dataMgr.SideColorVar);
+        SetLabelChoiceIndexByVarLabel(heightLabelDropdown, DataManager.Instance.HeightVar);
+        SetLabelChoiceIndexByVarLabel(topColorLabelDropdown, DataManager.Instance.TopColorVar);
+        SetLabelChoiceIndexByVarLabel(sideColorLabelDropdown, DataManager.Instance.SideColorVar);
     }
 
     /// <summary>
@@ -134,7 +126,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
     {
         List<Dropdown.OptionData> list = new List<Dropdown.OptionData>();
 
-        foreach (string label in dataMgr.GetLabels())
+        foreach (string label in DataManager.Instance.GetLabels())
         {
             Dropdown.OptionData od = new Dropdown.OptionData();
             od.text = label;
