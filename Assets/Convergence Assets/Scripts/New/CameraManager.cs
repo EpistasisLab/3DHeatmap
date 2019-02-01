@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 //Script for managing camera movement, etc
-public class CameraManager : MonoBehaviour {
+public class CameraManager : MonoBehaviorSingleton<CameraManager> {
 
     /// <summary> Scaling for translational input </summary>
     public float translationScaleKeys = 1f;
@@ -22,8 +22,15 @@ public class CameraManager : MonoBehaviour {
     /// <summary> The look-at target for the camera </summary>
     private Vector3 lookAtTarget;
 
-	// Use this for initialization
-	void Start () {
+    //Use this instead of Awake
+    //void Awake()
+    protected override void Initialize()
+    {
+
+    }
+
+    // Use this for initialization
+    void Start () {
         //Expect a Camera component in this class' object
         ourCamera = transform.GetComponent<Camera>() as Camera;
         if (ourCamera == null)
@@ -55,7 +62,7 @@ public class CameraManager : MonoBehaviour {
         ResetView();
     }
 
-    private void TranslateView(float lateralStep, float forwardsStep)
+    public void TranslateView(float lateralStep, float forwardsStep)
     {
         //Move both the camera and lookat target
         Vector3 lateral = ourCamera.transform.right * lateralStep;
@@ -79,30 +86,20 @@ public class CameraManager : MonoBehaviour {
         ourCamera.transform.RotateAround(lookAtTarget, Vector3.up, rotYstep);
     }
 
-    private void TouchHandler()
-    {
-        //Input.touch stuff seems to be for multitouch screens, not for trackpad
-        //Not sure yet how to handle trackpad/touchpad gestures
-        if (Input.touchCount > 0)
-            Debug.Log("touchCount: " + Input.touchCount);
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
-        {
-            // Get movement of the finger since last frame
-            Vector2 touchDeltaPosition = Input.GetTouch(0).deltaPosition;
-            Debug.Log("touch delta: " + touchDeltaPosition);
-        }
-    }
 
-    private void Zoom(float amount)
+    /// <summary> Zoom by moving camera along its fwd vector</summary>
+    /// <param name="amount">Amount to move by - scale the zoomScale public property. Use +1 (zoom in) and -1 (zoom out) to control direction and use default zoom amount.</param>
+    public void Zoom(float amount)
     {
+        float zoomAmount = amount * zoomScale;
         if(ourCamera.orthographic)
         {
-            ourCamera.orthographicSize += -amount;
+            ourCamera.orthographicSize += zoomAmount;
         }
         else
         {
             //perspective. move along fwd vector
-            ourCamera.transform.position += ourCamera.transform.forward * amount;
+            ourCamera.transform.position += ourCamera.transform.forward * zoomAmount;
         }
     }
 
@@ -138,17 +135,17 @@ public class CameraManager : MonoBehaviour {
             RotateView(-rotX * rotationScale, rotY * rotationScale);
         }
 
-        //TODO
-        TouchHandler();
+        //Check for touch events and proces them
+        TouchManager.Instance.Process();
 
         //Zoom
         if (Input.GetKey(KeyCode.Minus) || Input.GetKey(KeyCode.KeypadMinus))
         {
-            Zoom(-zoomScale);
+            Zoom(-1f);
         }
         if (Input.GetKey(KeyCode.Equals) || Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.KeypadPlus))
         {
-            Zoom(zoomScale);
+            Zoom(1f);
         }
 
     }

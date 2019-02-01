@@ -31,11 +31,6 @@ public class HeatVRML : MonoBehaviour
     //Stauffer - Data
     //See DataManager singleton - new model of self-contained data objects
     
-    //Stauffer - Camera
-    CameraManager cameraMgr;
-
-
-    
     // window numbers
     private int DSwin = 0;
     private int STYLEwin;
@@ -254,11 +249,6 @@ public class HeatVRML : MonoBehaviour
     //
     public virtual void Start()
     {
-        //--- New
-        cameraMgr = GameObject.Find("Camera").GetComponent<CameraManager>();
-        if (cameraMgr == null)
-            Debug.LogError("cameraMgr == null");
-        //---
 
         int i = 0;
         this.lastScrollTime = Time.time; //Stauffer move init here
@@ -2133,7 +2123,7 @@ public class HeatVRML : MonoBehaviour
         this.NewShowData();
 
         //Point the camera to the middle of the plot 
-        cameraMgr.LookAt(GetPlotCenter());
+        CameraManager.Instance.LookAt(GetPlotCenter());
 
         /* Stauffer - this code is never reached because bScrollBin never changes from its default val of false
         if (this.bScrollBin)
