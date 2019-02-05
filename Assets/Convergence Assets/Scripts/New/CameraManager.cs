@@ -99,7 +99,10 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         else
         {
             //perspective. move along fwd vector
-            ourCamera.transform.position += ourCamera.transform.forward * zoomAmount;
+            Vector3 newPos = ourCamera.transform.position + ourCamera.transform.forward * zoomAmount;
+            if (newPos.y < 0.1f)
+                return;
+            ourCamera.transform.position = newPos;
         }
     }
 

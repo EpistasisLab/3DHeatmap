@@ -3872,7 +3872,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bacbd5c560f07df4495b0a8d74e828b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pinchZoomTolerance: 0.95
+  pinchZoomScale: 1
+  pinchZoomExpScale: 2.5
+  pinchZoomDotThreshold: 0.9
   translationScale: 0.1
   translationExpScale: 2.5
   translateDotThreshold: 0.95

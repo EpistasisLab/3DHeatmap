@@ -84,25 +84,24 @@ public class TouchManager : MonoBehaviorSingleton<TouchManager> {
             if (mv0 || mv1)
             {
                 //Method:
-                //Make a vector from first touch to tip vector made from deltaPosition and touch position.
+                //Make a vector from first touch to tip of vector made from 2nd Touch's position + deltaPosition.
                 //If this vector is parallel or anti-parallel to the 2nd touch's deltaPosition, then we're pinching.
                 //This lets us zoom when one touch isn't moving.
-                if (mv0 && mv1)
+                //If one of the touches is stationary, use that as the still/reference point.
+                //If both are moving, it doesn't matter which is which.
+                Touch still, moving;
+                moving = mv0 ? Input.GetTouch(0) : Input.GetTouch(1);
+                still = mv0 ? Input.GetTouch(1) : Input.GetTouch(0);
+                Vector2 dH = ( moving.deltaPosition + moving.position - still.position);
+                float dot = Vector2.Dot(dH, moving.deltaPosition);
+                Debug.Log("zoom dot: " + dot);
+                //Check if the two touches are moving parallel or anti-parallel
+                if ( Mathf.Abs(dot) > pinchZoomDotThreshold)
                 {
-                    //If one of the touches is stationary, use that as the still/reference point.
-                    //If both are moving, it doesn't matter which is which.
-                    Touch still, moving;
-                    moving = mv0 ? Input.GetTouch(0) : Input.GetTouch(1);
-                    still = mv0 ? Input.GetTouch(1) : Input.GetTouch(0);
-                    Vector2 dH = ( moving.deltaPosition + moving.position - still.position);
-                    float dot = Vector2.Dot(dH, moving.deltaPosition);
-                    //Check if the two touches are moving parallel or anti-parallel
-                    if ( Mathf.Abs(dot) > pinchZoomDotThreshold)
-                    {
-                        Vector2 avg = (d0 + d1) / 2f;
-                        float zoom = Mathf.Pow(Mathf.Abs(avg.magnitude), pinchZoomExpScale) * pinchZoomScale * Mathf.Sign(dot) * -1;
-                        CameraManager.Instance.Zoom(zoom);
-                    }
+                    float magnitude = mv0 && mv1 ? (d0.magnitude + d1.magnitude) / 2f : Mathf.Max(d0.magnitude,d1.magnitude);
+                    float zoom = Mathf.Pow(magnitude, pinchZoomExpScale) * pinchZoomScale * Mathf.Sign(dot);
+                    CameraManager.Instance.Zoom(zoom);
+                    return;
                 }
             }
         }

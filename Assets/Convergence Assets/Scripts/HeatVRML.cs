@@ -1824,6 +1824,7 @@ public class HeatVRML : MonoBehaviour
 
     public static RaycastHit hit;
     public static int dataPointMask;
+    //Stauffer - NOTE this isn't called from anywhere.
     public virtual void CapturePointedAt()
     {
         this.pointedData.ready = false;
