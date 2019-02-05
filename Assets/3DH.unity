@@ -3872,11 +3872,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bacbd5c560f07df4495b0a8d74e828b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pinchZoomScale: 1
-  pinchZoomExpScale: 2.5
+  touchStartDelay: 0.15
+  pinchZoomScale: 0.25
+  pinchZoomExpScale: 1.5
   pinchZoomDotThreshold: 0.9
+  rotationScale: 0.1
+  rotationExpScale: 1.5
+  rotationDotThreshold: 0.9
   translationScale: 0.1
-  translationExpScale: 2.5
+  translationExpScale: 1.5
   translateDotThreshold: 0.95
 --- !u!4 &580437087
 Transform:
@@ -10217,7 +10221,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   translationScaleKeys: 1.5
   translationScaleMouse: 25
-  rotationScale: 6
+  rotationScaleMouse: 1
   zoomScale: 1.5
   defaultPosition: {x: 1000, y: 250, z: 600}
 --- !u!224 &1814658524

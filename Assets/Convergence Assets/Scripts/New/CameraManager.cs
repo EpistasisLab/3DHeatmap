@@ -10,7 +10,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <summary> Scaling for translational input </summary>
     public float translationScaleKeys = 1f;
     public float translationScaleMouse = 8f;
-    public float rotationScale = 1f;
+    public float rotationScaleMouse = 1f;
     public float zoomScale = 1f;
     public Vector3 defaultPosition;
 
@@ -72,18 +72,21 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         ourCamera.transform.position += lateral + forwards;
     }
 
-    private void RotateView(float rotXstep, float rotYstep)
+    /// <summary> Rotate camera around the lookAtTarget point </summary>
+    /// <param name="rotRightStep">rotation step around camera's Right vector</param>
+    /// <param name="rotUpStep">rotation step around camera's Up vector</param>
+    public void RotateView(float rotRightStep, float rotUpStep)
     {
         //Prevent the camera from dropping down below the ground plane
-        if (rotXstep < 0f)
-            rotXstep = Mathf.Max(3f - ourCamera.transform.rotation.eulerAngles.x, rotXstep );
+        if (rotRightStep < 0f)
+            rotRightStep = Mathf.Max(3f - ourCamera.transform.rotation.eulerAngles.x, rotRightStep );
         else
             //Prevent the camera from rotating over the top (which makes Y flip in LoogAt call and isn't terrible, but still not what we want)
-            rotXstep = Mathf.Min((89.95f - ourCamera.transform.rotation.eulerAngles.x), rotXstep);
+            rotRightStep = Mathf.Min((89.95f - ourCamera.transform.rotation.eulerAngles.x), rotRightStep);
 
         //Rotate camera around the target so it keeps looking at target
-        ourCamera.transform.RotateAround(lookAtTarget, ourCamera.transform.right, rotXstep);
-        ourCamera.transform.RotateAround(lookAtTarget, Vector3.up, rotYstep);
+        ourCamera.transform.RotateAround(lookAtTarget, ourCamera.transform.right, rotRightStep);
+        ourCamera.transform.RotateAround(lookAtTarget, Vector3.up, rotUpStep);
     }
 
 
@@ -133,9 +136,9 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         if (Input.GetButton("Fire1"/*left mouse button*/))
         {
             // Read the mouse input axis
-            float rotX = Input.GetAxis("Mouse Y");
-            float rotY = Input.GetAxis("Mouse X");
-            RotateView(-rotX * rotationScale, rotY * rotationScale);
+            float rotX = Input.GetAxis("Mouse X");
+            float rotY = Input.GetAxis("Mouse Y");
+            RotateView(-rotY * rotationScaleMouse, rotX * rotationScaleMouse);
         }
 
         //Check for touch events and proces them
