@@ -1,4 +1,3 @@
-using Mono.Data.Sqlite;
 using System;
 using System.IO;
 using UnityEngine;
@@ -190,9 +189,10 @@ public class HeatVRML : MonoBehaviour
     private string[] rowLabels;
     private int numRowLabels;
     private string connStrn;
-    private SqliteDataReader reader;
-    private SqliteConnection connection;
-    private SqliteCommand dbcmd;
+    //Stauffer - removing Sqlite stuff to work on webGL build
+    //private SqliteDataReader reader;
+    //private SqliteConnection connection;
+    //private SqliteCommand dbcmd;
     private bool dataChanged;
     private bool wantRedraw;
     private bool wantVRML;
@@ -305,9 +305,12 @@ public class HeatVRML : MonoBehaviour
 
         // Open database
         this.connStrn = "URI=file:" + Const.dataBase;
+
+        /* Stauffer - removing Sqlite stuff to work on webGL build
         this.connection = new SqliteConnection(this.connStrn);
         this.connection.Open();
         this.dbcmd = this.connection.CreateCommand();
+        */
         //this.myCameraOld = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
         //Stauffer - change this to my new camera for now while new camera controls are implemented
         this.myCameraOld = GameObject.Find("Camera").GetComponent<Camera>() as Camera; 
@@ -1160,9 +1163,11 @@ public class HeatVRML : MonoBehaviour
 
     public virtual void GetAxisExtentsOld()
     {
+        Debug.LogError("Deprecated to be removed");
         //Stauffer - get ranges for row and col numbers, bin numbers, and height values (first observed value)
         //In DatasetSelected, the ranges get set for the optional subsequent int columns.
         //
+        /* Stauffer - removing Sqlite stuff to work on webGL build
         this.dbcmd.CommandText = ((("SELECT MIN(row), MAX(row), MIN(col), MAX(col), MIN(bin), MAX(bin), MIN(height), MAX(height) from " + this.selTable) + " where col <= ") + this.colLimit) + ";";
         Debug.Log("GetAxisExtentsOld() query is " + this.dbcmd.CommandText);
         this.reader = this.dbcmd.ExecuteReader();
@@ -1185,10 +1190,14 @@ public class HeatVRML : MonoBehaviour
         this.numCols = (this.maxCol - this.minCol) + 1;
         this.numBins = (this.maxBin - this.minBin) + 1;
         this.heightRange = this.maxHeight - this.minHeight;
+        */
     }
 
     public virtual int ArrayFromQuery(string[] inarray, string field, string fromClause)
     {
+        Debug.LogError("Deprecated to be removed");
+        return 0;
+        /* Stauffer - removing Sqlite stuff to work on webGL build
         int anint = 0;
         this.dbcmd.CommandText = (("SELECT count(" + field) + ") ") + fromClause;
         //Debug.Log("Query is " + dbcmd.CommandText);
@@ -1217,6 +1226,7 @@ public class HeatVRML : MonoBehaviour
         //Debug.Log("Member " + (thisChoice - 1) + " is " + inarray[thisChoice - 1]);
         this.reader.Close();
         return thisChoice;
+        */
     }
 
     public virtual void ScaleRidges(float frac)
@@ -1267,6 +1277,9 @@ public class HeatVRML : MonoBehaviour
 
     public virtual void ShowDataOld()
     {
+        Debug.LogError("Deprecated to be removed");
+        /* Stauffer - removing Sqlite stuff to work on webGL build
+
         int prow = 0; //Stauffer - previous row?
         int pbin = 0; //Stauffer - previous bin?
         int col = 0;
@@ -1348,6 +1361,7 @@ public class HeatVRML : MonoBehaviour
         }
         this.reader.Close();
         this.BuildRidgeOld(prow, xslot, pbin - this.minBin);
+        */
     }
 
     public bool doingEdges; //Stauffer - seems to determine if a bevel is drawn at top of column
@@ -1846,6 +1860,9 @@ public class HeatVRML : MonoBehaviour
             floatCol = floatCol - 1f;
         }
         this.pointedData.col = (int)Mathf.Floor(floatCol);
+
+        Debug.LogError("Deprecated to be removed");
+        /* Stauffer - removing Sqlite stuff to work on webGL build
         this.dbcmd.CommandText = ((((((("Select height from " + this.selTable) + " where row = ") + this.pointedData.row) + " and col = ") + this.pointedData.col) + " and bin = ") + this.pointedData.bin) + ";";
         Debug.Log(this.dbcmd.CommandText);
         this.reader = this.dbcmd.ExecuteReader();
@@ -1855,6 +1872,7 @@ public class HeatVRML : MonoBehaviour
             this.pointedData.ready = true;
         }
         this.reader.Close();
+        */
         this.ShowPointedData();
     }
 
@@ -2520,8 +2538,13 @@ public class HeatVRML : MonoBehaviour
         //
         //Stauffer - this first step looks to be getting the names of *extra* fields, ie the optional int fields past
         // the required row, col, bin and height fields
-        this.dbcmd.CommandText = ("PRAGMA table_info(" + this.selTable) + ");";
+
         List<string> nameArray = new List<string>();
+
+        Debug.LogError("Deprecated to be removed");
+        /* Stauffer - removing Sqlite stuff to work on webGL build
+        
+        this.dbcmd.CommandText = ("PRAGMA table_info(" + this.selTable) + ");";
         this.reader = this.dbcmd.ExecuteReader();
         while (this.reader.Read())
         {
@@ -2548,6 +2571,7 @@ public class HeatVRML : MonoBehaviour
 
         }
         this.reader.Close();
+        */
 
         //Stauffer - now it's setting up the field (variable) description array with bin, height, and any additional fields it found above
         thisField = 0;
@@ -2569,6 +2593,8 @@ public class HeatVRML : MonoBehaviour
         // REMEMBER that a field/column here in the db format is a variable (i.e. colleciton of observations for a particular class/type/param)
         foreach (string fieldname in nameArray)
         {
+            /* Stauffer - removing Sqlite stuff to work on webGL build
+
             this.dbcmd.CommandText = ((((("SELECT MIN(" + fieldname) + "), MAX(") + fieldname) + ") from ") + this.selTable) + ";";
             //Debug.Log("trying " + dbcmd.CommandText);
             this.reader = this.dbcmd.ExecuteReader();
@@ -2608,12 +2634,15 @@ public class HeatVRML : MonoBehaviour
                 //no color map table found
             }
             this.allVariableDescs[this.numFields++] = intField;
+            */
         }
 
         //Look for table with row labels and parse if found
         string rowtable = "heatrows_" + this.selTable.Substring(5);
+          
+        /* Stauffer - removing Sqlite stuff to work on webGL build
         this.dbcmd.CommandText = ("SELECT count(*) from " + rowtable) + ";";
-
+        
         try
         {
             this.numRowLabels = UnityScript.Lang.UnityBuiltins.parseInt(this.dbcmd.ExecuteScalar() as string);
@@ -2631,6 +2660,7 @@ public class HeatVRML : MonoBehaviour
             this.numRowLabels = 0;
             this.rowLabels = new string[1];
         }
+        */
 
         //Draw it!
         this.ShowDataOld();
@@ -2897,7 +2927,7 @@ public class HeatVRML : MonoBehaviour
 				cstring += (colors[avert].g + " ");
 				cstring += (colors[avert++].b + ", ");
 				*/
-                cstring = cstring + (colors[avert].r + " ");
+        cstring = cstring + (colors[avert].r + " ");
                 cstring = cstring + (colors[avert].g + " ");
                 cstring = cstring + colors[avert].b;
             }
