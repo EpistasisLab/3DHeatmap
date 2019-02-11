@@ -134,7 +134,7 @@ public class DataVarUIHandler : MonoBehaviour {
             return;
         if( dataVar != null)
         {
-            DataManager.Instance.Remove(dataVar);
+            DataManager.Instance.Remove(dataVar); //NOTE - why is this done here and not in DataManager ???
         }
         filepathLocal = result;
         SetFileNeedsLoading(true);

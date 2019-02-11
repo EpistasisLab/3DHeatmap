@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/3DH.unity
     guid: 27d2c0c901a664755a80dac3addb1eb5
+  - enabled: 0
+    path: Assets/StandaloneFileBrowser/Sample/CanvasSampleScene.unity
+    guid: c0e4eec5741834194a946535d535405c
   m_configObjects: {}
