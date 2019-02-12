@@ -5,6 +5,67 @@ using System.Collections.Generic;
 using UnityEngine;
 using SFB;
 
+/// <summary> Data values and data labels for a point on the data grid.
+/// For a given row and column, the three data values from each mapped DataVariable.
+/// Include the labels of the DataVariables for each value, for convenience. </summary>
+public class TriDataPoint
+{
+    /// <summary> Flag. Is the data in this object valid? </summary>
+    public bool isValid;
+
+    public int row;
+    public int col;
+
+    public float heightValue;
+    public float topValue;
+    public float sideValue;
+
+    public string heightLabel;
+    public string topLabel;
+    public string sideLabel;
+
+    TriDataPoint()
+    {
+        isValid = false;
+        row = col = -1;
+    }
+
+    public TriDataPoint(int row, int col)
+    {
+        Initialize(row, col);
+    }
+
+    public void Initialize(int rowIn, int colIn)
+    {
+        isValid = false;
+        string dummy;
+        //Returns silently if data isn't ready or is out of bounds
+        if (DataManager.Instance.PrepareAndVerify(out dummy) == false)
+            return;
+        if (rowIn < 0 || row >= DataManager.Instance.Rows)
+            return;
+        if (colIn < 0 || col >= DataManager.Instance.Cols)
+            return;
+
+        row = rowIn;
+        col = colIn;
+
+        DataVariable v;
+        v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.Height);
+        heightValue = v.Data[row][col]; //should really have a general accessor for this
+        heightLabel = v.Label;
+        v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.TopColor);
+        topValue = v.Data[row][col];
+        topLabel = v.Label;
+        v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.SideColor);
+        sideValue = v.Data[row][col];
+        sideLabel = v.Label;
+
+        isValid = true;
+    }
+}
+
+
 /// <summary>
 /// A single data variable, i.e. a set of observational values for a particular experiment, state, condition, etc.
 /// Initially, the 2D data imported from a single csv file.
@@ -29,8 +90,9 @@ public class DataVariable : CSVReaderData
     private string filename;
     public string Filepath { get { return filename; } set { filename = value; } }
 
-    /// <summary> A label for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
+    /// <summary> A user-friendly label/name for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
     private string label;
+    /// <summary> A user-friendly label/name for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
     public string Label { get { return label; } set { label = value; } }
 
     public DataVariable()
@@ -148,6 +210,13 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
 
     /// <summary> Returns true if one or more data variables are loaded. Does NOT verify data or variable mappings. </summary>
     public bool DataIsLoaded { get { return variables.Count > 0; } }
+
+    /// <summary>
+    /// Get the number of rows of data. 
+    /// NOTE - only returns size of Height variable. You should already know that all the data is valid before using this.
+    /// </summary>
+    public int Rows { get { return HeightVarIsAssigned ? HeightVar.numDataRows : 0; } }
+    public int Cols { get { return HeightVarIsAssigned ? HeightVar.numDataCols : 0; } }
 
     /// <summary> Check if a variable has been assigned to the height param </summary>
     public bool HeightVarIsAssigned { get { return (HeightVar != null && HeightVar.VerifyData()); } }

@@ -394,7 +394,10 @@ public class HeatVRML : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F12))
         {
             //Debugging
-            UIManager.Instance.StartUIActionPrompts();
+            //UIManager.Instance.StartUIActionPrompts();
+            TriDataPoint data = new TriDataPoint(0, 1);
+            Debug.Log("TriDataPoint test: " + data.isValid + " r,c: " + data.row + " " + data.col + "\nval, label\n" + data.heightValue + " " + data.heightLabel +
+                "\n" + data.topValue + " " + data.topLabel + "\n" + data.sideValue + " " + data.sideLabel);
         }
         if (Const.menuScrolling && (Time.time > (this.lastScrollTime + this.minScrollSecs)))
         {
