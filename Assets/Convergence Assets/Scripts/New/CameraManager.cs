@@ -2,16 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 //Script for managing camera movement, etc
 public class CameraManager : MonoBehaviorSingleton<CameraManager> {
 
-    /// <summary> Scaling for translational input </summary>
-    public float translationScaleKeys = 1f;
-    public float translationScaleMouse = 8f;
-    public float rotationScaleMouse = 1f;
-    public float zoomScale = 1f;
     public Vector3 defaultPosition;
 
     private Camera ourCamera;
@@ -22,7 +16,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <summary> The look-at target for the camera </summary>
     private Vector3 lookAtTarget;
 
-    //Use this instead of Awake
+    //Use this instead of Awake since this is a MonoBehaviorSingleton
     //void Awake()
     protected override void Initialize()
     {
@@ -89,12 +83,11 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         ourCamera.transform.RotateAround(lookAtTarget, Vector3.up, rotUpStep);
     }
 
-
-    /// <summary> Zoom by moving camera along its fwd vector</summary>
-    /// <param name="amount">Amount to move by - scale the zoomScale public property. Use +1 (zoom in) and -1 (zoom out) to control direction and use default zoom amount.</param>
+   /// <summary> Zoom by moving camera along its fwd vector</summary>
+    /// <param name="amount">Amount to move by. Use + (zoom in) and - (zoom out) to control direction.</param>
     public void Zoom(float amount)
     {
-        float zoomAmount = amount * zoomScale;
+        float zoomAmount = amount;
         if(ourCamera.orthographic)
         {
             ourCamera.orthographicSize += zoomAmount;
@@ -109,60 +102,8 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         }
     }
 
-    private void CheckForInput()
-    {
-        float vertButton = Input.GetAxisRaw("Vertical");
-        float horzButton = Input.GetAxisRaw("Horizontal");
-        //These two were used in orig code, but I'm not using, at least not at this point.
-        //float turnButton = Input.GetAxisRaw("Turn");
-        //float spaceButton = Input.GetAxisRaw("Jump");
-
-        //Forward / backward translation parallel to ground plane.
-        //NOT movement along camera-forward
-        if ((vertButton != 0f || horzButton != 0f))
-        {
-            TranslateView(horzButton * translationScaleKeys, vertButton * translationScaleKeys);
-            //Debug.Log("horzButton " + horzButton);
-        }
-        if (Input.GetButton("Fire2"/*right mouse button*/))
-        {
-            // Read the mouse input axis
-            float trX = Input.GetAxis("Mouse X");
-            float trY = Input.GetAxis("Mouse Y");
-            TranslateView(-trX * translationScaleMouse, -trY * translationScaleMouse);
-        }
-
-        //Rotation
-        if (Input.GetButton("Fire1"/*left mouse button*/))
-        {
-            // Read the mouse input axis
-            float rotX = Input.GetAxis("Mouse X");
-            float rotY = Input.GetAxis("Mouse Y");
-            RotateView(-rotY * rotationScaleMouse, rotX * rotationScaleMouse);
-        }
-
-        //Check for touch events and proces them
-        TouchManager.Instance.Process();
-
-        //Zoom
-        if (Input.GetKey(KeyCode.Minus) || Input.GetKey(KeyCode.KeypadMinus))
-        {
-            Zoom(-1f);
-        }
-        if (Input.GetKey(KeyCode.Equals) || Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.KeypadPlus))
-        {
-            Zoom(1f);
-        }
-
-    }
     // Update is called once per frame
     void Update () {
-
-        //Look for input controls if the UI isn't being used
-        //if (!EventSystem.current.IsPointerOverGameObject() ) //NOTE - this method fails when cursor leaves area of UI control but still is controlling it, e.g. with a slider when you move up or down off of it while still holding click on it
-        if (EventSystem.current.currentSelectedGameObject == null)
-            CheckForInput();
-
         //Update target
         ourCamera.transform.LookAt(lookAtTarget);
         //Debug.Log("target: " + target);

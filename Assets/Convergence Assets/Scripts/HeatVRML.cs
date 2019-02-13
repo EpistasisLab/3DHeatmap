@@ -4,8 +4,12 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 
+/// <summary>
+/// Main class. Has lots of state vars crammed in it. Plan is to break it up over time.
+/// As a MonoBehaviorSingleton, there's a single global instance that is accessible via HeatVRML.Instance
+/// </summary>
 [System.Serializable]
-public class HeatVRML : MonoBehaviour
+public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 {
     /*
 	Heatmap.js Contains almost all code for interacting with user and drawing 3D heatmaps.  Coded by Douglas P. Hill.
@@ -131,14 +135,14 @@ public class HeatVRML : MonoBehaviour
     private float zScale;
     private int minRow;
     private int maxRow;
-    private int minCol;
+    public int minCol;
     private int maxCol;
     private int minBin;
     private int maxBin;
     private float minHeight;
     private float maxHeight;
     private int numRows;
-    private int numCols;
+    public int numCols;
     private int numBins;
     private float heightRange;
     private int minMarker;
@@ -245,6 +249,13 @@ public class HeatVRML : MonoBehaviour
     private Texture2D xray;
     private bool showXRay;
     private int colLimit;
+
+    //Use this instead of Awake since this is a MonoBehaviorSingleton
+    //void Awake()
+    protected override void Initialize()
+    {
+
+    }
 
     //
     public virtual void Start()
@@ -396,8 +407,7 @@ public class HeatVRML : MonoBehaviour
             //Debugging
             //UIManager.Instance.StartUIActionPrompts();
             TriDataPoint data = new TriDataPoint(0, 1);
-            Debug.Log("TriDataPoint test: " + data.isValid + " r,c: " + data.row + " " + data.col + "\nval, label\n" + data.heightValue + " " + data.heightLabel +
-                "\n" + data.topValue + " " + data.topLabel + "\n" + data.sideValue + " " + data.sideLabel);
+            data.DebugDump();
         }
         if (Const.menuScrolling && (Time.time > (this.lastScrollTime + this.minScrollSecs)))
         {

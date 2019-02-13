@@ -88,7 +88,8 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     // Update is called once per frame
     void Update () {
-        /*
+
+        /* debug
         if (Input.GetKeyDown(KeyCode.T))
         {
             //Test status panel

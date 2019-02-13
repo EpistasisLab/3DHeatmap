@@ -18,6 +18,19 @@ public class PointerDataSelection : MonoBehaviour {
 
     //	}
 
+    public TriDataPoint GetDataAtScreenPosition(Vector3 pointerPosition)
+    {
+        int row, col;
+        if( SelectAtScreenPosition(pointerPosition, out row, out col) == false)
+        {
+            //Return empty data object, with isValid = false
+            return new TriDataPoint();
+        }
+
+        //This will hold the data for the data variables at [row,col]
+        return new TriDataPoint(row, col);
+    }
+
     public bool SelectAtScreenPosition(Vector3 pointerPosition, out int row, out int col)
     {
         row = col = 0;
@@ -34,8 +47,8 @@ public class PointerDataSelection : MonoBehaviour {
 
         // Calculate column from x position of hit
         // It is possible for this to be one too high if it hits on the right side of a column, so check for this condition
-   /*
-        float floatCol = (((hit.point.x - HeatVRML.xzySceneCorner.x) * HeatVRML.numCols) / HeatVRML.xSceneSize) + HeatVRML.minCol;
+   
+        float floatCol = (((hit.point.x - HeatVRML.Instance.xzySceneCorner.x) * HeatVRML.Instance.numCols) / HeatVRML.Instance.xSceneSize) + HeatVRML.Instance.minCol;
         if (((floatCol - Mathf.Floor(floatCol)) < 0.1f) && (hit.normal.x > 0.95f))
         {
             floatCol = floatCol - 1f;
@@ -43,7 +56,7 @@ public class PointerDataSelection : MonoBehaviour {
 
         col = (int)Mathf.Floor(floatCol);
         row = idScript.row;
-    */
+    
         return true;
     }
 

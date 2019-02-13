@@ -671,6 +671,8 @@ MonoBehaviour:
   ySceneSizeByBin: 400
   zSceneSize: 25
   xzySceneCorner: {x: 800, y: 2, z: 800}
+  minCol: 0
+  numCols: 0
   minScrollSecs: 0.05
   includeVRML: 0
   includeBalls: 0
@@ -3855,7 +3857,7 @@ GameObject:
   - component: {fileID: 580437087}
   - component: {fileID: 580437086}
   m_Layer: 0
-  m_Name: TouchManager
+  m_Name: InputManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3873,15 +3875,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   touchStartDelay: 0.15
-  pinchZoomScale: 0.25
-  pinchZoomExpScale: 1.5
-  pinchZoomDotThreshold: 0.9
-  rotationScale: 0.1
-  rotationExpScale: 1.5
-  rotationDotThreshold: 0.9
-  translationScale: 0.1
-  translationExpScale: 1.5
-  translateDotThreshold: 0.95
+  pinchZoomScaleTouch: 0.2
+  pinchZoomExpScaleTouch: 1.5
+  pinchZoomDotThresholdTouch: 0.9
+  rotationScaleTouch: 0.1
+  rotationExpScaleTouch: 1.5
+  rotationDotThresholdTouch: 0.9
+  translationScaleTouch: 0.1
+  translationExpScaleTouch: 1.5
+  translateDotThresholdTouch: 0.95
 --- !u!4 &580437087
 Transform:
   m_ObjectHideFlags: 0

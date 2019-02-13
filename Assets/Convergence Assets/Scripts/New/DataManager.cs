@@ -24,7 +24,7 @@ public class TriDataPoint
     public string topLabel;
     public string sideLabel;
 
-    TriDataPoint()
+    public TriDataPoint()
     {
         isValid = false;
         row = col = -1;
@@ -62,6 +62,12 @@ public class TriDataPoint
         sideLabel = v.Label;
 
         isValid = true;
+    }
+
+    public void DebugDump()
+    {
+        Debug.Log("TriDataPoint.DebugDump: " + isValid + " r,c: " + row + " " + col + "\nval, label\n" + heightValue.ToString("F4") + " " + heightLabel +
+                    "\n" + topValue.ToString("F4") + " " + topLabel + "\n" + sideValue.ToString("F4") + " " + sideLabel);
     }
 }
 
