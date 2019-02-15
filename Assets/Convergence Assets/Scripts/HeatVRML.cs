@@ -304,11 +304,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             this.zSceneSize = this.zSceneSize * 4f;
         }
         // Find the prototype mesh object, if present
-        this.proto = GameObject.Find("protomesh");
-        if (!this.includeBalls)
-        {
-            UnityEngine.Object.Destroy(this.proto.GetComponent<Collider>());
-        }
+        this.proto = GameObject.Find("protomesh_InScene");
+
         this.baseCube = GameObject.Find("basecube");
         this.MakeUnitCube(this.baseCube);
         this.protolabel = GameObject.Find("protolabel");
@@ -405,9 +402,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         if (Input.GetKeyDown(KeyCode.F12))
         {
             //Debugging
+            GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z), Quaternion.identity);
+            newRidge.name = "testRidge";
+
             //UIManager.Instance.StartUIActionPrompts();
-            TriDataPoint data = new TriDataPoint(0, 1);
-            data.DebugDump();
+
+            //TriDataPoint data = new TriDataPoint(0, 1);
+            //data.DebugDump();
         }
         if (Const.menuScrolling && (Time.time > (this.lastScrollTime + this.minScrollSecs)))
         {

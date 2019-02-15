@@ -16,7 +16,9 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     //// MOUSE Input ////
     public float translationScaleMouse = 25f;
     public float rotationScaleMouse = 1f;
-
+    /// <summary> Time below which a mouse click-and-release is considered a single click </summary>
+    public float mouseSingleClickThreshold;
+    private float leftMouseButtonDownTime;
 
     //// TOUCH Input ////
 
@@ -51,6 +53,9 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Threshold above which dot product of movement vectors are considered parallel and thus translating </summary>
     public float translateDotThresholdTouch = 0.95f;
 
+    /// <summary> Ref to component for getting data via pointer </summary>
+    PointerDataSelection pointerDataSelection;
+
     //Use this instead of Awake
     protected override void Initialize()
     {
@@ -61,7 +66,11 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 	void Start () {
         firstTouchTime = 0;
         currentTouchAction = prevTouchActionDbg = TouchAction.None;
-	}
+        pointerDataSelection = GetComponent<PointerDataSelection>();
+        if (pointerDataSelection == null)
+            Debug.LogError("pointerDataSelection == null!");
+
+    }
 	
     /// <summary> Call this when you want to check for touch actions and respond to them </summary>
     public void CheckForTouch()
@@ -208,11 +217,28 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 
     private void CheckForMouse()
     {
+        //Check for single click. Stash time and swallow if found.
+        if (Input.GetMouseButtonDown(0))
+        {
+            leftMouseButtonDownTime = Time.time;
+            return;
+        }
+        if (Input.GetMouseButtonUp(0))
+        {
+            if( Time.time - leftMouseButtonDownTime < mouseSingleClickThreshold)
+            {
+                //Process single click
+                TriDataPoint triPoint = pointerDataSelection.GetDataAtScreenPosition(Input.mousePosition);
+                triPoint.DebugDump();
+                return;
+            }
+        }
+        
         //Translate
         if (Input.GetMouseButton(1/*right mouse button*/))
         {
             // Read the mouse input axis
-            float trX = Input.GetAxis("Mouse X");
+            float trX = Input.GetAxis("Mouse X"); //delta position, from what I understand
             float trY = Input.GetAxis("Mouse Y");
             CameraManager.Instance.TranslateView(-trX * translationScaleMouse, -trY * translationScaleMouse);
         }

@@ -8,6 +8,9 @@ using UnityEngine;
 /// </summary>
 public class PointerDataSelection : MonoBehaviour {
 
+    /// <summary> Unity layer assigned to data objects. For ray-casting. </summary>
+    public int DataObjectLayer = 8;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -18,6 +21,12 @@ public class PointerDataSelection : MonoBehaviour {
 
     //	}
 
+    /// <summary>
+    /// Raycast from pointer position to data to select a data point.
+    /// Check returned object 'isValid' property to test for success.
+    /// </summary>
+    /// <param name="pointerPosition"></param>
+    /// <returns></returns>
     public TriDataPoint GetDataAtScreenPosition(Vector3 pointerPosition)
     {
         int row, col;
@@ -37,12 +46,13 @@ public class PointerDataSelection : MonoBehaviour {
 
         //Stauffer - this code mostly taken from old HeatVRML.CapturePointedAt method that was unused.
         Ray ray = Camera.main.ScreenPointToRay(pointerPosition);
-        ray.origin = Camera.main.transform.position;
+        //Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.red, 10, false);
         RaycastHit hit;
-        if (!Physics.Raycast(ray, out hit, Mathf.Infinity, HeatVRML.dataPointMask))
+        if (!Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << DataObjectLayer))
         {
             return false;
         }
+        Debug.Log("Raycast gameObject name: " + hit.transform.gameObject.name);
         IdentifyRidge idScript = (IdentifyRidge) hit.transform.gameObject.GetComponent(typeof(IdentifyRidge));
 
         // Calculate column from x position of hit
@@ -58,6 +68,11 @@ public class PointerDataSelection : MonoBehaviour {
         row = idScript.row;
     
         return true;
+    }
+
+    public void Update()
+    {
+        //Debug.DrawRay(Vector3.zero, new Vector3(1, 1, 1)*1000f, Color.red);
     }
 
 }
