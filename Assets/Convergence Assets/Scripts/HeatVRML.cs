@@ -304,7 +304,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             this.zSceneSize = this.zSceneSize * 4f;
         }
         // Find the prototype mesh object, if present
-        this.proto = GameObject.Find("protomesh_InScene");
+        this.proto = GameObject.Find("protomesh_SceneObj");
+        if (this.proto == null)
+            Debug.LogError("Failed to find object for proto ridge");
 
         this.baseCube = GameObject.Find("basecube");
         this.MakeUnitCube(this.baseCube);
@@ -2500,22 +2502,11 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         mm.Attach(amesh);
 
-        try
-        {
-            //Stauffer
-            //'sharedMesh' throws an error with #pragma strict - not a member of Collider.
-            //There is a MeshCollider::sharedMesh, so my guess is that this addition of
-            // amesh isn't doing anything in the original code.
-            //newRidge is of type 'protomesh' prefab from project. It has a Box Collider.
-            //Must be found by <Collider>, as it's presumably a sub-class. Is it also a subclass of MeshCollider? I guess not if it doesn't have sharedMesh member.
-            //
-            //Commenting out until can be sorted out
-            //newRidge.transform.GetComponent.< Collider > ().sharedMesh = amesh;
-        }
-        catch
-        {
-            //Debug.Log("Failed to set collider mesh in dataset " + selTable + " row " + row + ", bin " + binindex);
-        }
+        // Set the mesh as the collider mesh for use in PointedDataSelection
+        // NOTE - this slows things down noticably on large data files (60% slower on 1000x1000 data set)
+        // See notes in dev doc about Cooking Options (in short, use 'none' for much better speed - seems to work well)
+        newRidge.transform.GetComponent<MeshCollider>().sharedMesh = amesh;
+
         this.xRidges[this.numRidges].AddRidge(newRidge, amesh, binindex, row);
         this.xRidges[this.numRidges++].AddLabel(newLabel);
     }
