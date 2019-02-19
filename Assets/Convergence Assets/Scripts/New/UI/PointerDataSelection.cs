@@ -11,6 +11,9 @@ public class PointerDataSelection : MonoBehaviour {
     /// <summary> Unity layer assigned to data objects. For ray-casting. </summary>
     public int DataObjectLayer = 8;
 
+    /// <summary> GameObject with mesh that's shown to indicate selected data column </summary>
+    public GameObject dataIndicator;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -30,14 +33,18 @@ public class PointerDataSelection : MonoBehaviour {
     public TriDataPoint GetDataAtScreenPosition(Vector3 pointerPosition)
     {
         int row, col;
-        if( SelectAtScreenPosition(pointerPosition, out row, out col) == false)
+        if( ! SelectAtScreenPosition(pointerPosition, out row, out col) )
         {
             //Return empty data object, with isValid = false
             return new TriDataPoint();
         }
 
+        TriDataPoint result = new TriDataPoint(row, col);
+
+        ShowDataIndicator(result);
+
         //This will hold the data for the data variables at [row,col]
-        return new TriDataPoint(row, col);
+        return result;
     }
 
     public bool SelectAtScreenPosition(Vector3 pointerPosition, out int row, out int col)
@@ -68,6 +75,45 @@ public class PointerDataSelection : MonoBehaviour {
         row = idScript.row;
     
         return true;
+    }
+
+    /// <summary>
+    /// Show a graphic on top of a data column. Intended for showing which column was selected/clicked for inspection.
+    /// Adapated from ShowPointedData() in original code. 
+    /// Goal is to eventually have a better method that changes color or otherwise highlights the column.
+    /// </summary>
+    public virtual void ShowDataIndicator(TriDataPoint triData)
+    {
+        if ( ! triData.isValid )
+            return;
+
+        float signSize = 0.9f * Mathf.Min(HeatVRML.Instance.rowDepthDataOnly, HeatVRML.Instance.xSceneSize / HeatVRML.Instance.numCols);
+        dataIndicator.transform.localScale = new Vector3(signSize, signSize, signSize);
+        //Note - should make a method to get scene position from a data column/position
+        //float sceney = (((((triData.heightValue - HeatVRML.Instance.minDataHeight) * HeatVRML.Instance.dataHeightRangeScale) + 0.1f) * HeatVRML.Instance.zSceneSize) * HeatVRML.Instance.currGraphHeight) + HeatVRML.Instance.xzySceneCorner.y;
+        float sceney = HeatVRML.Instance.GetColumnSceneHeight(triData.heightValue);
+
+        Debug.Log("heightValue, minDataHeight, dataHeightRangeScale, zSceneSize, currGraphHeight, xzySceneCorner");
+        Debug.Log(triData.heightValue + ", " + HeatVRML.Instance.minDataHeight + ", " + HeatVRML.Instance.dataHeightRangeScale + ", " + HeatVRML.Instance.zSceneSize + ", " + HeatVRML.Instance.currGraphHeight + ", " + HeatVRML.Instance.xzySceneCorner);
+
+        //Raise it up to rest on top of column
+        sceney += signSize / 2;
+        float scenex = ((((triData.col + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.xSceneSize) / HeatVRML.Instance.numCols) + HeatVRML.Instance.xzySceneCorner.x;
+        //Remember orig developer switched y & z
+        float yoff = triData.row * HeatVRML.Instance.rowDepthFull;
+        if (HeatVRML.Instance.binInterleave)
+        {
+            yoff = yoff + (triData.bin * HeatVRML.Instance.binSeparation);
+        }
+        else
+        {
+            yoff = yoff + (triData.bin * HeatVRML.Instance.ySceneSizeByBinWithSep);
+        }
+        float scenez = (HeatVRML.Instance.xzySceneCorner.z + yoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
+
+        Debug.Log("signSize: " + signSize + " scenex, y, z: " + scenex + ", " + sceney + ", " + scenez);
+        dataIndicator.transform.position = new Vector3(scenex, sceney, scenez);
+        dataIndicator.GetComponent<Renderer>().enabled = true;
     }
 
     public void Update()

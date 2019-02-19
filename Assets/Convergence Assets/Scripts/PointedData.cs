@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary> Stauffer - old object. Will be removed </summary>
 [System.Serializable]
 public class PointedData : object
 {

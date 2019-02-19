@@ -101,21 +101,21 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private float ySceneSizeApproxMax;
     /// <summary> Stauffer - plotting area DEPTH in scene units, for single bin (or for all bins when interleaved) </summary>
     public float ySceneSizeByBin;
-    //Stauffer - plotting area HEIGHT in scene units. Gets updated when data is redrawn.
+    /// <summary> Stauffer - plotting area HEIGHT in scene units. Gets updated when data is redrawn. </summary>
     public float zSceneSize;
     /// <summary> Stauffer - starting corner of plot area in scene units. The left/front, 1st row/1st column. </summary>
     public Vector3 xzySceneCorner;
     /// <summary> Stauffer - separtion in scene units between bins, whether bins are interleaved or not. So if not interleaved,
     /// it's separation between groups of rows of each bin. If interleaved, this is separation between each row (different than rowGap, however). </summary>
-    private float binSeparation;
+    public float binSeparation;
     /// <summary> Stauffer - full scene depth of each row, including gap beetween rows (and bin separation when interleaved) </summary>
-    private float rowDepthFull;
+    public float rowDepthFull;
     /// <summary> Stauffer - plotting area DEPTH in scene units, for single bin (or for all bins when interleaved) INCLUDING gap between bin groups </summary>
-    private float ySceneSizeByBinWithSep;
+    public float ySceneSizeByBinWithSep;
 
     // chart related
     /// <summary> Stauffer - as best I can tell, this flag controls interleaving of bins within the plot. i.e. if each bin is shown as separate group of rows, or interleaved by row </summary>
-    private bool binInterleave;
+    public bool binInterleave;
     private bool bConnectX; //Draw ribbon. Flag
     private bool bExtendZ;
     private bool bHaveLabels = false; //Stauffer - set default val to suppress warning
@@ -123,28 +123,34 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int topColorChoice;
     private int sideColorChoice;
     private GameObject proto;
-    private GameObject baseCube;
+    //private GameObject baseCube; Stauffer - seems unused
     private GameObject protolabel;
     private bool drawn;
     private XRidge[] xRidges;
     //private int shaveCount; Stauffer - never used
     private int numRidges;
+    /// <summary> Stauffer added. Minimum height of mesh used to make a ridge. </summary>
+    private float ridgeMeshMinHeight;
     /// <summary> Depth (unity z-dimension) of data representation, i.e. the depth of the tower representing the data point. Does NOT include gap between rows. </summary>
-    private float rowDepthDataOnly;
+    public float rowDepthDataOnly;
     private float xScale;
-    private float zScale;
     private int minRow;
     private int maxRow;
     public int minCol;
     private int maxCol;
     private int minBin;
     private int maxBin;
-    private float minHeight;
-    private float maxHeight;
+    /// <summary> the minimum value of the data assigned to height </summary>
+    public float minDataHeight;
+    /// <summary> the max value of the data assigned to height </summary>
+    public float maxDataHeight;
+    /// <summary> the range in data variable assigned to height </summary>
+    public float dataHeightRange;
+    /// <summary> 1 over (maxDataHeight - minDataHeight) </summary>
+    public float dataHeightRangeScale;
     private int numRows;
     public int numCols;
     private int numBins;
-    private float heightRange;
     private int minMarker;
     private int maxMarker;
     private int numMarkers;
@@ -164,7 +170,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private float lowGraphHeightRange;
     private float highGraphHeightRange;
     /// <summary> Scaling of column/ridge height </summary>
-    private float currGraphHeight;
+    public float currGraphHeight;
     private float lowFOVRange;
     private float highFOVRange;
     private float currFOV;
@@ -308,8 +314,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         if (this.proto == null)
             Debug.LogError("Failed to find object for proto ridge");
 
-        this.baseCube = GameObject.Find("basecube");
-        this.MakeUnitCube(this.baseCube);
+        //this.baseCube = GameObject.Find("basecube");
+        //this.MakeUnitCube(this.baseCube);
         this.protolabel = GameObject.Find("protolabel");
         this.signPost = UnityEngine.Object.Instantiate(GameObject.Find("SignPost"), new Vector3(-1000, -1000, -1000), Quaternion.identity);
 
@@ -336,6 +342,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //SpreadBalls(16, 10.0);
 
         //Stauffer
+        //
+        this.ridgeMeshMinHeight = 0.1f;
         //Quick intro message with instructions
         UIManager.Instance.ShowIntroMessage();
     }
@@ -1194,8 +1202,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.maxCol = this.reader.GetInt32(3);
         this.minBin = this.reader.GetInt32(4);
         this.maxBin = this.reader.GetInt32(5);
-        this.minHeight = this.reader.GetFloat(6);
-        this.maxHeight = this.reader.GetFloat(7);
+        this.minDataHeight = this.reader.GetFloat(6);
+        this.maxDataHeight = this.reader.GetFloat(7);
         this.reader.Close();
         this.numRows = (this.maxRow - this.minRow) + 1;
         // debugging
@@ -1205,7 +1213,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         this.numCols = (this.maxCol - this.minCol) + 1;
         this.numBins = (this.maxBin - this.minBin) + 1;
-        this.heightRange = this.maxHeight - this.minHeight;
+        this.dataHeightRange = this.maxDataHeight - this.minDataHeight;
         */
     }
 
@@ -1323,7 +1331,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.numRidges = 0;
         this.CalcDimensions();
         this.xScale = 1f / this.numCols;
-        this.zScale = 1f / (this.maxHeight - this.minHeight);
+        this.dataHeightRangeScale = 1f / (this.maxDataHeight - this.minDataHeight);
         this.xRidges = new XRidge[this.numRows * this.numBins];
         // In case we have changed datasets
         if (this.topColorChoice >= this.numFields)
@@ -1490,14 +1498,16 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             {
                 //Stauffer - colVals[] - seems to be just an array of column numbers. It gets shifted to always start at 0, so why bother with it???
                 thisX = ((this.colVals[0] + 0.5f) - this.minCol) * this.xScale;
-                thisZ = ((this.heightVals[0] - this.minHeight) * this.zScale) + minZ;
+                //thisZ = ((this.heightVals[0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
+                thisZ = GetColumnMeshHeight(this.heightVals[0]);
                 prevX = thisX - this.xScale;
                 prevZ = thisZ;
             }
             if (i < lastInd)
             {
                 nextX = ((this.colVals[i + 1] + 0.5f) - this.minCol) * this.xScale;
-                nextZ = ((this.heightVals[i + 1] - this.minHeight) * this.zScale) + minZ;
+                //nextZ = ((this.heightVals[i + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
+                nextZ = GetColumnMeshHeight(this.heightVals[i+1]);
             }
             else
             {
@@ -1640,6 +1650,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.xRidges[this.numRidges++].AddLabel(newLabel);
     }
 
+    //Stauffer - seems unused since I removed basecube member
     public virtual void MakeUnitCube(GameObject ac)
     {
         Mesh amesh = ((MeshFilter)ac.GetComponent(typeof(MeshFilter))).mesh;
@@ -1717,7 +1728,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         if (colorChoice == 0)
         {
             // height
-            inv = (this.heightVals[col] - this.minHeight) / this.heightRange;
+            inv = (this.heightVals[col] - this.minDataHeight) / this.dataHeightRange;
         }
         else
         {
@@ -1892,11 +1903,12 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.ShowPointedData();
     }
 
+    //OLD ROUTINE to be removed
     public virtual void ShowPointedData()
     {
         if (this.pointedData.ready)
         {
-            float sceney = ((((this.pointedData.height - this.minHeight) * this.zScale) * this.zSceneSize) * this.currGraphHeight) + this.xzySceneCorner.y;
+            float sceney = ((((this.pointedData.height - this.minDataHeight) * this.dataHeightRangeScale) * this.zSceneSize) * this.currGraphHeight) + this.xzySceneCorner.y;
             float scenex = ((((this.pointedData.col + 0.5f) - this.minCol) * this.xSceneSize) / this.numCols) + this.xzySceneCorner.x;
             float yoff = this.pointedData.row * this.rowDepthFull;
             if (this.binInterleave)
@@ -1919,6 +1931,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
     }
 
+    // OLD ROUTINE
     // debugging
     public virtual void MakeXRay()
     {
@@ -2139,7 +2152,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Old code - the 2 required data fields (height & bin)
         this.allVariableDescs = new VariableDesc[2];
         this.allVariableDescs[0] = new VariableDesc();
-        this.allVariableDescs[0].SetAsFloat("height", this.minHeight, this.maxHeight);
+        this.allVariableDescs[0].SetAsFloat("height", this.minDataHeight, this.maxDataHeight);
         this.allVariableDescs[1] = new VariableDesc();
         this.allVariableDescs[1].SetAsInt("bin", this.minBin, this.maxBin);
         this.numFields = 2;
@@ -2193,8 +2206,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.maxCol = heightVar.numDataCols - 1;
         this.minBin = 0; //Just always have 1 bin for now. Empirically, we want its number to be 0, otherwise a space for a phantom bin appears in render.
         this.maxBin = 0;
-        this.minHeight = heightVar.MinValue;
-        this.maxHeight = heightVar.MaxValue;
+        this.minDataHeight = heightVar.MinValue;
+        this.maxDataHeight = heightVar.MaxValue;
         this.numRows = (this.maxRow - this.minRow) + 1;
         // debugging
         if (this.maxCol > this.colLimit)
@@ -2203,7 +2216,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         this.numCols = (this.maxCol - this.minCol) + 1;
         this.numBins = (this.maxBin - this.minBin) + 1;
-        this.heightRange = this.maxHeight - this.minHeight;
+        this.dataHeightRange = this.maxDataHeight - this.minDataHeight;
     }
     
     
@@ -2232,7 +2245,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.CalcDimensions();
 
         this.xScale = 1f / this.numCols;
-        this.zScale = 1f / (this.maxHeight - this.minHeight);
+        this.dataHeightRangeScale = 1f / (this.maxDataHeight - this.minDataHeight);
         this.xRidges = new XRidge[this.numRows * this.numBins];
         // In case we have changed datasets
         if (this.topColorChoice >= this.numFields)
@@ -2257,6 +2270,18 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             this.heightVals = hVar.Data[row];
             this.NewBuildRidge(row, this.numCols, this.minBin);//always one bin for now
         }
+    }
+
+    /// <summary> For the given data value (of data var assigned to height), return the *unscaled* column height, i.e. the height of the mesh before any scene scaling </summary>
+    /// <param name="heightValue"></param>
+    /// <returns></returns>
+    public float GetColumnMeshHeight(float heightValue)
+    {
+        return ((heightValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
+    }
+    public float GetColumnSceneHeight(float heightValue)
+    {
+        return ( GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeight) + this.xzySceneCorner.y;
     }
 
     public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
@@ -2285,7 +2310,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         {
             yoff = yoff + (binindex * this.ySceneSizeByBinWithSep);
         }
-        //Stauffer - 'proto' is from protomesh prefab. It's a private global instanced above.
+        //Stauffer - 'proto' is from protomesh scene object. It's a private global instanced above.
         GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z + yoff), Quaternion.identity);
         //Stauffer these vals used to set localScale are calc'ed in CalcDimensions, I believe.
         //NOTE z is used in variable names for up, i.e. y in unity.
@@ -2372,14 +2397,14 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             else
             {
                 thisX = ((0.5f) - this.minCol) * this.xScale;
-                thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minHeight) * this.zScale) + minZ;
+                thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
                 prevX = thisX - this.xScale;
                 prevZ = thisZ;
             }
             if (colNum < lastInd)
             {
                 nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.xScale;
-                nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minHeight) * this.zScale) + minZ;
+                nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
             }
             else
             {
@@ -2502,9 +2527,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         mm.Attach(amesh);
 
-        // Set the mesh as the collider mesh for use in PointedDataSelection
+        // Set the mesh as the collider mesh for use in PointerDataSelection
         // NOTE - this slows things down noticably on large data files (60% slower on 1000x1000 data set)
-        // See notes in dev doc about Cooking Options (in short, use 'none' for much better speed - seems to work well)
+        // See notes in dev doc about MeshCollider Cooking Options (in short, use 'none' for much better speed - seems to work well)
         newRidge.transform.GetComponent<MeshCollider>().sharedMesh = amesh;
 
         this.xRidges[this.numRidges].AddRidge(newRidge, amesh, binindex, row);
@@ -2589,7 +2614,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Stauffer - the 2 required data fields (height & bin)
         this.allVariableDescs = new VariableDesc[2 + nameArray.Count];
         this.allVariableDescs[0] = new VariableDesc();
-        this.allVariableDescs[0].SetAsFloat("height", this.minHeight, this.maxHeight);
+        this.allVariableDescs[0].SetAsFloat("height", this.minDataHeight, this.maxDataHeight);
         this.allVariableDescs[1] = new VariableDesc();
         this.allVariableDescs[1].SetAsInt("bin", this.minBin, this.maxBin);
         this.numFields = 2;

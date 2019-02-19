@@ -137,11 +137,8 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         statusPanel.GetComponent<StatusHandler>().StatusComplete(messageID);
     }
 
-    /// <summary>
-    /// Disables and greys out the main UI elements, i.e. data selection and mapping panels, and options panels.
-    /// Meant for use when a message dialog or similar is shown, and you want to prevent other UI action.
-    /// Does NOT do SetActive(False). Instead, uses a CanvasGroup and makes no interactable
-    /// </summary>
+    /// <summary> Disables and greys out the main UI elements.
+    /// Meant for use when a message dialog or similar is shown, and you want to prevent other UI action. </summary>
     public void DisableMainUI()
     {
         MainUIEnableDisable(false);
@@ -155,6 +152,11 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         MainUIEnableDisable(true);
     }
 
+    /// <summary>
+    /// To Disables and greys out the main UI elements, i.e. data selection and mapping panels, and options panels.
+    /// Meant for use when a message dialog or similar is shown, and you want to prevent other UI action.
+    /// Does NOT do SetActive(False). Instead, uses a CanvasGroup and makes no interactable
+    /// </summary>
     private void MainUIEnableDisable(bool enable)
     {
         float alpha = enable ? 1f : 0.5f;

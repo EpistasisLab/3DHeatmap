@@ -13,8 +13,13 @@ public class TriDataPoint
     /// <summary> Flag. Is the data in this object valid? </summary>
     public bool isValid;
 
+    /// <summary> Data row of this data point </summary>
     public int row;
+    /// <summary> Data column of this data point </summary>
     public int col;
+    /// <summary> Bin number - always 0 - not used currently. Orig code included a bin # for data in the database. 
+    /// Have this here for compatibility with older code, until we decide for sure whether to not re-implement the bin option. </summary>
+    public int bin;
 
     public float heightValue;
     public float topValue;
@@ -28,6 +33,7 @@ public class TriDataPoint
     {
         isValid = false;
         row = col = -1;
+        bin = 0;
     }
 
     public TriDataPoint(int row, int col)
@@ -49,6 +55,7 @@ public class TriDataPoint
 
         row = rowIn;
         col = colIn;
+        bin = 0;
 
         DataVariable v;
         v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.Height);

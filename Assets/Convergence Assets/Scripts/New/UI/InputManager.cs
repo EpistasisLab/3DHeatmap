@@ -225,6 +225,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         }
         if (Input.GetMouseButtonUp(0))
         {
+            //Look for single click
             if( Time.time - leftMouseButtonDownTime < mouseSingleClickThreshold)
             {
                 //Process single click
