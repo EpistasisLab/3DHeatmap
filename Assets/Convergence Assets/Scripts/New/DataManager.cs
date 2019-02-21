@@ -13,9 +13,9 @@ public class TriDataPoint
     /// <summary> Flag. Is the data in this object valid? </summary>
     public bool isValid;
 
-    /// <summary> Data row of this data point </summary>
+    /// <summary> Data row (corresponds to a ridge) of this data point </summary>
     public int row;
-    /// <summary> Data column of this data point </summary>
+    /// <summary> Data column (position within a ridge) of this data point </summary>
     public int col;
     /// <summary> Bin number - always 0 - not used currently. Orig code included a bin # for data in the database. 
     /// Have this here for compatibility with older code, until we decide for sure whether to not re-implement the bin option. </summary>
@@ -349,7 +349,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         }
 
         //Update UI
-        UIManager.Instance.DataUpdated();
+        UIManager.Instance.RefreshUI();
     }
 
     /// <summary>
@@ -453,7 +453,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
             //Get filename and set it to label as default
             dataVar.Label = Path.GetFileNameWithoutExtension(dataVar.Filepath);
             //Update UI
-            UIManager.Instance.DataUpdated();
+            UIManager.Instance.RefreshUI();
         }
         else
         {

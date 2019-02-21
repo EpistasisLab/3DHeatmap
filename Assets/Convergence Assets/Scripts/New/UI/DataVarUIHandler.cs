@@ -97,7 +97,7 @@ public class DataVarUIHandler : MonoBehaviour {
         Debug.Log("OnLabelEdit");
         if (dataVar != null)
             dataVar.Label = GetLabel();
-        UIManager.Instance.DataUpdated();
+        UIManager.Instance.RefreshUI();
         //Switch prompting behavior to the next UI element if this element is currently prompting.
         UIManager.Instance.ShowNextUIActionPromptIfPrompting(go);
     }

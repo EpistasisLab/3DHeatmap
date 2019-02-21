@@ -255,6 +255,12 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 
     }
 
+    /// <summary> Reset anything that should be reset when new data loaded, etc. </summary>
+    public void Reset()
+    {
+        pointerDataSelection.HideDataIndicator();
+    }
+
     // Update is called once per frame
     void Update ()
     {

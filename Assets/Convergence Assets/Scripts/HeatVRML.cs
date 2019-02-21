@@ -2108,6 +2108,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public void Redraw(bool quiet = false)
     {
         StartCoroutine(RedrawCoroutine());
+        UIManager.Instance.RefreshUI();
         //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
         // which also handles the case when user jumps ahead of the prompts to here.
         UIManager.Instance.StopAllUIActionPrompts();

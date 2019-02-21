@@ -27,9 +27,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     private Text toolTipText;
     public GameObject messageDialogPrefab;
 
-    //The main object for the app
-    private HeatVRML heatVRML;
-
     private List<int> debugStatusPanelID;
 
     /// <summary> The UI object that's currently being highlighted in some way </summary>
@@ -69,9 +66,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         toolTipText = toolTipPanel.transform.Find("ToolTipText").GetComponent<Text>();
         if( toolTipText == null)
             Debug.LogError("toolTipText == null");
-        heatVRML = GameObject.Find("Prefab objectify").GetComponent<HeatVRML>();
-        if (heatVRML == null)
-            Debug.LogError("heatVRML == null");
 
         TooltipHide();
 
@@ -213,11 +207,14 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     }
 
     /// <summary>
-    /// Call this when data has been updated in some way the will need a UI refresh (i.e. DataVariables)
+    /// Call this when something needs refershing, e.g. data has been updated in some way the will need a UI refresh (i.e. DataVariables)
+    /// Awkware, I know.
     /// </summary>
-    public void DataUpdated()
+    public void RefreshUI()
     {
         visualMappingUIHandler.RefreshUI();
+        InputManager.Instance.Reset();
+        
         //Debug
         //dataMgr.DebugDumpVariables(false/*verbose*/);   
     }
@@ -233,13 +230,13 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     public void OnRedrawButtonClick(GameObject button)
     {
-        heatVRML.Redraw();
+        HeatVRML.Instance.Redraw();
     }
 
     public void OnMaxHeightSlider(GameObject go)
     {
         float frac = go.GetComponent<Slider>().value;
-        heatVRML.SetNewGraphHeight(frac);
+        HeatVRML.Instance.SetNewGraphHeight(frac);
         //Don't need to redraw to see new height
         //StartCoroutine(RedrawCoroutine(true));
     }
