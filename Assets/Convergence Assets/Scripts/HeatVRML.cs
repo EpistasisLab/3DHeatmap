@@ -409,6 +409,11 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             //this.showHelp = !this.showHelp;
             UIManager.Instance.ShowIntroMessage();
         }
+        if (Input.GetKeyDown(KeyCode.D) && Input.GetKey(KeyCode.RightShift))
+        {
+            //Quick load a test file and view it
+            DataManager.Instance.DebugQuickLoadDefaultAndDraw();
+        }
         if (Input.GetKeyDown(KeyCode.F12))
         {
             //Debugging

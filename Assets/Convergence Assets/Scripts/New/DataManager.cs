@@ -597,4 +597,29 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         return success;
     }
 
+
+    /// <summary>
+    /// For Debugging. load a hardcoded file and assign it to height param and display it
+    /// </summary>
+    public bool DebugQuickLoadDefaultAndDraw()
+    {
+        DataVariable dataVar;
+
+        string path = "C:\\Users\\mgsta\\Documents\\Penn\\IBI\\3dHeatMap\\testData\\simple\\10x10-monotonic-DEcrease-no_headers.csv";
+        string errorMsg;
+        bool success = LoadAddFile(path, true, true, out dataVar, out errorMsg);
+        if (success)
+        {
+            Debug.Log("DEBUG: Success choosing and loading file.");
+            variables.Add(dataVar);
+            HeightVar = dataVar;
+            TopColorVar = dataVar;
+            SideColorVar = dataVar;
+            HeatVRML.Instance.Redraw();
+        }
+        else
+            Debug.Log("Other error while reading file: \n" + errorMsg);
+        return success;
+    }
+
 }
