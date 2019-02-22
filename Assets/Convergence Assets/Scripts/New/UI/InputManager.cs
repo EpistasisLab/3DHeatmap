@@ -54,7 +54,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     public float translateDotThresholdTouch = 0.95f;
 
     /// <summary> Ref to component for getting data via pointer </summary>
-    PointerDataSelection pointerDataSelection;
+    DataInspector dataInspector;
 
     //Use this instead of Awake
     protected override void Initialize()
@@ -66,9 +66,9 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 	void Start () {
         firstTouchTime = 0;
         currentTouchAction = prevTouchActionDbg = TouchAction.None;
-        pointerDataSelection = GetComponent<PointerDataSelection>();
-        if (pointerDataSelection == null)
-            Debug.LogError("pointerDataSelection == null!");
+        dataInspector = GetComponent<DataInspector>();
+        if (dataInspector == null)
+            Debug.LogError("dataInspector == null!");
 
     }
 	
@@ -229,8 +229,8 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             if( Time.time - leftMouseButtonDownTime < mouseSingleClickThreshold)
             {
                 //Process single click
-                TriDataPoint triPoint = pointerDataSelection.GetDataAtScreenPosition(Input.mousePosition);
-                triPoint.DebugDump();
+                TriDataPoint triPoint = dataInspector.GetDataAtScreenPosition(Input.mousePosition);
+                //triPoint.DebugDump();
                 return;
             }
         }
@@ -258,7 +258,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Reset anything that should be reset when new data loaded, etc. </summary>
     public void Reset()
     {
-        pointerDataSelection.HideDataIndicator();
+        dataInspector.Hide();
     }
 
     // Update is called once per frame

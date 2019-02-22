@@ -2528,7 +2528,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         mm.Attach(amesh);
 
-        // Set the mesh as the collider mesh for use in PointerDataSelection
+        // Set the mesh as the collider mesh for use in DataInspector
         // NOTE - this slows things down noticably on large data files (60% slower on 1000x1000 data set)
         // See notes in dev doc about MeshCollider Cooking Options (in short, use 'none' for much better speed - seems to work well)
         newRidge.transform.GetComponent<MeshCollider>().sharedMesh = amesh;

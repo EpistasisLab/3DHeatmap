@@ -24,7 +24,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     private GameObject visualMappingPanel;
     private VisualMappingUIHandler visualMappingUIHandler;
     //private GameObject dataVarsTopPanel; not using here currently
-    private Text toolTipText;
     public GameObject messageDialogPrefab;
 
     private List<int> debugStatusPanelID;
@@ -63,9 +62,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         if (visualMappingUIHandler == null)
             Debug.LogError("visualMappingUIHandler == null");
         //dataVarsTopPanel = GetAndCheckGameObject("DataVarsTopPanel");
-        toolTipText = toolTipPanel.transform.Find("ToolTipText").GetComponent<Text>();
-        if( toolTipText == null)
-            Debug.LogError("toolTipText == null");
 
         TooltipHide();
 
@@ -198,12 +194,12 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// <param name="txf">The transform of the gameObject we want the tooltip placed next to</param>
     public void TooltipShow(string tip, Transform txf)
     {
-        toolTipPanel.GetComponent<ToolTipHandler>().ToolTipShow(tip, txf);
+        toolTipPanel.GetComponent<SimpleTextPanelHandler>().ShowNearTransform(tip, txf);
     }
 
     public void TooltipHide()
     {
-        toolTipPanel.GetComponent<ToolTipHandler>().ToolTipHide();
+        toolTipPanel.GetComponent<SimpleTextPanelHandler>().Hide();
     }
 
     /// <summary>

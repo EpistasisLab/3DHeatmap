@@ -15,8 +15,13 @@ public class TriDataPoint
 
     /// <summary> Data row (corresponds to a ridge) of this data point </summary>
     public int row;
+    /// <summary> The first non-empty row header from data vars, in order height, top, side </summary>
+    public string rowHeader;
     /// <summary> Data column (position within a ridge) of this data point </summary>
     public int col;
+    /// <summary> The first non-empty column header from data vars, in order height, top, side </summary>
+    public string colHeader;
+
     /// <summary> Bin number - always 0 - not used currently. Orig code included a bin # for data in the database. 
     /// Have this here for compatibility with older code, until we decide for sure whether to not re-implement the bin option. </summary>
     public int bin;
@@ -25,9 +30,20 @@ public class TriDataPoint
     public float topValue;
     public float sideValue;
 
+    /// <summary> The user-assigned label/name for this data variable </summary>
     public string heightLabel;
+    /// <summary> Data row label/header string. Emptry-string if not assigned. </summary>
+    public string heightRowHeader;
+    /// <summary> Data column label/header string. Emptry-string if not assigned. </summary>
+    public string heightColHeader;
+
     public string topLabel;
+    public string topRowHeader;
+    public string topColHeader;
+
     public string sideLabel;
+    public string sideRowHeader;
+    public string sideColHeader;
 
     public TriDataPoint()
     {
@@ -61,12 +77,23 @@ public class TriDataPoint
         v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.Height);
         heightValue = v.Data[row][col]; //should really have a general accessor for this
         heightLabel = v.Label;
+        heightRowHeader = v.hasRowHeaders ? v.rowHeaders[row] : "";        
+        heightColHeader = v.hasColumnHeaders ? v.columnHeaders[col] : "";
+
         v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.TopColor);
         topValue = v.Data[row][col];
         topLabel = v.Label;
+        topRowHeader = v.hasRowHeaders ? v.rowHeaders[row] : "";
+        topColHeader = v.hasColumnHeaders ? v.columnHeaders[col] : "";
+
         v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.SideColor);
         sideValue = v.Data[row][col];
         sideLabel = v.Label;
+        sideRowHeader = v.hasRowHeaders ? v.rowHeaders[row] : "";
+        sideColHeader = v.hasColumnHeaders ? v.columnHeaders[col] : "";
+
+        rowHeader = heightRowHeader != "" ? heightRowHeader : (topRowHeader != "" ? topRowHeader : sideRowHeader);
+        colHeader = heightColHeader != "" ? heightColHeader : (topColHeader != "" ? topColHeader : sideColHeader);
 
         isValid = true;
     }

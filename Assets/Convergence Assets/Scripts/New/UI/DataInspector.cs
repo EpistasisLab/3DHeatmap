@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Tools for selecting data from screen, mouse or touch.
+/// Tools for selecting data, initially from screen, mouse or touch.
 /// Initially from
 /// </summary>
-public class PointerDataSelection : MonoBehaviour {
+public class DataInspector : MonoBehaviour {
 
     /// <summary> Unity layer assigned to data objects. For ray-casting. </summary>
     public int DataObjectLayer = 8;
 
     /// <summary> GameObject with mesh that's shown to indicate selected data column </summary>
     public GameObject dataIndicator;
+
+    /// <summary> Simple display panel object with component SimpleTextPanelHandler </summary>
+    public GameObject displayPanel;
+    private SimpleTextPanelHandler displayPanelHandler;
 
     public float indicatorFlashFreq;
 
@@ -23,6 +27,9 @@ public class PointerDataSelection : MonoBehaviour {
 	void Start ()
     {
         isShowing = false;
+        displayPanelHandler = displayPanel.GetComponent<SimpleTextPanelHandler>();
+        if (displayPanelHandler == null)
+            Debug.LogError("displayPanelHandler == null");
 	}
 
     // Update is called once per frame
@@ -41,7 +48,8 @@ public class PointerDataSelection : MonoBehaviour {
         int row, col;
         if( ! SelectAtScreenPosition(pointerPosition, out row, out col) )
         {
-            HideDataIndicator();
+            //Hide any ui elements
+            Hide();
             //Return empty data object, with isValid = false
             return new TriDataPoint();
         }
@@ -49,6 +57,7 @@ public class PointerDataSelection : MonoBehaviour {
         TriDataPoint result = new TriDataPoint(row, col);
 
         ShowDataIndicator(result);
+        ShowDataInspector(result);
 
         //This will hold the data for the data variables at [row,col]
         return result;
@@ -82,6 +91,14 @@ public class PointerDataSelection : MonoBehaviour {
         row = idScript.row;
     
         return true;
+    }
+
+
+    /// <summary> Hide any UI elements managed by this component </summary>
+    public void Hide()
+    {
+        HideDataIndicator();
+        HideDataInspector();
     }
 
     /// <summary>
@@ -144,6 +161,28 @@ public class PointerDataSelection : MonoBehaviour {
             dataIndicator.GetComponent<Renderer>().material.color = color;
             yield return null;
         }
+    }
+
+    /// <summary> Show a simple text panel with the data point info </summary>
+    /// <param name="triData"></param>
+    public void ShowDataInspector(TriDataPoint triData)
+    {
+        string str = "";
+        str += "row, col: " + triData.row + ", " + triData.col;
+        if (triData.rowHeader != "")
+            str += "\nrow header: " + triData.rowHeader;
+        if (triData.colHeader != "")
+            str += "\ncol header: " + triData.colHeader;
+        str += "\n\n" + triData.heightValue.ToString("F3") + " - " + triData.heightLabel +
+            "\n" + triData.topValue.ToString("F3") + " - " + triData.topLabel +
+            "\n" + triData.sideValue.ToString("F3") + " - " + triData.sideLabel;
+
+        displayPanelHandler.Show(str);
+    }
+
+    public void HideDataInspector()
+    {
+        displayPanelHandler.Hide();
     }
 
     public void Update()
