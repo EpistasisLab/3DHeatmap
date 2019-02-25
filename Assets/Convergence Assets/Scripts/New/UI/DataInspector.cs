@@ -19,6 +19,8 @@ public class DataInspector : MonoBehaviour {
     private SimpleTextPanelHandler displayPanelHandler;
 
     public float indicatorFlashFreq;
+    /// <summary> Maximum alpha value used for the indicator when it's overlaid </summary>
+    public float indicatorMaxAlpha;
 
     /// <summary> True if the DataIndicator is currently being shown </summary>
     private bool isShowing;
@@ -38,7 +40,34 @@ public class DataInspector : MonoBehaviour {
     //	}
 
     /// <summary>
-    /// Raycast from pointer position to data to select a data point.
+    /// Get TriDataPoint data object from a screen position, and optionally show UI features for the selected point.
+    /// Returned object will have isValid field set true if valid.
+    /// </summary>
+    /// <param name="pointerPosition">Screen position, expected from mouse or touch</param>
+    /// <param name="showDataIndicator">True to highlight the data column that's being inspected</param>
+    /// <param name="showDataInspector">True to show data point info in UI</param>
+    /// <returns></returns>
+    public TriDataPoint InspectDataAtScreenPosition(Vector3 pointerPosition, bool showDataIndicator, bool showDataInspector)
+    {
+        TriDataPoint triData = GetDataAtScreenPosition(pointerPosition);
+
+        if (triData.isValid)
+        {
+            if (showDataIndicator)
+                ShowDataIndicator(triData);
+            else
+                HideDataIndicator();
+            if (showDataInspector)
+                ShowDataInspector(triData);
+            else
+                HideDataInspector();
+        }
+
+        return triData;
+    }
+
+    /// <summary>
+    /// Raycast from pointer position to data to get a data point.
     /// Check returned object 'isValid' property to test for success.
     /// </summary>
     /// <param name="pointerPosition"></param>
@@ -55,9 +84,6 @@ public class DataInspector : MonoBehaviour {
         }
 
         TriDataPoint result = new TriDataPoint(row, col);
-
-        ShowDataIndicator(result);
-        ShowDataInspector(result);
 
         //This will hold the data for the data variables at [row,col]
         return result;
@@ -126,7 +152,7 @@ public class DataInspector : MonoBehaviour {
 
         pos.x = ((((triData.col + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.xSceneSize) / HeatVRML.Instance.numCols) + HeatVRML.Instance.xzySceneCorner.x;
 
-        //Remember orig developer switched y & z
+        //Remember orig developer switched y & z - I really should rename these!
         float yoff = triData.row * HeatVRML.Instance.rowDepthFull;
         if (HeatVRML.Instance.binInterleave)
         {
@@ -157,7 +183,7 @@ public class DataInspector : MonoBehaviour {
         {
             float phase = Mathf.Sin(Mathf.PI * 2f * Time.time * indicatorFlashFreq );
             Color color = dataIndicator.GetComponent<Renderer>().material.color;
-            color.a = phase;
+            color.a = phase * indicatorMaxAlpha; //note, if try this: (phase + 1 )/2;  then when alpha goes to 0, the underlying mesh is not drawn/seen
             dataIndicator.GetComponent<Renderer>().material.color = color;
             yield return null;
         }
@@ -168,11 +194,11 @@ public class DataInspector : MonoBehaviour {
     public void ShowDataInspector(TriDataPoint triData)
     {
         string str = "";
-        str += "row, col: " + triData.row + ", " + triData.col;
+        str += "row, col #: " + triData.row + ", " + triData.col;
         if (triData.rowHeader != "")
-            str += "\nrow header: " + triData.rowHeader;
+            str += "\nrow: " + triData.rowHeader;
         if (triData.colHeader != "")
-            str += "\ncol header: " + triData.colHeader;
+            str += "\ncol : " + triData.colHeader;
         str += "\n\n" + triData.heightValue.ToString("F3") + " - " + triData.heightLabel +
             "\n" + triData.topValue.ToString("F3") + " - " + triData.topLabel +
             "\n" + triData.sideValue.ToString("F3") + " - " + triData.sideLabel;

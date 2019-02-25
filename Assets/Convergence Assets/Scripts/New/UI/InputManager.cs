@@ -19,6 +19,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Time below which a mouse click-and-release is considered a single click </summary>
     public float mouseSingleClickThreshold;
     private float leftMouseButtonDownTime;
+    public float zoomScaleScrollWheel;
 
     //// TOUCH Input ////
 
@@ -53,13 +54,23 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Threshold above which dot product of movement vectors are considered parallel and thus translating </summary>
     public float translateDotThresholdTouch = 0.95f;
 
+    //// Other fields ////
+
+    //Data Inspection
+    //
     /// <summary> Ref to component for getting data via pointer </summary>
     DataInspector dataInspector;
+    /// <summary> Flag to enable continuous data inspection, so data under the mouse pointer is queried under continuously as pointer is moved </summary>
+    private bool contDataInspectionEnabled = true;
+    private bool contDataInpectionTempDisable = false;
+    /// <summary> How often (seconds) to do continous data inspection </summary>
+    public float contDataInspectionInterval = 0.2f;
+    private float contDataInspectionPrevTime;
 
     //Use this instead of Awake
     protected override void Initialize()
     {
-
+        contDataInspectionPrevTime = 0f;
     }
 
 	// Use this for 
@@ -229,19 +240,21 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             if( Time.time - leftMouseButtonDownTime < mouseSingleClickThreshold)
             {
                 //Process single click
-                TriDataPoint triPoint = dataInspector.GetDataAtScreenPosition(Input.mousePosition);
+                TriDataPoint triPoint = dataInspector.InspectDataAtScreenPosition(Input.mousePosition, true, true);
+                contDataInpectionTempDisable = triPoint.isValid;
                 //triPoint.DebugDump();
-                return;
             }
+            return;
         }
-        
+
         //Translate
-        if (Input.GetMouseButton(1/*right mouse button*/))
+        if (Input.GetMouseButton(1/*right mouse button held down*/))
         {
             // Read the mouse input axis
             float trX = Input.GetAxis("Mouse X"); //delta position, from what I understand
             float trY = Input.GetAxis("Mouse Y");
             CameraManager.Instance.TranslateView(-trX * translationScaleMouse, -trY * translationScaleMouse);
+            return;
         }
 
         //Rotation - mouse
@@ -251,6 +264,27 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             float rotX = Input.GetAxis("Mouse X");
             float rotY = Input.GetAxis("Mouse Y");
             CameraManager.Instance.RotateView(-rotY * rotationScaleMouse, rotX * rotationScaleMouse);
+            return;
+        }
+
+        //Scroll wheel for zoom
+        //NOTE - this isn't picking up scroll from trackpad - why not?
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if( scroll != 0 )
+        {
+            CameraManager.Instance.Zoom(scroll * zoomScaleScrollWheel);
+            return;
+        }
+
+        //No mouse button or scroll-wheel activity and no button held
+        //
+        //Do continuous data inspector
+        if ( contDataInspectionEnabled &&
+            ! contDataInpectionTempDisable &&
+            (Time.time - contDataInspectionPrevTime) > contDataInspectionInterval)
+        {
+            TriDataPoint tri = dataInspector.InspectDataAtScreenPosition(Input.mousePosition, true, true);
+            contDataInspectionPrevTime = Time.time;
         }
 
     }
