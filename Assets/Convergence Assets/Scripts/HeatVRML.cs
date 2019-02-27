@@ -123,6 +123,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int topColorChoice;
     private int sideColorChoice;
     private GameObject proto;
+    public GameObject Proto { get { return proto; } }
     //private GameObject baseCube; Stauffer - seems unused
     private GameObject protolabel;
     private bool drawn;
@@ -386,53 +387,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     public virtual void Update()
     {
-        if (Input.GetKeyDown(KeyCode.O))
-        {/*
-            if (DataManager.Instance.DebugQuickChooseLoadDisplayFile())
-            {
-                //take the new data and draw it
-                Debug.Log("Loaded file with success");
-                NewPrepareAndDrawData();
-            }
-            */
-        }
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            Redraw();
-        }
-        if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
-        {
-            this.allHidden = !this.allHidden;
-        }
-        if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
-        {
-            //this.showHelp = !this.showHelp;
-            UIManager.Instance.ShowIntroMessage();
-        }
-        if (Input.GetKeyDown(KeyCode.D) && Input.GetKey(KeyCode.RightShift))
-        {
-            //Quick load a test file and view it
-            DataManager.Instance.DebugQuickLoadDefaultAndDraw();
-        }
-        if (Input.GetKeyDown(KeyCode.F12))
-        {
-            //Debugging
-            GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z), Quaternion.identity);
-            newRidge.name = "testRidge";
 
-            //UIManager.Instance.StartUIActionPrompts();
-
-            //TriDataPoint data = new TriDataPoint(0, 1);
-            //data.DebugDump();
-        }
-        if (Const.menuScrolling && (Time.time > (this.lastScrollTime + this.minScrollSecs)))
-        {
-            this.scrollAmount = Input.GetAxis("Mouse ScrollWheel");
-            if (this.scrollAmount != 0f)
-            {
-                this.lastScrollTime = Time.time;
-            }
-        }
     }
 
     public virtual void FixedUpdate()

@@ -199,8 +199,11 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         }
     }
 
-    private void CheckForKeyboard()
+    /// <summary> Check for keyboard input that's ok only if the UI does NOT have input focus. </summary>
+    private void CheckForNonUIKeyboard()
     {
+        //// VIEW-CONTROL INPUTS
+
         float vertButton = Input.GetAxisRaw("Vertical");
         float horzButton = Input.GetAxisRaw("Horizontal");
         //These two were used in orig code, but I'm not using, at least not at this point.
@@ -223,6 +226,51 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         if (Input.GetKey(KeyCode.Equals) || Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.KeypadPlus))
         {
             CameraManager.Instance.Zoom(1f * zoomScaleKeys);
+        }
+    }
+
+    /// <summary> Check for keyboard input that's ok if the UI has input focus. </summary>
+    private void CheckForUIKeyboard() { 
+
+        if (Input.GetKeyDown(KeyCode.O))
+        {/*
+            if (DataManager.Instance.DebugQuickChooseLoadDisplayFile())
+            {
+                //take the new data and draw it
+                Debug.Log("Loaded file with success");
+                NewPrepareAndDrawData();
+            }
+            */
+        }
+        if (Input.GetKeyDown(KeyCode.D) && Input.GetKey(KeyCode.RightShift))
+        {
+            //Quick load a test file and view it
+            DataManager.Instance.DebugQuickLoadDefaultAndDraw();
+        }
+        if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
+        {
+            //this.showHelp = !this.showHelp;
+            UIManager.Instance.ShowIntroMessage();
+        }
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            HeatVRML.Instance.Redraw();
+        }
+        if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
+        {
+            //From orig code - show/hide UI windows
+            //HeatVRML.Instance.allHidden = !HeatVRML.Instance.allHidden;
+        }
+        if (Input.GetKeyDown(KeyCode.F12))
+        {
+            //Debugging
+            GameObject newRidge = UnityEngine.Object.Instantiate(HeatVRML.Instance.Proto, new Vector3(HeatVRML.Instance.xzySceneCorner.x, HeatVRML.Instance.xzySceneCorner.y, HeatVRML.Instance.xzySceneCorner.z), Quaternion.identity);
+            newRidge.name = "testRidge";
+
+            //UIManager.Instance.StartUIActionPrompts();
+
+            //TriDataPoint data = new TriDataPoint(0, 1);
+            //data.DebugDump();
         }
     }
 
@@ -298,12 +346,14 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     // Update is called once per frame
     void Update ()
     {
+        CheckForUIKeyboard();
+
         //Look for input controls if the UI isn't being used
         //if (!EventSystem.current.IsPointerOverGameObject() ) //NOTE - this method fails when cursor leaves area of UI control but still is controlling it, e.g. with a slider when you move up or down off of it while still holding click on it
         if (EventSystem.current.currentSelectedGameObject != null)
             return;
 
-        CheckForKeyboard();
+        CheckForNonUIKeyboard();
 
         //Check for touch events and proces them
         CheckForTouch();
