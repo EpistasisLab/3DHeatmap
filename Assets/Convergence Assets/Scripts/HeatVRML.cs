@@ -1350,6 +1350,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     public bool doingEdges; //Stauffer - seems to determine if a bevel is drawn at top of column
     public float bevelFraction;
+#if false
+    // old code to be removed
     public virtual void BuildRidgeOld(int row, int numx /*== num of columns*/, int binindex)
     {
         Color thisColor = default(Color);
@@ -1458,16 +1460,14 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             {
                 //Stauffer - colVals[] - seems to be just an array of column numbers. It gets shifted to always start at 0, so why bother with it???
                 thisX = ((this.colVals[0] + 0.5f) - this.minCol) * this.xScale;
-                //thisZ = ((this.heightVals[0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
-                thisZ = GetColumnMeshHeight(this.heightVals[0]);
+                thisZ = ((this.heightVals[0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
                 prevX = thisX - this.xScale;
                 prevZ = thisZ;
             }
             if (i < lastInd)
             {
                 nextX = ((this.colVals[i + 1] + 0.5f) - this.minCol) * this.xScale;
-                //nextZ = ((this.heightVals[i + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
-                nextZ = GetColumnMeshHeight(this.heightVals[i+1]);
+                nextZ = ((this.heightVals[i + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
             }
             else
             {
@@ -1609,6 +1609,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.xRidges[this.numRidges].AddRidge(newRidge, amesh, binindex, row);
         this.xRidges[this.numRidges++].AddLabel(newLabel);
     }
+#endif
 
     //Stauffer - seems unused since I removed basecube member
     public virtual void MakeUnitCube(GameObject ac)
@@ -1675,7 +1676,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
 
 
-
+#if false
+    old code to remove
     // Stauffer - NOTE this seems to work with the currently-loaded row data,
     //   by accessing the HeatVRML class properties topVals[] and sideVals[]
     public virtual Color MakeColor(int col, int bin, bool isSide)
@@ -1757,13 +1759,14 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         return retColor;
     }
+#endif
 
     //Color Maps
     public virtual Color GreenRed(float inv, bool isSide)
     {
         float green = 0.0f;
         float red = 0.0f;
-        float trans = isSide ? 0.7f : 0.9f;
+        float trans = 1;// isSide ? 0.7f : 0.9f;
         if (inv > 0.5f)
         {
             green = 0f;
@@ -1785,13 +1788,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     public virtual Color YellowBlue(float inv, bool isSide)
     {
-        float trans = isSide ? 0.7f : 0.9f;
+        float trans = 1;// isSide ? 0.7f : 0.9f;
         return new Color(1f - inv, 1f - inv, inv, trans);
     }
 
     public virtual Color Spectrum(float inv, bool isSide)
     {
-        float trans = isSide ? 0.7f : 0.9f;
+        float trans = 1;// isSide ? 0.7f : 0.9f;
         if (inv < 0.25f)
         {
             return new Color(0f, inv * 4f, 1f, trans);
@@ -1810,17 +1813,17 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public virtual Color Rainbow(float inv, bool isSide)
     {
         Color aColor = Colors.HSLtoColor(inv * 0.93f, 1f, 0.5f);
-        return new Color(aColor.r, aColor.g, aColor.b, isSide ? 0.7f : 0.9f);
+        return new Color(aColor.r, aColor.g, aColor.b, 1);// isSide ? 0.7f : 0.9f);
     }
 
     public virtual Color GrayScale(float inv, bool isSide)
     {
-        return new Color(inv, inv, inv, isSide ? 0.7f : 0.9f);
+        return new Color(inv, inv, inv, 1);// isSide ? 0.7f : 0.9f);
     }
 
     public virtual Color ConstantColor(float inv, bool isSide)
     {
-        return new Color(0.5f, 0.5f, 0.5f, isSide ? 0.7f : 0.9f);
+        return new Color(0.5f, 0.5f, 0.5f, 1);// isSide ? 0.7f : 0.9f);
     }
 
     public static RaycastHit hit;
@@ -2247,8 +2250,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
     {
-        Color topColor = default(Color);
-        Color sideColor = default(Color);
+        Color topColor = new Color(); // default(Color);
+        Color sideColor = new Color(); //default(Color);
         float thisX = 0.0f;
         float thisZ = 0.0f;
         float prevX = 0.0f;
@@ -2358,14 +2361,17 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             else
             {
                 thisX = ((0.5f) - this.minCol) * this.xScale;
-                thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
+                //thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
+                thisZ = GetColumnMeshHeight(DataManager.Instance.HeightVar.Data[row][0]);
                 prevX = thisX - this.xScale;
                 prevZ = thisZ;
             }
             if (colNum < lastInd)
             {
                 nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.xScale;
-                nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
+                //nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
+                nextZ = GetColumnMeshHeight(DataManager.Instance.HeightVar.Data[row][colNum + 1]);
+
             }
             else
             {
