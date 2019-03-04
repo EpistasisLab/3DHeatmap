@@ -696,7 +696,6 @@ MonoBehaviour:
   myController: {fileID: 0}
   vrmlModelMM: 200
   protoBall: {fileID: 5400000, guid: 901a114dc778c4811b19313853df6ebd, type: 2}
-  doingEdges: 1
   bevelFraction: 0.01
 --- !u!114 &40
 MonoBehaviour:
@@ -1155,7 +1154,7 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RenderingLayerMask: 4294967295
   m_Materials:
-  - {fileID: 2100000, guid: 7ccc1d55b266444529375dc248789e86, type: 2}
+  - {fileID: 2100000, guid: 1a650dc0757242a4189ea85844442abd, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1234,7 +1233,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 359.6805, y: 56.50479}
+  m_SizeDelta: {x: 362.1601, y: 57.679794}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &11538871
 MonoBehaviour:
@@ -6885,8 +6884,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 179.84026, y: -27.252398}
-  m_SizeDelta: {x: 339.6805, y: 34.50479}
+  m_AnchoredPosition: {x: 181.08005, y: -27.8399}
+  m_SizeDelta: {x: 342.1601, y: 35.679794}
   m_Pivot: {x: 0.5, y: 0.49999997}
 --- !u!114 &1131258133
 MonoBehaviour:

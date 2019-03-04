@@ -1348,7 +1348,17 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         */
     }
 
-    public bool doingEdges; //Stauffer - seems to determine if a bevel is drawn at top of column
+    //Stauffer - seems to determine if a bevel is drawn at top of column
+    // Made it a getter/setter so I could put a breakpoint on it to see when it changes, cuz
+    // when I set it to false in the ctor below, it was getting set back to true somewhere that
+    // I couldn't see in the code. But weirdly, when I made this getter/setter and put a breakpoint
+    // on 'set', it didn't change back to true.
+    public bool doingEdges
+    {
+        get;
+        set;
+    }
+
     public float bevelFraction;
 #if false
     // old code to be removed
@@ -2425,7 +2435,48 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 // tile
                 if (this.doingEdges) //Seems to mean draw a bevel
                 {
+                    //STAUFFER - NOTE - this is the orig default branch 
+                    // I changed the UV's cuz they seemed wrong in orig code in some places
+                    // and now with the orig material I can see some edges made by shading on a little bevel
                     edgeZ = thisZ - topBite;
+                    // draw top
+                    mm.SetColor(topColor);
+                    mm.Verts(leftX + edgeBite, thisZ, front, 0, 0); //0
+                    mm.Verts(leftX + edgeBite, thisZ, back, 0, 1);  //1
+                    mm.Verts(rightX - edgeBite, thisZ, front, 1, 0);//2
+                    mm.Verts(rightX - edgeBite, thisZ, back, 1, 1); //3
+                    // draw bevel
+                    // Stauffer - the bevel amount is tiny (topBite) at around 0.001
+                    // but still makes a difference. If I remove it and use my unlit shader,
+                    // I see black edges on most of edges but not all. 
+                    mm.Verts(leftX, edgeZ, front, 0, 0); //4
+                    mm.Verts(leftX, edgeZ, back, 0, 0.9f);  //5
+                    mm.Verts(rightX, edgeZ, front, 0.9f, 0);//6
+                    mm.Verts(rightX, edgeZ, back, 1, 0.9f); //7
+                    mm.Tris(0, 1, 2, 2, 1, 3);
+                    mm.Tris(4, 2, 6, 2, 4, 0, 6, 3, 7, 3, 6, 2);
+                    mm.Tris(7, 1, 5, 1, 7, 3, 5, 0, 4, 0, 5, 1);
+                    // draw bottom
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 1);
+                    mm.Tris(2, 1, 0, 3, 1, 2);
+                    // draw sides
+                    mm.SetColor(sideColor);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
+                    mm.Verts(leftX, edgeZ, front, 0, 0.9f);
+                    mm.Verts(rightX, edgeZ, front, 1, 0.9f);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
+                    mm.Verts(leftX, edgeZ, back, 1, 0.9f);
+                    mm.Verts(rightX, edgeZ, back, 0, 0.9f);
+                    mm.Tris(0, 2, 1, 1, 2, 3);
+                    mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
+                    mm.Tris(1, 3, 5, 3, 7, 5);
+
+                    /* - orig code - UV's seem wrong
                     // draw top
                     mm.SetColor(topColor);
                     mm.Verts(leftX + edgeBite, thisZ, front, 1, 1);
@@ -2459,10 +2510,18 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                     mm.Tris(0, 2, 1, 1, 2, 3);
                     mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
                     mm.Tris(1, 3, 5, 3, 7, 5);
+                    */
                 }
                 else
                 {
                     edgeZ = thisZ;
+
+                    // Stauffer - orig code here, UV's seem wrong on first few
+                    // But this code isn't run cuz branch above gets run since doingEdges
+                    // is always true.
+                    // When force doingEdges false, this code doesn't draw right, at least when
+                    // using the orig material and shader
+
                     // draw top
                     mm.SetColor(topColor);
                     mm.Verts(leftX, edgeZ, front, 1, 1);
@@ -2495,7 +2554,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         mm.Attach(amesh);
 
         // Set the mesh as the collider mesh for use in DataInspector
-        // NOTE - this slows things down noticably on large data files (60% slower on 1000x1000 data set)
+        // NOTE - this slows down drawing noticably on large data files (60% slower on 1000x1000 data set)
         // See notes in dev doc about MeshCollider Cooking Options (in short, use 'none' for much better speed - seems to work well)
         newRidge.transform.GetComponent<MeshCollider>().sharedMesh = amesh;
 
@@ -2995,7 +3054,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.menuScrollPos = new Vector2(0f, 0f);
         this.vrmlModelMM = 200f;
         this.colLimit = 32000;
-        this.doingEdges = true;
+        this.doingEdges = true; //If want to change this, see declaration of doingEdges
         this.bevelFraction = 0.05f;
     }
 
