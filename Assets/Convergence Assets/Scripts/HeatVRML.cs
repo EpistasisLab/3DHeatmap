@@ -2516,18 +2516,16 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 {
                     edgeZ = thisZ;
 
-                    // Stauffer - orig code here, UV's seem wrong on first few
-                    // But this code isn't run cuz branch above gets run since doingEdges
-                    // is always true.
-                    // When force doingEdges false, this code doesn't draw right, at least when
-                    // using the orig material and shader
+                    // Stauffer - orig code here, UV's seem wrong on first few. Fixed.
+                    // When force doingEdges false and we get here, this code doesn't draw right when
+                    // using the orig material and shader - maybe cuz uv's were off?
 
                     // draw top
                     mm.SetColor(topColor);
-                    mm.Verts(leftX, edgeZ, front, 1, 1);
+                    mm.Verts(leftX, edgeZ, front, 0, 0); //Stauffer changed these uvs to what seems correct
                     mm.Verts(leftX, edgeZ, back, 0, 1);
-                    mm.Verts(rightX, edgeZ, front, 1, 1);
-                    mm.Verts(rightX, edgeZ, back, 0, 1);
+                    mm.Verts(rightX, edgeZ, front, 1, 0);
+                    mm.Verts(rightX, edgeZ, back, 1, 1);
                     mm.Tris(0, 1, 2, 2, 1, 3);
                     // draw bottom
                     mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
@@ -3054,7 +3052,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.menuScrollPos = new Vector2(0f, 0f);
         this.vrmlModelMM = 200f;
         this.colLimit = 32000;
-        this.doingEdges = true; //If want to change this, see declaration of doingEdges
+        this.doingEdges = false; //If want to change this, see declaration of doingEdges
         this.bevelFraction = 0.05f;
     }
 
