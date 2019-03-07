@@ -2744,7 +2744,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         this.currGraphHeight = newGraphHeight;
         this.ScaleRidges(this.currGraphHeight);
-        this.ShowPointedData();
+        //this.ShowPointedData();
     }
 
     /// <summary>
