@@ -130,6 +130,7 @@ public class MeshMaker : object
         //Stauffer - This is inefficient! Why is this done? Cuz this.vert and others are a fixed size?
         //Should be able to do all this w/out this copying. Seems like a bit of a time waste and also
         // a memory waste for larger data sets.
+        //BUT note, docs say you should use a separate Vector3 of verts and then assign it to amesh.vertices, so be sure to do that part that way.
         Vector3[] newVertices = new Vector3[this.numVerts];
         Vector2[] newUV = new Vector2[this.numVerts];
         Color[] newColor = new Color[this.numVerts];
@@ -154,6 +155,9 @@ public class MeshMaker : object
         amesh.colors = newColor;
         amesh.RecalculateNormals();
         amesh.RecalculateBounds();
+
+        amesh.UploadMeshData(false);
+
         this.Reset();
     }
 
