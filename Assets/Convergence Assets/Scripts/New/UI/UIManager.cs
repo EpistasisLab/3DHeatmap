@@ -9,7 +9,6 @@ using UnityEngine.UI;
 /// </summary>
 public class UIManager : MonoBehaviorSingleton<UIManager>
 {
-
     //The UI canvas
     private GameObject canvas;
     //A bunch of refs to various elements
@@ -231,8 +230,8 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     public void OnMaxHeightSlider(GameObject go)
     {
-        float frac = go.GetComponent<Slider>().value;
-        HeatVRML.Instance.SetNewGraphHeight(frac);
+        //float frac = go.GetComponent<Slider>().value;
+        //HeatVRML.Instance.SetGraphHeightFrac(frac);
         //Don't need to redraw to see new height
         //StartCoroutine(RedrawCoroutine(true));
     }

@@ -60,12 +60,10 @@ public class XRidge : object
 
     public virtual void NewHeight(float nh)
     {
-
         {
-            float _59 = nh;
-            Vector3 _60 = this.trans.localScale;
-            _60.y = _59;
-            this.trans.localScale = _60;
+            Vector3 scale = this.trans.localScale;
+            scale.y = nh;
+            this.trans.localScale = scale;
         }
     }
 

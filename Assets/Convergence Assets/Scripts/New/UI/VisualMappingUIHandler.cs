@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Handler code for the PANEL that contains UI for visual mapping selections.
+/// Handler code for the PANEL that contains UI for visual mapping selections, i.e
+/// for setting which data variables should be mapped to which visual parameter.
 /// </summary>
 public class VisualMappingUIHandler : MonoBehaviour {
 

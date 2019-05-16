@@ -3,6 +3,7 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using SMView;
 
 /// <summary>
 /// Main class. Has lots of state vars crammed in it. Plan is to break it up over time.
@@ -168,10 +169,18 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int sideStyleChoice;
     private int topStyleChoice;
     private int scrollChoice;
+    /// <summary> Minimum height of the bars </summary>
     private float lowGraphHeightRange;
+    /// <summary> Maximum height of the bars (can be scale visually) </summary>
     private float highGraphHeightRange;
-    /// <summary> Scaling of column/ridge height </summary>
+    /// <summary> Current height of bar/ridges, within min/max</summary>
     public float currGraphHeight;
+    /// <summary> The current graph display height as a fractional value, for use with UI </summary>
+    public float CurrGraphHeightFrac
+    {
+        get { return SMV.Instance.GetValueFloat(SMVmapping.GraphHeightFrac); }
+        set { SMV.Instance.SetValue(SMVmapping.GraphHeightFrac, value); }
+    }
     private float lowFOVRange;
     private float highFOVRange;
     private float currFOV;
@@ -261,7 +270,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     //void Awake()
     protected override void Initialize()
     {
-
+        //Stauffer - move some things here that use SimpleModelView, because it
+        // cannot be init'ed in HeatVRML ctor
+        this.CurrGraphHeightFrac = 0.5f;
     }
 
     //
@@ -820,7 +831,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         if (oldGraphHeight != this.currGraphHeight)
         {
-            this.GraphHeightSelected(this.currGraphHeight);
+            this.GraphHeightSelected_OLD(this.currGraphHeight);
         }
         if (oldFOV != this.currFOV)
         {
@@ -2735,27 +2746,49 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     }
 
     /// <summary>
-    /// Set new graph height value.
-    /// Does NOT require a redraw of the graph since it scales the ridges using transform scaling.
-    /// See SetNewGraphheight to adjust using [0,1] value.
+    /// Event handler for the SMV Simple Model View system.
+    /// This handles events that are generated when an SMV-mapped state is
+    /// changed, either from UI or from code, so it acts like a method that
+    /// you normally would call from both your UI event handler and from
+    /// your code when a particular value is changed.
     /// </summary>
-    /// <param name="newGraphHeight"></param>
-    public virtual void GraphHeightSelected(float newGraphHeight)
+    /// <param name="mapping"></param>
+    public void SMV_OnUpdateEvent(SMVmapping mapping)
     {
-        this.currGraphHeight = newGraphHeight;
-        this.ScaleRidges(this.currGraphHeight);
-        //this.ShowPointedData();
+        switch (mapping)
+        {
+            case SMVmapping.GraphHeightFrac:
+                UpdateGraphHeight();
+                break;
+            default:
+                Debug.LogError("Unrecognized SMVmapping in event handler: " + mapping.ToString());
+                break;
+        }
     }
 
     /// <summary>
     /// Stauffer added
-    /// Let's us call this func from UI with a [0,1] fractional value
+    /// Let's us call this func from UI with a [0,1] fractional value.
+    /// Used internally from SimpleModelView callback.
     /// </summary>
     /// <param name="frac"></param>
-    public virtual void SetNewGraphHeight(float frac)
+    private void UpdateGraphHeight()
     {
-        float newHeight = this.lowGraphHeightRange + (this.highGraphHeightRange - this.lowGraphHeightRange) * frac;
-        GraphHeightSelected(newHeight);
+        this.currGraphHeight = this.lowGraphHeightRange + (this.highGraphHeightRange - this.lowGraphHeightRange) * CurrGraphHeightFrac;
+        this.ScaleRidges(this.currGraphHeight);
+    }
+
+    /// <summary>
+    /// Set new graph height value.
+    /// Does NOT require a redraw of the graph since it scales the ridges using transform scaling.
+    /// See new method UpdateGraphHeight to adjust using [0,1] value.
+    /// </summary>
+    /// <param name="newGraphHeight">proportional between lowGraphHeightRange and highGraphHeightRange</param>
+    public virtual void GraphHeightSelected_OLD(float newGraphHeight)
+    {
+        this.currGraphHeight = newGraphHeight;
+        this.ScaleRidges(this.currGraphHeight);
+        //this.ShowPointedData();
     }
 
     public virtual void FOVSelected(float newFOV)
@@ -2997,12 +3030,16 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     public HeatVRML()
     {
+        //NOTE - stauffer - some inits are made now in Initialize()
+        //But if I move everything here into Initialize(), then display/view
+        // gets messed up
+
         this.programVersion = "1.2";
         this.STYLEwin = 1;
         this.ZIPwin = 2;
         this.SLwin = 3;
         this.NUMwin = 4;
-        this.isLayout = new bool[] {true, true, true, true};
+        this.isLayout = new bool[] { true, true, true, true };
         this.dsRect = new Rect(2, 2, 120, 100);
         this.styleRect = new Rect(130, 2, 120, 40);
         this.zipRect = new Rect(258, 2, 120, 40);
@@ -3010,7 +3047,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.pointedWindowRect = new Rect(0, 300, 120, 60);
         this.xrayWindowRect = new Rect(200, 200, 800, 800);
         this.helpWindowRect = new Rect(10, 10, 10, 10);
-        this.windNames = new string[] {"Data Selection", "Chart Style", "Zip to Viewpoint", "Chart View"};
+        this.windNames = new string[] { "Data Selection", "Chart Style", "Zip to Viewpoint", "Chart View" };
         this.xSceneSize = 400f;
         this.ySceneSizeByBin = 400f;
         this.ySceneSizeApproxMax = 2f * this.xSceneSize;
@@ -3029,9 +3066,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.choiceGap = 4;
         this.choiceBin = 5;
         this.scrollChoice = -1;
-        this.lowGraphHeightRange = 0.002f;
+        this.lowGraphHeightRange = 0.25f;
         this.highGraphHeightRange = 1f;
-        this.currGraphHeight = 0.5f;
+        //this.currGraphHeight = 0.5f; see Initialize()
         this.lowFOVRange = 20f;
         this.highFOVRange = 170f;
         this.lowDepthToWidthRatioRange = -4f;

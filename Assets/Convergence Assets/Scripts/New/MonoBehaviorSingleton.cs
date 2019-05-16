@@ -97,9 +97,11 @@ public class MonoBehaviorSingleton<T> : MonoBehaviour where T : MonoBehaviorSing
 						instance = newInstance;
 						destroyed = false;
 					}
-				}
+                    else
+                        Debug.LogError("Singleton object not found in scene: " + typeof(T).Name);
+                }
 
-				if (instance != null && !destroyed)
+                if (instance != null && !destroyed)
 				{
 					if (needInitialization)
 					{
