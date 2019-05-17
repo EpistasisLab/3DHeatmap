@@ -39,6 +39,7 @@ Shader "Custom/UnlitShadedVertexColor" {
 
 		v2f vert(appdata v) {
 			v2f o;
+			
 			o.pos = UnityObjectToClipPos(v.vertex);
 			o.color = v.color;
 			o.uvs = v.uvs;

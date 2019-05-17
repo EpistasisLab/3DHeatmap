@@ -683,7 +683,7 @@ MonoBehaviour:
   dataHeightRangeScale: 0
   numCols: 0
   minScrollSecs: 0.05
-  currGraphHeight: 0.5
+  currGraphHeightScale: 0
   includeVRML: 0
   includeBalls: 0
   includeTriangles: 0
@@ -4816,10 +4816,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   onUpdateEvent:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 37}
+        m_MethodName: SMV_OnUpdateEvent
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: SMView.OnUpdateEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  doDebugLogging: 0
+  doDebugLogging: 1
 --- !u!4 &685562161
 Transform:
   m_ObjectHideFlags: 0

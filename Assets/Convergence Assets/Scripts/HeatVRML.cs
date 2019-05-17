@@ -173,8 +173,10 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private float lowGraphHeightRange;
     /// <summary> Maximum height of the bars (can be scale visually) </summary>
     private float highGraphHeightRange;
-    /// <summary> Current height of bar/ridges, within min/max</summary>
-    public float currGraphHeight;
+    /// <summary> Stauffer added - Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors </summary>
+    private float minGraphHeight;
+    /// <summary> Current scaling of height of bar/ridges, within min/max of range, added to abs min height</summary>
+    public float currGraphHeightScale;
     /// <summary> The current graph display height as a fractional value, for use with UI </summary>
     public float CurrGraphHeightFrac
     {
@@ -272,7 +274,10 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         //Stauffer - move some things here that use SimpleModelView, because it
         // cannot be init'ed in HeatVRML ctor
+        //Also adding variables that I've added to keep them separate
+
         this.CurrGraphHeightFrac = 0.5f;
+        this.minGraphHeight = 0.25f;
     }
 
     //
@@ -659,7 +664,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         GUI.DragWindow();
         if (this.dataChanged && (++this.waitCount > 4))
         {
-            this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.binInterleave, this.topColorChoice, this.sideColorChoice, this.currGraphHeight);
+            this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.binInterleave, this.topColorChoice, this.sideColorChoice, this.currGraphHeightScale);
         }
     }
 
@@ -770,7 +775,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         GUI.DragWindow();
         if (this.wantRedraw && (++this.waitCount > 4))
         {
-            this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.binInterleave, this.topColorChoice, this.sideColorChoice, this.currGraphHeight);
+            this.DatasetSelected(this.selTable, this.bConnectX, this.bExtendZ, this.binInterleave, this.topColorChoice, this.sideColorChoice, this.currGraphHeightScale);
         }
         if (this.wantVRML && (++this.waitCount > 4))
         {
@@ -785,7 +790,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public virtual void DoSliders(int windowID)
     {
         int oldScrollChoice = this.scrollChoice;
-        float oldGraphHeight = this.currGraphHeight;
+        float oldGraphHeight = this.currGraphHeightScale;
         float oldFOV = this.currFOV;
         float oldThick = this.currDepthToWidthRatioExp;
         float oldSep = this.binSeparationFrac;
@@ -794,7 +799,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.ShrinkIt(windowID);
         if (this.scrollAmount != 0f)
         {
-            this.currGraphHeight = this.UpdateFromScroll(this.choiceHeight, this.currGraphHeight, this.lowGraphHeightRange, this.highGraphHeightRange, 0.05f);
+            this.currGraphHeightScale = this.UpdateFromScroll(this.choiceHeight, this.currGraphHeightScale, this.lowGraphHeightRange, this.highGraphHeightRange, 0.05f);
             this.currFOV = this.UpdateFromScroll(this.choiceFOV, this.currFOV, this.lowFOVRange, this.highFOVRange, 0.05f);
             this.currDepthToWidthRatioExp = this.UpdateFromScroll(this.choiceThick, this.currDepthToWidthRatioExp, this.lowDepthToWidthRatioRange, this.highDepthToWidthRatioRange, 0.05f);
             this.binSeparationFrac = this.UpdateFromScroll(this.choiceSep, this.binSeparationFrac, this.lowSepRange, this.highSepRange, 0.05f);
@@ -803,7 +808,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             this.scrollAmount = 0f;
         }
         this.UpdateSliderFromToggle(this.choiceHeight, "height");
-        this.currGraphHeight = GUILayout.HorizontalSlider(this.currGraphHeight, this.lowGraphHeightRange, this.highGraphHeightRange, new GUILayoutOption[] { });
+        this.currGraphHeightScale = GUILayout.HorizontalSlider(this.currGraphHeightScale, this.lowGraphHeightRange, this.highGraphHeightRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceFOV, "zoom");
         this.currFOV = GUILayout.HorizontalSlider(this.currFOV, this.lowFOVRange, this.highFOVRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceThick, "thickness");
@@ -829,9 +834,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 this.VisBins(this.currBin);
             }
         }
-        if (oldGraphHeight != this.currGraphHeight)
+        if (oldGraphHeight != this.currGraphHeightScale)
         {
-            this.GraphHeightSelected_OLD(this.currGraphHeight);
+            this.GraphHeightSelected_OLD(this.currGraphHeightScale);
         }
         if (oldFOV != this.currFOV)
         {
@@ -1892,7 +1897,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         if (this.pointedData.ready)
         {
-            float sceney = ((((this.pointedData.height - this.minDataHeight) * this.dataHeightRangeScale) * this.zSceneSize) * this.currGraphHeight) + this.xzySceneCorner.y;
+            float sceney = ((((this.pointedData.height - this.minDataHeight) * this.dataHeightRangeScale) * this.zSceneSize) * this.currGraphHeightScale) + this.xzySceneCorner.y;
             float scenex = ((((this.pointedData.col + 0.5f) - this.minCol) * this.xSceneSize) / this.numCols) + this.xzySceneCorner.x;
             float yoff = this.pointedData.row * this.rowDepthFull;
             if (this.binInterleave)
@@ -2251,22 +2256,21 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Build the ridges
         for ( int row = 0; row < hVar.numDataRows; row++)
         {
-            //NOTE - these are class properties, that then get used in BuildRidgeOld
+            //NOTE - these are class properties, that then get used in BuildRidge
             this.heightVals = hVar.Data[row];
             this.NewBuildRidge(row, this.numCols, this.minBin);//always one bin for now
         }
     }
 
     /// <summary> For the given data value (of data var assigned to height), return the *unscaled* column height, i.e. the height of the mesh before any scene scaling </summary>
-    /// <param name="heightValue"></param>
-    /// <returns></returns>
     public float GetColumnMeshHeight(float heightValue)
     {
         return ((heightValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
     }
+    /// <summary> For the given data value, return the *scaled* column height, i.e. the height of the mesh WITH scene scaling </summary>
     public float GetColumnSceneHeight(float heightValue)
     {
-        return ( GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeight) + this.xzySceneCorner.y;
+        return ( GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y;
     }
 
     public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
@@ -2299,7 +2303,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z + yoff), Quaternion.identity);
         //Stauffer these vals used to set localScale are calc'ed in CalcDimensions, I believe.
         //NOTE z is used in variable names for up, i.e. y in unity.
-        newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeight, this.rowDepthDataOnly);
+        newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeightScale, this.rowDepthDataOnly);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
         IdentifyRidge idScript = (IdentifyRidge)newRidge.gameObject.GetComponent(typeof(IdentifyRidge));
@@ -2353,7 +2357,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         float slabZ = 0.006f;
         float edgeBite = this.bevelFraction / this.numCols;
         // Note: this makes a 45 degree bevel at the curreent graph height, but it will be a different angle when height is changed.
-        float topBite = (edgeBite * this.xSceneSize) / (this.zSceneSize * this.currGraphHeight);
+        float topBite = (edgeBite * this.xSceneSize) / (this.zSceneSize * this.currGraphHeightScale);
         MeshMaker mm = new MeshMaker();
         
         for (int colNum = 0; colNum < numx; colNum++) //loop over columns
@@ -2585,7 +2589,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.binInterleave = newBInterpolateY;
         this.topColorChoice = newTopColorChoice;
         this.sideColorChoice = newSideColorChoice;
-        this.currGraphHeight = newGraphHeight;
+        this.currGraphHeightScale = newGraphHeight;
         i = 0;
         while (i < this.numDB)
         {
@@ -2774,8 +2778,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <param name="frac"></param>
     private void UpdateGraphHeight()
     {
-        this.currGraphHeight = this.lowGraphHeightRange + (this.highGraphHeightRange - this.lowGraphHeightRange) * CurrGraphHeightFrac;
-        this.ScaleRidges(this.currGraphHeight);
+        this.currGraphHeightScale = this.lowGraphHeightRange + (this.highGraphHeightRange - this.lowGraphHeightRange) * CurrGraphHeightFrac;
+        this.ScaleRidges(this.currGraphHeightScale);
     }
 
     /// <summary>
@@ -2786,8 +2790,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <param name="newGraphHeight">proportional between lowGraphHeightRange and highGraphHeightRange</param>
     public virtual void GraphHeightSelected_OLD(float newGraphHeight)
     {
-        this.currGraphHeight = newGraphHeight;
-        this.ScaleRidges(this.currGraphHeight);
+        this.currGraphHeightScale = newGraphHeight;
+        this.ScaleRidges(this.currGraphHeightScale);
         //this.ShowPointedData();
     }
 
@@ -2832,22 +2836,22 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 myY = this.xzySceneCorner.z + (this.ySceneSizeByBin / 2f);
                 myX = this.xzySceneCorner.x + (this.xSceneSize / 2f);
                 //Debug.Log("xzySceneCorner.y is " + xzySceneCorner.y);
-                //Debug.Log("(zSceneSize * currGraphHeight) is " + (zSceneSize * currGraphHeight));
+                //Debug.Log("(zSceneSize * currGraphHeightScale) is " + (zSceneSize * currGraphHeightScale));
                 //Debug.Log("myCameraOld.fieldOfView is " + myCameraOld.fieldOfView);
                 //Debug.Log("Mathf.Tan(myCameraOld.fieldOfView / 2.0) is " + Mathf.Tan(myCameraOld.fieldOfView * Mathf.PI / 360.0));
-                myZ = (this.xzySceneCorner.y + (this.zSceneSize * this.currGraphHeight)) + ((this.ySceneSizeByBin / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
+                myZ = (this.xzySceneCorner.y + (this.zSceneSize * this.currGraphHeightScale)) + ((this.ySceneSizeByBin / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
                 //Debug.Log("myZ is " + myZ);
                 Fly.NewRotation(0f, -90f);
                 break;
             case 1:
                 myX = this.xzySceneCorner.x + (this.xSceneSize / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeight) / 2f);
+                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
                 myY = this.xzySceneCorner.z - ((this.xSceneSize / 2f) / Mathf.Tan(hFOV));
                 Fly.NewRotation(0f, 0f);
                 break;
             case 2:
                 myX = this.xzySceneCorner.x + (this.xSceneSize / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeight) / 2f);
+                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
                 myY = (this.xzySceneCorner.z + this.ySceneSizeByBin) + ((this.xSceneSize / 2f) / Mathf.Tan(hFOV));
                 if ((this.numBins > 1) && !this.binInterleave)
                 {
@@ -2857,13 +2861,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 break;
             case 3:
                 myY = this.xzySceneCorner.z + (this.ySceneSizeByBin / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeight) / 2f);
+                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
                 myX = this.xzySceneCorner.x - ((this.ySceneSizeByBin / 2f) / Mathf.Tan(hFOV));
                 Fly.NewRotation(90f, 0f);
                 break;
             case 4:
                 myY = this.xzySceneCorner.z + (this.ySceneSizeByBin / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeight) / 2f);
+                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
                 myX = (this.xzySceneCorner.x + this.xSceneSize) + ((this.ySceneSizeByBin / 2f) / Mathf.Tan(hFOV));
                 Fly.NewRotation(-90f, 0f);
                 break;
@@ -3066,9 +3070,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.choiceGap = 4;
         this.choiceBin = 5;
         this.scrollChoice = -1;
-        this.lowGraphHeightRange = 0.25f;
+        this.lowGraphHeightRange = 0.05f;
         this.highGraphHeightRange = 1f;
-        //this.currGraphHeight = 0.5f; see Initialize()
+        //this.currGraphHeightScale = 0.5f; see Initialize()
         this.lowFOVRange = 20f;
         this.highFOVRange = 170f;
         this.lowDepthToWidthRatioRange = -4f;
