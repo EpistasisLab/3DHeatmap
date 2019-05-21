@@ -169,20 +169,20 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int sideStyleChoice;
     private int topStyleChoice;
     private int scrollChoice;
-    /// <summary> Minimum height of the bars </summary>
-    private float lowGraphHeightRange;
-    /// <summary> Maximum height of the bars (can be scale visually) </summary>
-    private float highGraphHeightRange;
-    /// <summary> Stauffer added - Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors </summary>
-    private float minGraphHeight;
+    /// <summary> The lowest height scaling factor allowed. Must be above 0. Actually ridge height gets scaled by zSceneSize </summary>
+    private float lowGraphHeightScaleRange;
+    /// <summary> The largest height scaling factor allowed. Actually ridge height gets scaled by zSceneSize </summary>
+    private float highGraphHeightScaleRange;
     /// <summary> Current scaling of height of bar/ridges, within min/max of range, added to abs min height</summary>
     public float currGraphHeightScale;
-    /// <summary> The current graph display height as a fractional value, for use with UI </summary>
+    /// <summary> Stauffer added - The current graph display height as a fractional value, for use with UI </summary>
     public float CurrGraphHeightFrac
     {
         get { return SMV.Instance.GetValueFloat(SMVmapping.GraphHeightFrac); }
         set { SMV.Instance.SetValue(SMVmapping.GraphHeightFrac, value); }
     }
+    /// <summary> Stauffer added - Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors </summary>
+    private float minGraphHeight;
     private float lowFOVRange;
     private float highFOVRange;
     private float currFOV;
@@ -277,7 +277,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Also adding variables that I've added to keep them separate
 
         this.CurrGraphHeightFrac = 0.5f;
-        this.minGraphHeight = 0.25f;
+        this.minGraphHeight = 15.0f;
     }
 
     //
@@ -799,7 +799,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.ShrinkIt(windowID);
         if (this.scrollAmount != 0f)
         {
-            this.currGraphHeightScale = this.UpdateFromScroll(this.choiceHeight, this.currGraphHeightScale, this.lowGraphHeightRange, this.highGraphHeightRange, 0.05f);
+            this.currGraphHeightScale = this.UpdateFromScroll(this.choiceHeight, this.currGraphHeightScale, this.lowGraphHeightScaleRange, this.highGraphHeightScaleRange, 0.05f);
             this.currFOV = this.UpdateFromScroll(this.choiceFOV, this.currFOV, this.lowFOVRange, this.highFOVRange, 0.05f);
             this.currDepthToWidthRatioExp = this.UpdateFromScroll(this.choiceThick, this.currDepthToWidthRatioExp, this.lowDepthToWidthRatioRange, this.highDepthToWidthRatioRange, 0.05f);
             this.binSeparationFrac = this.UpdateFromScroll(this.choiceSep, this.binSeparationFrac, this.lowSepRange, this.highSepRange, 0.05f);
@@ -808,7 +808,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             this.scrollAmount = 0f;
         }
         this.UpdateSliderFromToggle(this.choiceHeight, "height");
-        this.currGraphHeightScale = GUILayout.HorizontalSlider(this.currGraphHeightScale, this.lowGraphHeightRange, this.highGraphHeightRange, new GUILayoutOption[] { });
+        this.currGraphHeightScale = GUILayout.HorizontalSlider(this.currGraphHeightScale, this.lowGraphHeightScaleRange, this.highGraphHeightScaleRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceFOV, "zoom");
         this.currFOV = GUILayout.HorizontalSlider(this.currFOV, this.lowFOVRange, this.highFOVRange, new GUILayoutOption[] { });
         this.UpdateSliderFromToggle(this.choiceThick, "thickness");
@@ -2082,6 +2082,10 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         return new Vector3(xzySceneCorner.x + xSceneSize / 2f, 0f, xzySceneCorner.z + ySceneSizeFull / 2f);
     }
 
+    /// <summary> This coroutine simply lets us put up a message and then start the
+    /// drawwing process in the next frame. Would be nice to multi-thread the drawing itself with a unity job. </summary>
+    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
+    /// <returns></returns>
     IEnumerator RedrawCoroutine(bool quiet = false)
     {
         int statusID = UIManager.Instance.StatusShow("Drawing...");
@@ -2090,14 +2094,26 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         UIManager.Instance.StatusComplete(statusID);
     }
 
-    /// <summary>
-    /// Start redrawing the data.
-    /// </summary>
+    /// <summary> Start redrawing the graph for the current data. </summary>
     /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
     public void Redraw(bool quiet = false)
     {
+        //Refresh some drawing params that may have changed.
+        //We'll want to put these into a more self-contained class and method at some point,
+        // but for now just use this.
+        //
+        //Set shader params used for drawing at a minimum height. We use a shader so that
+        // we can use a simple txf scaling to change height while viewing and avoid
+        // redrawing the meshes - i.e. for speed.
+        Shader.SetGlobalFloat("_gMinimumHeight", this.minGraphHeight);
+        Shader.SetGlobalFloat("_gSceneCornerY", this.xzySceneCorner.y);
+
+        //Start the draw in the next frame, see comments in coroutine
         StartCoroutine(RedrawCoroutine());
+
+        //Refresh the UI
         UIManager.Instance.RefreshUI();
+        
         //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
         // which also handles the case when user jumps ahead of the prompts to here.
         UIManager.Instance.StopAllUIActionPrompts();
@@ -2778,7 +2794,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <param name="frac"></param>
     private void UpdateGraphHeight()
     {
-        this.currGraphHeightScale = this.lowGraphHeightRange + (this.highGraphHeightRange - this.lowGraphHeightRange) * CurrGraphHeightFrac;
+        //Square the height-scaling-fraction so we get more sensitivity in the bottom of the range.
+        //This is important for getting a good height scale in larger data sets where ridges need to be short to see an overview.
+        this.currGraphHeightScale = this.lowGraphHeightScaleRange + (this.highGraphHeightScaleRange - this.lowGraphHeightScaleRange) * (CurrGraphHeightFrac * CurrGraphHeightFrac);
         this.ScaleRidges(this.currGraphHeightScale);
     }
 
@@ -2787,7 +2805,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// Does NOT require a redraw of the graph since it scales the ridges using transform scaling.
     /// See new method UpdateGraphHeight to adjust using [0,1] value.
     /// </summary>
-    /// <param name="newGraphHeight">proportional between lowGraphHeightRange and highGraphHeightRange</param>
+    /// <param name="newGraphHeight">proportional between lowGraphHeightScaleRange and highGraphHeightScaleRange</param>
     public virtual void GraphHeightSelected_OLD(float newGraphHeight)
     {
         this.currGraphHeightScale = newGraphHeight;
@@ -3070,8 +3088,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.choiceGap = 4;
         this.choiceBin = 5;
         this.scrollChoice = -1;
-        this.lowGraphHeightRange = 0.05f;
-        this.highGraphHeightRange = 1f;
+        //Keep this tiny, but > 0
+        this.lowGraphHeightScaleRange = 0.001f;
+        this.highGraphHeightScaleRange = 1f;
         //this.currGraphHeightScale = 0.5f; see Initialize()
         this.lowFOVRange = 20f;
         this.highFOVRange = 170f;

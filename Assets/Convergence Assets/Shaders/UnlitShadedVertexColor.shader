@@ -19,6 +19,15 @@ Shader "Custom/UnlitShadedVertexColor" {
 		#pragma fragment frag
 		#include "UnityCG.cginc"
 
+		//Global variable set from script
+		//
+		//The height of the scene floor/bottom/minimum. 
+		float _gSceneCornerY;
+		//The minimum ridge/bar height, so we can always see the side colors
+		float _gMinimumHeight;
+
+		//Material properties
+		//
 		float _BodyShadeAmount;
 		float _EdgeShadeAmount;
 		float _EdgeShadeWidth;
@@ -40,6 +49,13 @@ Shader "Custom/UnlitShadedVertexColor" {
 		v2f vert(appdata v) {
 			v2f o;
 			
+			//Force minimum height for vertices above the bottom of graph.
+			//_gSceneCornerY is the bottom y pos of the graph.
+			//We add a fixed offset to get a minimium height, while still being
+			// able to use simple txf scaling in code to adjust max height.
+			if (v.vertex.y > _gSceneCornerY)
+				v.vertex.y += _gMinimumHeight;
+
 			o.pos = UnityObjectToClipPos(v.vertex);
 			o.color = v.color;
 			o.uvs = v.uvs;
