@@ -73,7 +73,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     {
         //Prevent the camera from dropping down below the ground plane
         if (rotRightStep < 0f)
-            rotRightStep = Mathf.Max(3f - ourCamera.transform.rotation.eulerAngles.x, rotRightStep );
+            rotRightStep = Mathf.Max(2f - ourCamera.transform.rotation.eulerAngles.x, rotRightStep );
         else
             //Prevent the camera from rotating over the top (which makes Y flip in LoogAt call and isn't terrible, but still not what we want)
             rotRightStep = Mathf.Min((89.95f - ourCamera.transform.rotation.eulerAngles.x), rotRightStep);

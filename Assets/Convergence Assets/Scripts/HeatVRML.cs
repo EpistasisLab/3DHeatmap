@@ -131,7 +131,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private XRidge[] xRidges;
     //private int shaveCount; Stauffer - never used
     private int numRidges;
-    /// <summary> Stauffer added. Minimum height of mesh used to make a ridge. </summary>
+    /// <summary> Stauffer added. Minimum height of *mesh* used to make a ridge. Not minimum scene height - see minGraphSceneHeight for that </summary>
     private float ridgeMeshMinHeight;
     /// <summary> Depth (unity z-dimension) of data representation, i.e. the depth of the tower representing the data point. Does NOT include gap between rows. </summary>
     public float rowDepthDataOnly;
@@ -182,7 +182,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         set { SMV.Instance.SetValue(SMVmapping.GraphHeightFrac, value); }
     }
     /// <summary> Stauffer added - Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors </summary>
-    private float minGraphHeight;
+    private float minGraphSceneHeight;
     private float lowFOVRange;
     private float highFOVRange;
     private float currFOV;
@@ -277,7 +277,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Also adding variables that I've added to keep them separate
 
         this.CurrGraphHeightFrac = 0.5f;
-        this.minGraphHeight = 15.0f;
+        this.minGraphSceneHeight = 15.0f;
     }
 
     //
@@ -2105,7 +2105,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Set shader params used for drawing at a minimum height. We use a shader so that
         // we can use a simple txf scaling to change height while viewing and avoid
         // redrawing the meshes - i.e. for speed.
-        Shader.SetGlobalFloat("_gMinimumHeight", this.minGraphHeight);
+        Shader.SetGlobalFloat("_gMinimumHeight", this.minGraphSceneHeight);
         Shader.SetGlobalFloat("_gSceneCornerY", this.xzySceneCorner.y);
 
         //Start the draw in the next frame, see comments in coroutine
@@ -2276,6 +2276,19 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             this.heightVals = hVar.Data[row];
             this.NewBuildRidge(row, this.numCols, this.minBin);//always one bin for now
         }
+        DebugRidge(this.xRidges[0]);
+    }
+
+    private void DebugRidge(XRidge ridge)
+    {
+        string s = "--- Debug Ridge ---\n";
+        s += " pos: " + ridge.trans.position + "\n";
+        s += " scl: " + ridge.trans.localScale + "\n";
+        for(int i=0; i < 16; i++)
+        {
+            s += ridge.myMesh.vertices[i].ToString("F3") + "\n";
+        }
+        Debug.Log(s);
     }
 
     /// <summary> For the given data value (of data var assigned to height), return the *unscaled* column height, i.e. the height of the mesh before any scene scaling </summary>
@@ -2283,10 +2296,10 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         return ((heightValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
     }
-    /// <summary> For the given data value, return the *scaled* column height, i.e. the height of the mesh WITH scene scaling </summary>
+    /// <summary> For the given data value, return the *scaled* column height, i.e. the height of the mesh WITH scene scaling and minimum scene height </summary>
     public float GetColumnSceneHeight(float heightValue)
     {
-        return ( GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y;
+        return (GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y + this.minGraphSceneHeight;
     }
 
     public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
@@ -2916,6 +2929,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.waitCount = 0;
     }
 
+    /* Stauffer - these aren't getting used
     private StreamWriter trout;
     public virtual void DrawTriangle()
     {
@@ -2967,7 +2981,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             this.trout.WriteLine(cstring);
         }
     }
-
+    */
     public virtual void WriteVRMLMesh(Mesh amesh, Transform trans, bool makeColors)
     {
         int avert = 0;
