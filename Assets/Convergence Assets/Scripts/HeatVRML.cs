@@ -131,7 +131,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private XRidge[] xRidges;
     //private int shaveCount; Stauffer - never used
     private int numRidges;
-    /// <summary> Stauffer added. Minimum height of *mesh* used to make a ridge. Not minimum scene height - see minGraphSceneHeight for that </summary>
+    /// <summary> Stauffer added. Minimum height of *mesh* used to make a ridge. Not minimum scene height - see MinGraphSceneHeight for that </summary>
     private float ridgeMeshMinHeight;
     /// <summary> Depth (unity z-dimension) of data representation, i.e. the depth of the tower representing the data point. Does NOT include gap between rows. </summary>
     public float rowDepthDataOnly;
@@ -178,11 +178,29 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> Stauffer added - The current graph display height as a fractional value, for use with UI </summary>
     public float CurrGraphHeightFrac
     {
+        //Uses Simple Model View
         get { return SMV.Instance.GetValueFloat(SMVmapping.GraphHeightFrac); }
         set { SMV.Instance.SetValue(SMVmapping.GraphHeightFrac, value); }
     }
-    /// <summary> Stauffer added - Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors </summary>
-    private float minGraphSceneHeight;
+
+    /// <summary> 
+    /// Stauffer added - Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors.
+    ///
+    /// NOTE - BUG WORKAROUND - the property returns 0 when the # of columns is > 18, because there's an odd bug when
+    ///   # of columns > 18 that makes the minGraphSceneHeight not get added to the vertices in the shader.
+    ///   I checked the mesh creation, and the vert heights (used in shader to determine which verts get min height added) look
+    ///   the same for # of columns > 18 or not. Very weird.
+    ///   This results in two symptoms:
+    ///     - when currGraphHeightScale gets down close to 0, all buildings go flat and there's no min height to view the sides.
+    ///     - when DataInspector draws the highlight box around the selected bar, it's far too high, espeically at lower height scales.
+    ///   So this workaround is in here to avoid the second symptom, but can't address the first.
+    /// </summary>
+    private float _minGraphSceneHeight;
+    private float MinGraphSceneHeight {
+        set { _minGraphSceneHeight = value; }
+        get { return DataManager.Instance.Cols > 18 ? 0f : _minGraphSceneHeight; }
+    }
+
     private float lowFOVRange;
     private float highFOVRange;
     private float currFOV;
@@ -277,7 +295,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Also adding variables that I've added to keep them separate
 
         this.CurrGraphHeightFrac = 0.5f;
-        this.minGraphSceneHeight = 15.0f;
+        this.MinGraphSceneHeight = 15.0f;
     }
 
     //
@@ -2105,7 +2123,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Set shader params used for drawing at a minimum height. We use a shader so that
         // we can use a simple txf scaling to change height while viewing and avoid
         // redrawing the meshes - i.e. for speed.
-        Shader.SetGlobalFloat("_gMinimumHeight", this.minGraphSceneHeight);
+        Shader.SetGlobalFloat("_gMinimumHeight", this.MinGraphSceneHeight);
         Shader.SetGlobalFloat("_gSceneCornerY", this.xzySceneCorner.y);
 
         //Start the draw in the next frame, see comments in coroutine
@@ -2299,7 +2317,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> For the given data value, return the *scaled* column height, i.e. the height of the mesh WITH scene scaling and minimum scene height </summary>
     public float GetColumnSceneHeight(float heightValue)
     {
-        return (GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y + this.minGraphSceneHeight;
+        return (GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y + this.MinGraphSceneHeight;
     }
 
     public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
