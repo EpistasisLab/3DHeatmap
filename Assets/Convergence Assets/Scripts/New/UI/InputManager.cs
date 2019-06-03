@@ -210,6 +210,17 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         //float turnButton = Input.GetAxisRaw("Turn");
         //float spaceButton = Input.GetAxisRaw("Jump");
 
+        //test translation via moving the graph instead of camera
+        if( Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+        {
+            if ((vertButton != 0f || horzButton != 0f))
+            {
+                HeatVRML.Instance.TranslateRidges(horzButton * translationScaleKeys * 10, vertButton * translationScaleKeys * 10);
+                return;
+            }
+
+        }
+
         //Forward / backward translation parallel to ground plane.
         //NOT movement along camera-forward
         if ((vertButton != 0f || horzButton != 0f))

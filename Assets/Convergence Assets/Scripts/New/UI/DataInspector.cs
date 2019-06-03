@@ -93,6 +93,10 @@ public class DataInspector : MonoBehaviour {
     {
         row = col = 0;
 
+        //Hack during VR dev
+        if (Camera.main == null)
+            return false;
+
         //Stauffer - this code mostly taken from old HeatVRML.CapturePointedAt method that was unused.
         Ray ray = Camera.main.ScreenPointToRay(pointerPosition);
         //Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.red, 10, false);

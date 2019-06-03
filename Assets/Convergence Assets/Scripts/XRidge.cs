@@ -67,6 +67,16 @@ public class XRidge : object
         }
     }
 
+    /// <summary>
+    /// Stauffer added for testing
+    /// </summary>
+    public virtual void Translate(float x, float z)
+    {
+        Vector3 pos = this.trans.position;
+        pos += new Vector3(x, 0f, z);
+        this.trans.position = pos;
+    }
+
     //Stauffer - used (at least in one way) to show/hide ridges based on their bin number, and what bins are chosen for viewing
     public virtual void Show(bool doShow)
     {

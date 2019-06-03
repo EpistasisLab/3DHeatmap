@@ -1247,6 +1247,17 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         */
     }
 
+    /// <summary>
+    /// Stauffer added for testing
+    /// </summary>
+    public virtual void TranslateRidges(float x, float z)
+    {
+        foreach(XRidge xr in this.xRidges)
+        {
+            xr.Translate(x, z);
+        }
+    }
+
     public virtual void ScaleRidges(float frac)
     {
         int i = 0;
