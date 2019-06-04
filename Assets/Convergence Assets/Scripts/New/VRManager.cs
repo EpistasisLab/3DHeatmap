@@ -13,12 +13,15 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         return sis == SteamVR_Input_Sources.LeftHand ? Hand.left : Hand.right;
     }
 
-    /// <summary> Flag for whether a controller grab is currently happening </summary>
+    /// <summary> Flags for whether a controller grab is currently happening.
+    /// Array with element for each hand. </summary>
     private bool[] grabDown = new bool[2];
+
+    /// <summary> Current hand/controller position. Vector with one elem for each hand. </summary>
+    private Vector3[] handPos = new Vector3[2];
 
     /// <summary> Controller position at previous frame </summary>
     private Vector3[] handPosPrev = new Vector3[2];
-    private Vector3[] handPos = new Vector3[2];
 
     // Use this for initialization
     override protected void Initialize() {
@@ -32,15 +35,26 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     private void LateUpdate()
     {
-        if( grabDown[0])
-        {
-            Vector3 d = handPos[0] - handPosPrev[0];
-            Debug.Log("d: " + d);
-            HeatVRML.Instance.TranslateRidges(d.x, d.z);
-        }
+        //Do things in late update so we can grab current action states first via the event handlers
 
+
+        LookForGrabActivity();
+
+        //Update hand position
         handPosPrev[0] = handPos[0];
         handPosPrev[1] = handPos[1];
+    }
+
+
+    private void LookForGrabActivity()
+    {
+        if (grabDown[0] || grabDown[1])
+        {
+            Vector3 d = grabDown[0] ? handPos[0] - handPosPrev[0] : handPos[1] - handPosPrev[1];
+            d *= 250f; //hack in a larger movement until we get scaling figured out in VR
+            //Debug.Log("d: " + d.ToString("F4"));
+            HeatVRML.Instance.TranslateRidges(d.x, d.z);
+        }
     }
 
     //Event handlers from SteamVR Input system
@@ -59,7 +73,8 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     public void OnControllerTransformChange(SteamVR_Behaviour_Pose sbb, SteamVR_Input_Sources sis)
     {
-        handPos[(int)GetHand(sis)] = sbb.origin.position;
+        handPos[(int)GetHand(sis)] = sbb.transform.position;
+        //Debug.Log("handPos " + handPos[0].ToString("F3") + " " + handPos[1].ToString("F3"));
     }
 
 
