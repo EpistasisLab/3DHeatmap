@@ -70,10 +70,10 @@ public class XRidge : object
     /// <summary>
     /// Stauffer added for testing
     /// </summary>
-    public virtual void Translate(float x, float z)
+    public virtual void Translate(float x, float y, float z)
     {
         Vector3 pos = this.trans.position;
-        pos += new Vector3(x, 0f, z);
+        pos += new Vector3(x, y, z);
         this.trans.position = pos;
     }
 

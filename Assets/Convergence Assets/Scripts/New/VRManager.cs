@@ -51,26 +51,30 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         if (grabDown[0] || grabDown[1])
         {
             Vector3 d = grabDown[0] ? handPos[0] - handPosPrev[0] : handPos[1] - handPosPrev[1];
-            d *= 250f; //hack in a larger movement until we get scaling figured out in VR
+            
             //Debug.Log("d: " + d.ToString("F4"));
-            HeatVRML.Instance.TranslateRidges(d.x, d.z);
+
+            HeatVRML.Instance.TranslateRidges(d.x * 250f, d.y*100f, d.z * 250f); //hack in a larger movement until we get scaling figured out in VR
         }
     }
 
-    //Event handlers from SteamVR Input system
+    //Event handlers for events from SteamVR Input system
     //
+
+    //Controller grip button has changed state
     public void OnGrabGripChange(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
     {
         //I figure we should only get grip changes from left and right hand controllers, but just in case...
         if (sis != SteamVR_Input_Sources.LeftHand && sis != SteamVR_Input_Sources.RightHand)
             return;
 
-        Debug.Log("Grab with " + GetHand(sis).ToString() + " state " + state);
+        //Debug.Log("Grab with " + GetHand(sis).ToString() + " state " + state);
 
         grabDown[(int)GetHand(sis)] = state;
         handPosPrev[(int)GetHand(sis)] = handPos[(int)GetHand(sis)];
     }
 
+    //Controller/hand has changed position/rotation
     public void OnControllerTransformChange(SteamVR_Behaviour_Pose sbb, SteamVR_Input_Sources sis)
     {
         handPos[(int)GetHand(sis)] = sbb.transform.position;

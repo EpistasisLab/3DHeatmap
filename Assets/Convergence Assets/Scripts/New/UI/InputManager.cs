@@ -215,7 +215,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         {
             if ((vertButton != 0f || horzButton != 0f))
             {
-                HeatVRML.Instance.TranslateRidges(horzButton * translationScaleKeys * 10, vertButton * translationScaleKeys * 10);
+                HeatVRML.Instance.TranslateRidges(horzButton * translationScaleKeys * 10, 0f, vertButton * translationScaleKeys * 10);
                 return;
             }
 

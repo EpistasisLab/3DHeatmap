@@ -102,7 +102,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private float ySceneSizeApproxMax;
     /// <summary> Stauffer - plotting area DEPTH in scene units, for single bin (or for all bins when interleaved) </summary>
     public float ySceneSizeByBin;
-    /// <summary> Stauffer - plotting area HEIGHT in scene units. Gets updated when data is redrawn. </summary>
+    /// <summary> Stauffer - plotting area HEIGHT in scene units. </summary>
     public float zSceneSize;
     /// <summary> Stauffer - starting corner of plot area in scene units. The left/front, 1st row/1st column. </summary>
     public Vector3 xzySceneCorner;
@@ -1250,12 +1250,18 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary>
     /// Stauffer added for testing
     /// </summary>
-    public virtual void TranslateRidges(float x, float z)
+    public virtual void TranslateRidges(float x, float y, float z)
     {
         foreach(XRidge xr in this.xRidges)
         {
-            xr.Translate(x, z);
+            xr.Translate(x, y, z);
         }
+
+        //Update the scene corner state
+        xzySceneCorner.y += y;
+
+        //Needs some updating
+        UpdateSceneDrawingParams();
     }
 
     public virtual void ScaleRidges(float frac)
@@ -1274,9 +1280,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         //Stauffer xSceneSize is set to fixed val (400) during init
         this.rowDepthDataOnly = (this.xSceneSize * Mathf.Pow(2, this.currDepthToWidthRatioExp)) / this.numCols;
+
+        //Update this in case xSceneSize has changed
+        this.ySceneSizeApproxMax = 2f * this.xSceneSize;
+
         //Constrain row depth to not exceed max total depth of plot. This is necessary for data that has many more
         // rows than columns
-        if( this.numRows > (int)(this.numCols * 1.25f))
+        if ( this.numRows > (int)(this.numCols * 1.25f))
         {
             this.rowDepthDataOnly = this.ySceneSizeApproxMax / (this.numRows * (1f + this.rowGapFrac));
         }
@@ -2123,11 +2133,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         UIManager.Instance.StatusComplete(statusID);
     }
 
-    /// <summary> Start redrawing the graph for the current data. </summary>
-    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
-    public void Redraw(bool quiet = false)
+    private void UpdateSceneDrawingParams()
     {
-        //Refresh some drawing params that may have changed.
+        //Refresh for some drawing params that may have changed.
         //We'll want to put these into a more self-contained class and method at some point,
         // but for now just use this.
         //
@@ -2136,6 +2144,14 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         // redrawing the meshes - i.e. for speed.
         Shader.SetGlobalFloat("_gMinimumHeight", this.MinGraphSceneHeight);
         Shader.SetGlobalFloat("_gSceneCornerY", this.xzySceneCorner.y);
+    }
+
+    /// <summary> Start redrawing the graph for the current data. </summary>
+    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
+    public void Redraw(bool quiet = false)
+    {
+        //For any params that may have changed that need some action
+        UpdateSceneDrawingParams();
 
         //Start the draw in the next frame, see comments in coroutine
         StartCoroutine(RedrawCoroutine());
