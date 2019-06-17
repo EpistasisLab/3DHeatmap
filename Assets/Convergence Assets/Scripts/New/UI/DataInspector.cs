@@ -99,7 +99,7 @@ public class DataInspector : MonoBehaviour {
 
         //Stauffer - this code mostly taken from old HeatVRML.CapturePointedAt method that was unused.
         Ray ray = Camera.main.ScreenPointToRay(pointerPosition);
-        //Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.red, 10, false);
+        Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.red, 10, false);
         RaycastHit hit;
         if (!Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << DataObjectLayer))
         {
