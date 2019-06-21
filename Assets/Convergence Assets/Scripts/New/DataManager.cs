@@ -64,9 +64,9 @@ public class TriDataPoint
         //Returns silently if data isn't ready or is out of bounds
         if (DataManager.Instance.PrepareAndVerify(out dummy) == false)
             return;
-        if (rowIn < 0 || row >= DataManager.Instance.Rows)
+        if (rowIn < 0 || rowIn >= DataManager.Instance.Rows)
             return;
-        if (colIn < 0 || col >= DataManager.Instance.Cols)
+        if (colIn < 0 || colIn >= DataManager.Instance.Cols)
             return;
 
         row = rowIn;
@@ -274,6 +274,35 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
     public int GetColorTableIdByMapping(Mapping mapping)
     {
         return variableColorTableIDs[(int)mapping];
+    }
+
+    /// <summary> For the given row & column, return the value of the variable mapped to Height.
+    /// If nothing mapped, returns 0.
+    /// If row or col is out of range, returns 0 and prints error </summary>
+    public float GetHeightVariableValue(int row, int col)
+    {
+        if (!HeightVarIsAssigned)
+            return 0;
+
+        return GetVariableValueByMapping(Mapping.Height, row, col);
+    }
+
+    /// <summary> For the given row & column, return the value of the variable mapped to 'mapping'.
+    /// If nothing mapped, returns 0.
+    /// If row or col is out of range, returns 0 and prints error </summary>
+    public float GetVariableValueByMapping(Mapping mapping, int rowIn, int colIn)
+    {
+        if (!DataIsLoaded)
+            return 0;
+
+        if ( rowIn < 0 || rowIn >= DataManager.Instance.Rows ||
+             colIn < 0 || colIn >= DataManager.Instance.Cols)
+        {
+            Debug.LogError("GetVariableValueByMapping: row or col out of range: " + rowIn + ", " + colIn);
+            return 0;
+        }
+
+        return GetVariableByMapping(mapping).Data[rowIn][colIn];
     }
 
     /// <summary> Accessor to variable currently assigned to height param 

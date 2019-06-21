@@ -61,7 +61,8 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Ref to component for getting data via pointer </summary>
     DataInspector dataInspector;
     /// <summary> Flag to enable continuous data inspection, so data under the mouse pointer is queried under continuously as pointer is moved </summary>
-    private bool contDataInspectionEnabled = true;
+    public bool contDataInspectionEnabled = true;
+    /// <summary> Flag to temporarily disable continuous data inspection. Used to lock the inspection when mouse is clicked </summary>
     private bool contDataInpectionTempDisable = false;
     /// <summary> How often (seconds) to do continous data inspection </summary>
     public float contDataInspectionInterval = 0.2f;
@@ -299,7 +300,10 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             if( Time.time - leftMouseButtonDownTime < mouseSingleClickThreshold)
             {
                 //Process single click
+
+                //Initiate a data inspection
                 TriDataPoint triPoint = dataInspector.InspectDataAtScreenPosition(Input.mousePosition, true, true);
+                //If we get a valid point, lock the data inspection to this point by setting this flag.
                 contDataInpectionTempDisable = triPoint.isValid;
                 //triPoint.DebugDump();
             }

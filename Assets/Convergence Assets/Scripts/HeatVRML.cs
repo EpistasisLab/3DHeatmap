@@ -150,7 +150,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public float dataHeightRange;
     /// <summary> 1 over (maxDataHeight - minDataHeight) </summary>
     public float dataHeightRangeScale;
-    private int numRows;
+    public int numRows; //should give these a read-only accessor
     public int numCols;
     private int numBins;
     private int minMarker;
@@ -257,7 +257,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     // Layout
     public int pixPerLine;
     public int rowHeight;
-    public int colWidth;
+    //public int colWidth; stauffer - not used
     public int lineWidth;
 
     // Specific windows
@@ -2336,7 +2336,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         Debug.Log(s);
     }
 
-    /// <summary> For the given data value (of data var assigned to height), return the *unscaled* column height, i.e. the height of the mesh before any scene scaling </summary>
+    /// <summary> For the given data value (of data var assigned to height), return the *unscaled* column height, i.e. the height of the mesh before any object scaling for the scene </summary>
     public float GetColumnMeshHeight(float heightValue)
     {
         return ((heightValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
@@ -2345,6 +2345,19 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public float GetColumnSceneHeight(float heightValue)
     {
         return (GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y + this.MinGraphSceneHeight;
+    }
+
+    /// <summary> Get the scene height for the column at a particular data position (row, column) </summary>
+    /// <returns>Will return 0 if data not set or row or col is out of range</returns>
+    public float GetColumnSceneHeightByPosition(int row, int col)
+    {
+        return GetColumnSceneHeight(DataManager.Instance.GetHeightVariableValue(row, col));
+    }
+
+    /// <summary> Get the width of each column in scene units </summary>
+    public float GetColumnSceneWidth()
+    {
+        return HeatVRML.Instance.xSceneSize / HeatVRML.Instance.numCols;
     }
 
     public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
@@ -3162,7 +3175,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.pointedData = new PointedData();
         this.pixPerLine = 25;
         this.rowHeight = 25;
-        this.colWidth = 100;
+        //this.colWidth = 100; stauffer - not used
         this.lineWidth = 20;
         this.scrollHeight = 112;
         this.showHelp = false;

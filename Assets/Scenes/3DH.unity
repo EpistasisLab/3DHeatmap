@@ -681,6 +681,7 @@ MonoBehaviour:
   maxDataHeight: 0
   dataHeightRange: 0
   dataHeightRangeScale: 0
+  numRows: 0
   numCols: 0
   minScrollSecs: 0.05
   currGraphHeightScale: 0
@@ -689,7 +690,6 @@ MonoBehaviour:
   includeTriangles: 0
   pixPerLine: 25
   rowHeight: 25
-  colWidth: 100
   lineWidth: 20
   scrollHeight: 112
   myCameraOld: {fileID: 0}
@@ -1313,7 +1313,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 367.46344, y: 56.990463}
+  m_SizeDelta: {x: 350.2564, y: 56.871796}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &11538871
 MonoBehaviour:
@@ -4373,6 +4373,7 @@ MonoBehaviour:
   translationScaleTouch: 0.1
   translationExpScaleTouch: 1.5
   translateDotThresholdTouch: 0.95
+  contDataInspectionEnabled: 1
   contDataInspectionInterval: 0.2
 --- !u!4 &580437087
 Transform:
@@ -4405,6 +4406,7 @@ MonoBehaviour:
   displayPanel: {fileID: 11538869}
   indicatorFlashFreq: 1.1
   indicatorMaxAlpha: 0.85
+  dbgShowRay: 0
 --- !u!1 &582852499
 GameObject:
   m_ObjectHideFlags: 0
@@ -7254,8 +7256,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 183.73172, y: -27.495234}
-  m_SizeDelta: {x: 347.46344, y: 34.990463}
+  m_AnchoredPosition: {x: 175.1282, y: -27.4359}
+  m_SizeDelta: {x: 330.2564, y: 34.871796}
   m_Pivot: {x: 0.5, y: 0.49999997}
 --- !u!114 &1131258133
 MonoBehaviour:
