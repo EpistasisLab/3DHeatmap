@@ -105,7 +105,16 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> Stauffer - plotting area HEIGHT in scene units. </summary>
     public float zSceneSize;
     /// <summary> Stauffer - starting corner of plot area in scene units. The left/front, 1st row/1st column. </summary>
-    public Vector3 xzySceneCorner;
+    public Vector3 xzySceneCorner
+    {
+        get { return xzySceneCorner_; }
+        set
+        {
+            Debug.Log("xzySceneCorner setter! " + value.ToString("F2"));
+            xzySceneCorner_.Set(value.x, value.y, value.z);
+        }
+    }
+    private Vector3 xzySceneCorner_;
     /// <summary> Stauffer - separtion in scene units between bins, whether bins are interleaved or not. So if not interleaved,
     /// it's separation between groups of rows of each bin. If interleaved, this is separation between each row (different than rowGap, however). </summary>
     public float binSeparation;
@@ -296,6 +305,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         this.CurrGraphHeightFrac = 0.5f;
         this.MinGraphSceneHeight = 15.0f;
+
+        //Uses a property now for debugging, so can't be in ctor
+        this.xzySceneCorner = new Vector3(0,0,0);
     }
 
     //
@@ -1258,7 +1270,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
 
         //Update the scene corner state
-        xzySceneCorner.y += y;
+        xzySceneCorner = xzySceneCorner + new Vector3(0, y, 0);
 
         //Needs some updating
         UpdateSceneDrawingParams();
@@ -1403,7 +1415,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         */
     }
 
-    //Stauffer - seems to determine if a bevel is drawn at top of column
+    //Stauffer - seems to determine if a bevel is drawn at top of block
     // Made it a getter/setter so I could put a breakpoint on it to see when it changes, cuz
     // when I set it to false in the ctor below, it was getting set back to true somewhere that
     // I couldn't see in the code. But weirdly, when I made this getter/setter and put a breakpoint
@@ -3146,7 +3158,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.ySceneSizeByBin = 400f;
         this.ySceneSizeApproxMax = 2f * this.xSceneSize;
         this.zSceneSize = 200f;
-        this.xzySceneCorner = new Vector3(0, 0, 0);
         this.dbPos = new Vector2(0, 0);
         this.currDB = -1;
         this.includeTriangles = true;

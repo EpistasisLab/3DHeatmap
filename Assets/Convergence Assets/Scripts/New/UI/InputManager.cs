@@ -276,8 +276,11 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         if (Input.GetKeyDown(KeyCode.F12))
         {
             //Debugging
-            GameObject newRidge = UnityEngine.Object.Instantiate(HeatVRML.Instance.Proto, new Vector3(HeatVRML.Instance.xzySceneCorner.x, HeatVRML.Instance.xzySceneCorner.y, HeatVRML.Instance.xzySceneCorner.z), Quaternion.identity);
-            newRidge.name = "testRidge";
+
+            dataInspector.DbgSelectWithDebugRay();
+
+            //GameObject newRidge = UnityEngine.Object.Instantiate(HeatVRML.Instance.Proto, new Vector3(HeatVRML.Instance.xzySceneCorner.x, HeatVRML.Instance.xzySceneCorner.y, HeatVRML.Instance.xzySceneCorner.z), Quaternion.identity);
+            //newRidge.name = "testRidge";
 
             //UIManager.Instance.StartUIActionPrompts();
 

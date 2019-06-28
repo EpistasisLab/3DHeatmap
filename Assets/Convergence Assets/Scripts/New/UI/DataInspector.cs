@@ -11,8 +11,12 @@ public class DataInspector : MonoBehaviour {
     /// <summary> Unity layer assigned to data objects. For ray-casting. </summary>
     public int DataObjectLayer = 8;
 
-    /// <summary> GameObject with mesh that's shown to indicate selected data column </summary>
-    public GameObject dataIndicator;
+    /// <summary> GameObject with cube that's a) shown to indicate selected data column; b) used for raycast collisions  </summary>
+    public GameObject cubePrefab;
+    private GameObject dataIndicatorCube;
+    private GameObject blockIntersectionCube;
+    private Collider blockIntersectionCollider;
+    private RaycastHit blockHit;
 
     /// <summary> Simple display panel object with component SimpleTextPanelHandler </summary>
     public GameObject displayPanel;
@@ -24,6 +28,9 @@ public class DataInspector : MonoBehaviour {
 
     /// <summary> Show the ray we cast for data intersection for debugging </summary>
     public bool dbgShowRay;
+    /// <summary> Use these to generate a ray for debugging </summary>
+    public Vector3 dbgRayOrigin;
+    public Vector3 dbgRayDirex;
     private Ray dbgRay;
 
     /// <summary> True if the DataIndicator is currently being shown </summary>
@@ -36,7 +43,20 @@ public class DataInspector : MonoBehaviour {
         displayPanelHandler = displayPanel.GetComponent<SimpleTextPanelHandler>();
         if (displayPanelHandler == null)
             Debug.LogError("displayPanelHandler == null");
-	}
+
+        dataIndicatorCube = Instantiate(cubePrefab, transform);
+        if(dataIndicatorCube == null)
+            Debug.LogError("dataIndicatorCube == null");
+        blockIntersectionCube = Instantiate(cubePrefab, transform);
+        if (blockIntersectionCube == null)
+            Debug.LogError("blockIntersectionCube == null");
+        blockIntersectionCube.SetActive(true);
+        blockIntersectionCube.GetComponent<MeshRenderer>().enabled = false;
+        blockIntersectionCollider = blockIntersectionCube.GetComponent<Collider>();
+        if (blockIntersectionCollider == null)
+            Debug.LogError("blockIntersectionCollider == null");
+        
+    }
 
     // Update is called once per frame
     //	void Update () {
@@ -158,21 +178,71 @@ public class DataInspector : MonoBehaviour {
             return false;
 
         Ray ray = Camera.main.ScreenPointToRay(pointerPosition);
-        //Debug.Log("ray origin, direction: " + ray.origin.ToString("f3") + " " + ray.direction.ToString("f3"));
+        return SelectWithRayUsingGridIntersection(ray, out rowOut, out colOut);
+    }
+
+    /// <summary>
+    /// Debugging method. Use dbgRay direction to select block
+    /// </summary>
+    /// <returns></returns>
+    public void DbgSelectWithDebugRay()
+    {
+        Debug.Log("====== Select with dbgRay ");
+        int row = 0;
+        int col = 0;
+        Ray ray = new Ray(dbgRayOrigin, dbgRayDirex);
+        bool res = SelectWithRayUsingGridIntersection(ray, out row, out col);
+        //Debug.Log("Result " + res + " row, col " + row + ", " + col);
+    }
+
+    /// <summary> Working method so we can easily send it controlled rays for debugging </summary>
+    private bool SelectWithRayUsingGridIntersection(Ray ray, out int rowOut, out int colOut)
+    {
+        rowOut = colOut = 0;
+        string dbgStr = "";
+
+        dbgStr = "ray origin, direction: " + ray.origin.ToString("f3") + " " + ray.direction.ToString("f3") + "\n";
         if (dbgShowRay)
         {
             dbgRay = ray;
         }
 
-        //Determine equation of the 2D line that the ray makes relative to xz-plane, where z = mx + b
+        //Find the intersection with ground/terrain. If it doesn't intersect, we still might be
+        //pointing flat or upwards and hitting something
+        RaycastHit rayTerrainHit;
+        Terrain.activeTerrain.GetComponent<Collider>().Raycast(ray, out rayTerrainHit, 100000f);
+
+        //Determine equation of the 2D line that the ray makes in the xz-plane, where z = mx + b
         //m = slope (z/x)
         //b = intercept
-        float m = ray.direction.z / Mathf.Max(ray.direction.x, 0.00001f);
-        //Intercept, relative to graph centered at 0,0, and normalized to [0,1] for graph area
-        float bz = (ray.origin.z - HeatVRML.Instance.xzySceneCorner.z) / HeatVRML.Instance.rowDepthFull;
-        float bx = (ray.origin.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetColumnSceneWidth();
-        float b = bz - m * bx; //b = z - mx
+        //
+        //First calc the slope ratio, since our grid cells in scene are not square  - because each ridge (row of blocks)
+        // can have separator space between them.
+        float slopeRatio = (HeatVRML.Instance.rowDepthFull / HeatVRML.Instance.rowDepthDataOnly);
+        //The slope, taking slopeRatio into account. So this should now be in normalized unit for a regularized data grid.
+        float m = ray.direction.x != 0 ? ray.direction.z / ray.direction.x / slopeRatio : float.MaxValue;
+        //A point on the line in normalized grid space. Using the ray origin
+        float pz = (ray.origin.z - HeatVRML.Instance.xzySceneCorner.z) / HeatVRML.Instance.rowDepthFull;
+        float px = (ray.origin.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetColumnSceneWidth();
+        //Intercept, relative to graph front-left corner at 0,0
+        float b = pz - m * px;
 
+        dbgStr += "m, px, pz, b, sceneCorner: " + m + ", " + px + ", " + pz + ", " + b + ", " + HeatVRML.Instance.xzySceneCorner + "\n";
+
+        //If we're pointing away from the data, skeedaddle
+        if (px >= HeatVRML.Instance.numCols)
+            if ( ray.direction.x >= 0)
+                return false;
+        if (px < 0)
+            if (ray.direction.x <= 0)
+                return false;
+        if (pz >= HeatVRML.Instance.numRows)
+            if (ray.direction.z >= 0)
+                return false;
+        if (pz < 0)
+            if (ray.direction.z <= 0)
+                return false;
+        
         //List of data cell positions that are crossed by the line and are intersecting the ray
         List<Intersection> isx = new List<Intersection>();
 
@@ -183,46 +253,108 @@ public class DataInspector : MonoBehaviour {
         // we've intersected. If from one column edge to the next the z value crosses more than one row,
         // we track that and add more than one data point to the list.
         //
-        for ( int c = 0; c < HeatVRML.Instance.numCols; c++)
+        //Take into account whether we start with ray origin over/within the data, and ray direction
+        //We've already made sure above that we're pointing at the data.
+        int cStart;
+        int cEnd;
+        if ( ray.direction.x >= 0)
         {
-            //For the left of this column, calc the z intersection point, i.e. the row
+            cStart = Mathf.Max(0, Mathf.FloorToInt(px));
+            cEnd = HeatVRML.Instance.numCols-1;
+        }
+        else
+        {
+            cStart = 0;
+            cEnd = Mathf.Min( Mathf.FloorToInt(px), HeatVRML.Instance.numCols-1);
+        }
+
+        bool foundAnIntersection = false;
+        for ( int c = cStart; c <= cEnd; c++)
+        {
+            //For the left side of this column, calc the z intersection point, i.e. the row
             float z = m * c + b;
-            //Convert it to row number by taking into account the spacing between rows
-            float depthRatio = (HeatVRML.Instance.rowDepthFull / HeatVRML.Instance.rowDepthDataOnly);
-            int r = Mathf.FloorToInt(  z / depthRatio );
-
-            //If it's < 0, we're not on the scene grid yet, or we've gone past it
-            if (r < 0 || r >= HeatVRML.Instance.numRows )
-                continue;
-
-            //rows at which ray passes through left and right edges of column
-            int r0 = r;
+            //the rows at which ray passes through left and right edges of column
+            //The integer row number. FloorToInt yields largest int <= z, so for negs, gets more negative
+            int rLeft = Mathf.FloorToInt( z );
             float z1 = m * (c + 1) + b; //intesection at right edge of column
-            int r1 = Mathf.Min( Mathf.FloorToInt( z1 / depthRatio), HeatVRML.Instance.numRows-1 ); //don't let it go out of bounds
-            //Cycle over all the rows we cross between this column's left and right edges
-            for (int rr = r0; rr <= r1; rr++)
+            int rRight = Mathf.FloorToInt(z1);
+            dbgStr += "col " + c + ", raw rLeft rRight " + rLeft + ", " + rRight + "\n";
+            //If left side row < 0 or > numRows, we're not on the scene grid yet, or we've gone past it, so just do right edge if it's in bounds.
+            if (rLeft < 0 )
             {
-                Debug.Log("examining col,row: " + c + ", " + rr);
+                if (rRight < 0)
+                    continue;
+                rLeft = 0;
+            }
+            if (rLeft >= HeatVRML.Instance.numRows)
+            {
+                if (rRight >= HeatVRML.Instance.numRows)
+                    continue;
+                rLeft = HeatVRML.Instance.numRows - 1;
+            }
+
+            //Now that we now rLeft is in bounds, check rRight. Don't just assign rLeft to it,
+            // because we have to be able to traverse multiple rows when right side is out of bounds.
+            if (rRight < 0 || rRight >= HeatVRML.Instance.numRows)
+            rRight = Mathf.Max(0, Mathf.Min(rRight, HeatVRML.Instance.numRows-1));
+
+            //If ray origin is within/over the data, only search rows that are under the ray
+            if (ray.direction.z >= 0)
+            {
+                rLeft = Mathf.Max(rLeft, Mathf.FloorToInt(pz));
+                rRight = Mathf.Max(rRight, Mathf.FloorToInt(pz));
+            }
+            else
+            {
+                rLeft = Mathf.Min(rLeft, Mathf.FloorToInt(pz));
+                rRight = Mathf.Min(rRight, Mathf.FloorToInt(pz));
+            }
+
+            dbgStr += "col " + c + ", checking rows: " + rLeft + " - " + rRight + "\n";
+
+            //Cycle over all the in-bounds rows we cross between this column's left and right edges
+            //Direction of iteration over rows depends on whether starting point is above or below grid.
+            int step = rLeft <= rRight ? 1 : -1;
+            int end = rRight + step;
+            for (int rr = rLeft; rr != end; rr+=step)
+            {
+                dbgStr += "   examining col,row: " + c + ", " + rr + "\n";
+
+                //Scale and move the cube for raycasted intersection testing
+                PrepareBlockOverlay(blockIntersectionCube, rr, c, 0/*just always do 0, for now at least*/);
+                if( blockIntersectionCollider.Raycast(ray, out blockHit, 100000f))
+                {
+                    rowOut = rr;
+                    colOut = c;
+                    foundAnIntersection = true;
+                    //For rays going left-to-right, we just return the first intersection
+                    if (ray.direction.x >= 0)
+                        return true;
+                }
+
+                #if false
                 //Find where in the column's cell it intersects (i.e. which sides it enters and leaves),
                 //and calc ray height at those points, and store the min of those.
                 //
                 float minIxHeight = float.MaxValue;
                 float xix, zix;
-                //Intersections with bottom and top of cell
+                //Intersections with bottom and top of cell.
                 // x = (z - b) / m
-                xix = (rr - b) / m; //need to handle m == 0
+                if (m == 0)
+                    m = 0.00001f; //hack
+                xix = (rr - b) / m;
                 if (xix >= c && xix <= c + 1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, xix, rr));
+                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, xix, rr) /*returns float.MaxValue if rays hits floor or goes below.*/); 
                 xix = (rr+1 - b) / m;
                 if (xix >= c && xix <= c + 1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, xix, rr));
+                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, xix, rr));
                 //Intersections with sides of cell
                 zix = m * c + b; //left
                 if(zix >= rr && zix <= rr+1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, c, zix));
+                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, c, zix));
                 zix = m * (c+1) + b; //right
                 if (zix >= rr && zix <= rr + 1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, c, zix));
+                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, c, zix));
 
                 //Get scene-height of the column at this position
                 float h = HeatVRML.Instance.GetColumnSceneHeightByPosition(rr, c);
@@ -232,32 +364,73 @@ public class DataInspector : MonoBehaviour {
                 if( minIxHeight <= h)
                 {
                     isx.Add(new Intersection { col = c, row = rr });
-                    Debug.Log("found intersection at col, row: " + c + ", " + rr);
+                    dbgStr += "   ----- isx at col, row: " + c + ", " + rr + "\n";
                 }
                 //Debug.Log("minIxHeight, h: " + minIxHeight + ", " + h);
+#endif
             }
         }
 
+        Debug.Log(dbgStr);
+
+        return foundAnIntersection;
+        /*
         //Did we find anything?
         if (isx.Count == 0)
             return false;
 
-        //Now that we've gone all through the columns and found all the intersections with
-        // the ray, choose the appropriate one based on direction of ray
-        rowOut = isx[0].row;
-        colOut = isx[0].col;
+        //Now that we've gone through all the blocks that are under the ray, and found those that intersect with
+        // the ray, choose the appropriate one based on direction of ray.
+        int ind;
+        if (ray.direction.x >= 0)
+            ind = 0;
+        else
+            ind = isx.Count - 1;
+
+        rowOut = isx[ind].row;
+        colOut = isx[ind].col;
 
         return true;
+        */
     }
 
     /// <summary> Calc screen-unit height of a ray at normalized x and z positions. Helper function. </summary>
-    private float CalcRayScreenHeight(Ray ray, float xNorm, float zNorm)
+    /// <returns>The height of the ray in screen space at the given normalized xz coords. If height is below
+    /// the terrain/ground, return float.MaxValue </returns>
+    private float CalcRayScreenHeight(Ray ray, RaycastHit rayTerrainHit, float xNorm, float zNorm)
     {
-        //Calc distance in xz-plane from eye/ray to cell intersection point
+        //Block/cell intersection point in scene space
         Vector2 ix = new Vector2(xNorm * HeatVRML.Instance.GetColumnSceneWidth(), zNorm * HeatVRML.Instance.rowDepthFull);
-        float xzDist = (ix - new Vector2(ray.origin.x, ray.origin.z)).magnitude;
-        //Project distance xzDist along the ray to get height at the cell intersection point
-        return (ray.origin + xzDist * ray.direction).y;
+
+        float h0;
+        if( rayTerrainHit.collider != null)
+        {
+            //Use the triangle formed by ray origin, ray intersection with terrain, and its projection on.
+            //h0 = height of ray at intersection with block.
+            //h = ray origin height
+            //d = distance in xz-plane from ray origin to ray-terrain intersection.
+            //d0 = distance in xz-plane from block interseciton to ray-terrain intersecion
+            //Solve for h0
+            //  d0 / d = h0 / h -->
+            //  h0 = d0 / d * h
+            Vector2 rtIsx = new Vector2(rayTerrainHit.point.x, rayTerrainHit.point.z);
+            Vector2 rayOxz = new Vector2(ray.origin.x, ray.origin.z);
+            float d = ( rayOxz - rtIsx).magnitude;
+            //Check if ix is further from ray origin than rtIsx, which means it's below the terrain/ground
+            if ((ix - rayOxz).magnitude > d)
+                return float.MaxValue; //signifies no possible intersection
+            float d0 = (ix - rtIsx ).magnitude;
+            h0 = d0 / d * ray.origin.y;
+        }
+        else
+        {
+            //The ray doesn't intersect with terrain/ground, so it's either flat, almost flat or
+            // pointing up. In all these cases we'll just do a simple distance calc. Assume that when pointing
+            // up, it won't be by much since user will rarely be that deep in data to point up much.
+            h0 = ray.origin.y;
+        }
+
+        return h0;
     }
 
     /// <summary> Hide any UI elements managed by this component </summary>
@@ -265,6 +438,46 @@ public class DataInspector : MonoBehaviour {
     {
         HideDataIndicator();
         HideDataInspector();
+    }
+
+    /// <summary>
+    /// Take a game object for a cube and scale and position it based on data vals so it can overlay the block in the scene.
+    /// </summary>
+    /// <param name="cube"></param>
+    /// <param name="dataHeightValue"></param>
+    /// <param name="dataRow"></param>
+    /// <param name="dataCol"></param>
+    /// <param name="dataBin"></param>
+    /// <param name="extraScale">Small scale factor that helps with visual overlay not causing visual artifacts.</param>
+    private void PrepareBlockOverlay(GameObject cube, int dataRow, int dataCol, int dataBin, float extraScale = 1f)
+    {
+        //Size a cube to the size of the selected column and flash it.
+        float width = HeatVRML.Instance.GetColumnSceneWidth();
+        float height = HeatVRML.Instance.GetColumnSceneHeightByPosition(dataRow, dataCol);
+        float depth = HeatVRML.Instance.rowDepthDataOnly;
+        cube.transform.localScale = new Vector3(width, height, depth) * extraScale;
+
+        Vector3 pos = new Vector3();
+        pos.y = height / 2f + HeatVRML.Instance.xzySceneCorner.y;
+
+        //Debug.Log("heightValue, minDataHeight, dataHeightRangeScale, zSceneSize, currGraphHeightScale, xzySceneCorner");
+        //Debug.Log(triData.heightValue + ", " + HeatVRML.Instance.minDataHeight + ", " + HeatVRML.Instance.dataHeightRangeScale + ", " + HeatVRML.Instance.zSceneSize + ", " + HeatVRML.Instance.currGraphHeightScale + ", " + HeatVRML.Instance.xzySceneCorner);
+
+        pos.x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.xSceneSize) / HeatVRML.Instance.numCols) + HeatVRML.Instance.xzySceneCorner.x;
+
+        //Remember orig developer switched y & z - I really should rename these!
+        float yoff = dataRow * HeatVRML.Instance.rowDepthFull;
+        if (HeatVRML.Instance.binInterleave)
+        {
+            yoff = yoff + (dataBin * HeatVRML.Instance.binSeparation);
+        }
+        else
+        {
+            yoff = yoff + (dataBin * HeatVRML.Instance.ySceneSizeByBinWithSep);
+        }
+        pos.z = (HeatVRML.Instance.xzySceneCorner.z + yoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
+
+        cube.transform.position = pos;
     }
 
     /// <summary>
@@ -276,36 +489,9 @@ public class DataInspector : MonoBehaviour {
         if ( ! triData.isValid )
             return;
 
-        //Size a cube to the size of the selected column and flash it.
+        PrepareBlockOverlay(dataIndicatorCube, triData.row, triData.col, triData.bin, 1.02f);
 
-        float width = HeatVRML.Instance.GetColumnSceneWidth();
-        float height = HeatVRML.Instance.GetColumnSceneHeight(triData.heightValue);
-        float depth = HeatVRML.Instance.rowDepthDataOnly;
-        float extra = 1.02f; //to avoid artifacts from overlapping tris
-        dataIndicator.transform.localScale = new Vector3(width, height, depth) * extra;
-
-        Vector3 pos = new Vector3();
-        pos.y = height / 2f + HeatVRML.Instance.xzySceneCorner.y;
-
-        //Debug.Log("heightValue, minDataHeight, dataHeightRangeScale, zSceneSize, currGraphHeightScale, xzySceneCorner");
-        //Debug.Log(triData.heightValue + ", " + HeatVRML.Instance.minDataHeight + ", " + HeatVRML.Instance.dataHeightRangeScale + ", " + HeatVRML.Instance.zSceneSize + ", " + HeatVRML.Instance.currGraphHeightScale + ", " + HeatVRML.Instance.xzySceneCorner);
-
-        pos.x = ((((triData.col + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.xSceneSize) / HeatVRML.Instance.numCols) + HeatVRML.Instance.xzySceneCorner.x;
-
-        //Remember orig developer switched y & z - I really should rename these!
-        float yoff = triData.row * HeatVRML.Instance.rowDepthFull;
-        if (HeatVRML.Instance.binInterleave)
-        {
-            yoff = yoff + (triData.bin * HeatVRML.Instance.binSeparation);
-        }
-        else
-        {
-            yoff = yoff + (triData.bin * HeatVRML.Instance.ySceneSizeByBinWithSep);
-        }
-        pos.z = (HeatVRML.Instance.xzySceneCorner.z + yoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
-
-        dataIndicator.transform.position = pos;
-        dataIndicator.SetActive(true);
+        dataIndicatorCube.SetActive(true);
 
         isShowing = true;
         StartCoroutine(DataIndicatorAnimate());
@@ -314,7 +500,7 @@ public class DataInspector : MonoBehaviour {
     public void HideDataIndicator()
     {
         isShowing = false;
-        dataIndicator.SetActive(false);
+        dataIndicatorCube.SetActive(false);
     }
 
     IEnumerator DataIndicatorAnimate()
@@ -322,9 +508,9 @@ public class DataInspector : MonoBehaviour {
         while (isShowing)
         {
             float phase = Mathf.Sin(Mathf.PI * 2f * Time.time * indicatorFlashFreq );
-            Color color = dataIndicator.GetComponent<Renderer>().material.color;
+            Color color = dataIndicatorCube.GetComponent<Renderer>().material.color;
             color.a = phase * indicatorMaxAlpha; //note, if try this: (phase + 1 )/2;  then when alpha goes to 0, the underlying mesh is not drawn/seen
-            dataIndicator.GetComponent<Renderer>().material.color = color;
+            dataIndicatorCube.GetComponent<Renderer>().material.color = color;
             yield return null;
         }
     }
@@ -353,9 +539,13 @@ public class DataInspector : MonoBehaviour {
 
     public void Update()
     {
-        if (dbgShowRay)
+        if (dbgShowRay && dbgRay.direction.magnitude > 0)
         {
-            Debug.DrawRay(dbgRay.origin, dbgRay.direction * 10000f, Color.red);
+            RaycastHit hit;
+            float dist = 10000f;
+            if (Terrain.activeTerrain.GetComponent<Collider>().Raycast(dbgRay, out hit, 10000f))
+                dist = hit.distance;
+            Debug.DrawRay(dbgRay.origin, dbgRay.direction * dist, Color.red);
             Vector3 o = dbgRay.origin;
             o.y = HeatVRML.Instance.xzySceneCorner.y;
             Vector3 d = dbgRay.direction;
