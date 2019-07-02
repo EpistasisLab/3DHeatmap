@@ -173,7 +173,7 @@ public class DataInspector : MonoBehaviour {
     /// <returns>True if find an intersection, false if not</returns>
     private bool SelectAtScreenPositionUsingGridIntersection(Vector3 pointerPosition, out int rowOut, out int colOut)
     {
-        Debug.Log("---");
+        //Debug.Log("---");
         rowOut = colOut = 0;
 
         //Hack during VR dev
@@ -211,10 +211,24 @@ public class DataInspector : MonoBehaviour {
             dbgRay = ray;
         }
 
-        //Find the intersection with ground/terrain. If it doesn't intersect, we still might be
-        //pointing flat or upwards and hitting something
-        RaycastHit rayTerrainHit;
-        Terrain.activeTerrain.GetComponent<Collider>().Raycast(ray, out rayTerrainHit, 100000f);
+        //Find the intersection with ground/terrain.
+        RaycastHit terrainHit;
+        int terrainHitIntX;
+        int terrainHitIntZ;
+        if ( ! Terrain.activeTerrain.GetComponent<Collider>().Raycast(ray, out terrainHit, 100000f))
+        {
+            //If it doesn't intersect, we still might be pointing flat or upwards and hitting something,
+            // so set point to some max values based on ray direction, so the tests below will work 
+            terrainHitIntX = ray.direction.x >= 0 ? int.MaxValue : int.MinValue;
+            terrainHitIntZ = ray.direction.z >= 0 ? int.MaxValue : int.MinValue;
+        }
+        else
+        {
+            terrainHitIntX = Mathf.FloorToInt((terrainHit.point.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetColumnSceneWidth());
+            terrainHitIntZ = Mathf.FloorToInt((terrainHit.point.z - HeatVRML.Instance.xzySceneCorner.z) / HeatVRML.Instance.rowDepthFull);
+        }
+        if (dbgOutput)
+            dbgStr += "terrainHit, HitInt X Z: " + terrainHit.point.ToString("F1") + " " + terrainHitIntX + " " + terrainHitIntZ + "\n";
 
         //Determine equation of the 2D line that the ray makes in the xz-plane, where z = mx + b
         //m = slope (z/x)
@@ -265,11 +279,12 @@ public class DataInspector : MonoBehaviour {
         if ( ray.direction.x >= 0)
         {
             cStart = Mathf.Max(0, Mathf.FloorToInt(px));
-            cEnd = HeatVRML.Instance.numCols-1;
+            //Only go as far as the intersection of ray with terrain/ground (make sure to adjust this for VR if terrain/ground doesn't end up moving with graph)
+            cEnd = Mathf.Min(terrainHitIntX, HeatVRML.Instance.numCols-1);
         }
         else
         {
-            cStart = 0;
+            cStart = Mathf.Max(0, terrainHitIntX);
             cEnd = Mathf.Min( Mathf.FloorToInt(px), HeatVRML.Instance.numCols-1);
         }
 
@@ -302,18 +317,23 @@ public class DataInspector : MonoBehaviour {
             //Now that we now rLeft is in bounds, check rRight. Don't just assign rLeft to it,
             // because we have to be able to traverse multiple rows when right side is out of bounds.
             if (rRight < 0 || rRight >= HeatVRML.Instance.numRows)
-            rRight = Mathf.Max(0, Mathf.Min(rRight, HeatVRML.Instance.numRows-1));
+               rRight = Mathf.Max(0, Mathf.Min(rRight, HeatVRML.Instance.numRows-1));
 
-            //If ray origin is within/over the data, only search rows that are under the ray
+            //If ray origin is within/over the data, only search rows that are under the ray,
+            // and if ray intersection with plane is within data area, only search that far.
             if (ray.direction.z >= 0)
             {
                 rLeft = Mathf.Max(rLeft, Mathf.FloorToInt(pz));
+                rLeft = Mathf.Min(rLeft, terrainHitIntZ);
                 rRight = Mathf.Max(rRight, Mathf.FloorToInt(pz));
+                rRight = Mathf.Min(rRight, terrainHitIntZ);
             }
             else
             {
                 rLeft = Mathf.Min(rLeft, Mathf.FloorToInt(pz));
+                rLeft = Mathf.Max(rLeft, terrainHitIntZ);
                 rRight = Mathf.Min(rRight, Mathf.FloorToInt(pz));
+                rRight = Mathf.Max(rRight, terrainHitIntZ);
             }
 
             if (dbgOutput)

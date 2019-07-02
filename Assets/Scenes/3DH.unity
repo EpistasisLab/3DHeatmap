@@ -1312,7 +1312,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 350.2564, y: 56.871796}
+  m_SizeDelta: {x: 370.35898, y: 57.28205}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &11538871
 MonoBehaviour:
@@ -4405,6 +4405,7 @@ MonoBehaviour:
   indicatorFlashFreq: 1.1
   indicatorMaxAlpha: 0.85
   dbgShowRay: 1
+  dbgOutput: 0
   dbgRayOrigin: {x: 0, y: 200, z: 0}
   dbgRayDirex: {x: 0.3, y: -0.3, z: 0.4}
 --- !u!1 &582852499
@@ -7256,8 +7257,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 175.1282, y: -27.4359}
-  m_SizeDelta: {x: 330.2564, y: 34.871796}
+  m_AnchoredPosition: {x: 185.17949, y: -27.641027}
+  m_SizeDelta: {x: 350.35898, y: 35.28205}
   m_Pivot: {x: 0.5, y: 0.49999997}
 --- !u!114 &1131258133
 MonoBehaviour:
