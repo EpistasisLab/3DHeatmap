@@ -28,6 +28,9 @@ public class DataInspector : MonoBehaviour {
 
     /// <summary> Show the ray we cast for data intersection for debugging </summary>
     public bool dbgShowRay;
+    /// <summary> Flag to show some debugging info  </summary>
+    public bool dbgOutput;
+
     /// <summary> Use these to generate a ray for debugging </summary>
     public Vector3 dbgRayOrigin;
     public Vector3 dbgRayDirex;
@@ -201,7 +204,8 @@ public class DataInspector : MonoBehaviour {
         rowOut = colOut = 0;
         string dbgStr = "";
 
-        dbgStr = "ray origin, direction: " + ray.origin.ToString("f3") + " " + ray.direction.ToString("f3") + "\n";
+        if (dbgOutput)
+            dbgStr = "ray origin, direction: " + ray.origin.ToString("f3") + " " + ray.direction.ToString("f3") + "\n";
         if (dbgShowRay)
         {
             dbgRay = ray;
@@ -227,7 +231,8 @@ public class DataInspector : MonoBehaviour {
         //Intercept, relative to graph front-left corner at 0,0
         float b = pz - m * px;
 
-        dbgStr += "m, px, pz, b, sceneCorner: " + m + ", " + px + ", " + pz + ", " + b + ", " + HeatVRML.Instance.xzySceneCorner + "\n";
+        if (dbgOutput)
+            dbgStr += "m, px, pz, b, sceneCorner: " + m + ", " + px + ", " + pz + ", " + b + ", " + HeatVRML.Instance.xzySceneCorner + "\n";
 
         //If we're pointing away from the data, skeedaddle
         if (px >= HeatVRML.Instance.numCols)
@@ -278,7 +283,8 @@ public class DataInspector : MonoBehaviour {
             int rLeft = Mathf.FloorToInt( z );
             float z1 = m * (c + 1) + b; //intesection at right edge of column
             int rRight = Mathf.FloorToInt(z1);
-            dbgStr += "col " + c + ", raw rLeft rRight " + rLeft + ", " + rRight + "\n";
+            if (dbgOutput)
+                dbgStr += "col " + c + ", raw rLeft rRight " + rLeft + ", " + rRight + "\n";
             //If left side row < 0 or > numRows, we're not on the scene grid yet, or we've gone past it, so just do right edge if it's in bounds.
             if (rLeft < 0 )
             {
@@ -310,7 +316,8 @@ public class DataInspector : MonoBehaviour {
                 rRight = Mathf.Min(rRight, Mathf.FloorToInt(pz));
             }
 
-            dbgStr += "col " + c + ", checking rows: " + rLeft + " - " + rRight + "\n";
+            if (dbgOutput)
+                dbgStr += "col " + c + ", checking rows: " + rLeft + " - " + rRight + "\n";
 
             //Cycle over all the in-bounds rows we cross between this column's left and right edges
             //Direction of iteration over rows depends on whether starting point is above or below grid.
@@ -318,120 +325,33 @@ public class DataInspector : MonoBehaviour {
             int end = rRight + step;
             for (int rr = rLeft; rr != end; rr+=step)
             {
-                dbgStr += "   examining col,row: " + c + ", " + rr + "\n";
+                if (dbgOutput)
+                    dbgStr += "   examining col,row: " + c + ", " + rr + "\n";
 
-                //Scale and move the cube for raycasted intersection testing
-                PrepareBlockOverlay(blockIntersectionCube, rr, c, 0/*just always do 0, for now at least*/);
+                //Scale and move the cube for raycasted intersection testing.
+                PrepareBlockOverlay(blockIntersectionCube, rr, c, 0/*bin - just always do 0, for now at least*/);
                 if( blockIntersectionCollider.Raycast(ray, out blockHit, 100000f))
                 {
                     rowOut = rr;
                     colOut = c;
-                    foundAnIntersection = true;
                     //For rays going left-to-right, we just return the first intersection
                     if (ray.direction.x >= 0)
                         return true;
+                    //Otherwise for right-to-left rays we return the last one we find.
+                    //NOTE if it gets too slow to do all these intersection tests with 
+                    // huge data sets, we could reverse the order of columns traversal above
+                    // for right-to-left rays, and then pick the first one.
+                    foundAnIntersection = true;
                 }
-
-                #if false
-                //Find where in the column's cell it intersects (i.e. which sides it enters and leaves),
-                //and calc ray height at those points, and store the min of those.
-                //
-                float minIxHeight = float.MaxValue;
-                float xix, zix;
-                //Intersections with bottom and top of cell.
-                // x = (z - b) / m
-                if (m == 0)
-                    m = 0.00001f; //hack
-                xix = (rr - b) / m;
-                if (xix >= c && xix <= c + 1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, xix, rr) /*returns float.MaxValue if rays hits floor or goes below.*/); 
-                xix = (rr+1 - b) / m;
-                if (xix >= c && xix <= c + 1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, xix, rr));
-                //Intersections with sides of cell
-                zix = m * c + b; //left
-                if(zix >= rr && zix <= rr+1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, c, zix));
-                zix = m * (c+1) + b; //right
-                if (zix >= rr && zix <= rr + 1)
-                    minIxHeight = Mathf.Min(minIxHeight, CalcRayScreenHeight(ray, rayTerrainHit, c, zix));
-
-                //Get scene-height of the column at this position
-                float h = HeatVRML.Instance.GetColumnSceneHeightByPosition(rr, c);
-
-                //If the minimum ray intersection height is <= the height of the column
-                // at this point, we've got a hit.
-                if( minIxHeight <= h)
-                {
-                    isx.Add(new Intersection { col = c, row = rr });
-                    dbgStr += "   ----- isx at col, row: " + c + ", " + rr + "\n";
-                }
-                //Debug.Log("minIxHeight, h: " + minIxHeight + ", " + h);
-#endif
             }
         }
 
-        Debug.Log(dbgStr);
+        if(dbgOutput)
+            Debug.Log(dbgStr);
 
         return foundAnIntersection;
-        /*
-        //Did we find anything?
-        if (isx.Count == 0)
-            return false;
-
-        //Now that we've gone through all the blocks that are under the ray, and found those that intersect with
-        // the ray, choose the appropriate one based on direction of ray.
-        int ind;
-        if (ray.direction.x >= 0)
-            ind = 0;
-        else
-            ind = isx.Count - 1;
-
-        rowOut = isx[ind].row;
-        colOut = isx[ind].col;
-
-        return true;
-        */
     }
 
-    /// <summary> Calc screen-unit height of a ray at normalized x and z positions. Helper function. </summary>
-    /// <returns>The height of the ray in screen space at the given normalized xz coords. If height is below
-    /// the terrain/ground, return float.MaxValue </returns>
-    private float CalcRayScreenHeight(Ray ray, RaycastHit rayTerrainHit, float xNorm, float zNorm)
-    {
-        //Block/cell intersection point in scene space
-        Vector2 ix = new Vector2(xNorm * HeatVRML.Instance.GetColumnSceneWidth(), zNorm * HeatVRML.Instance.rowDepthFull);
-
-        float h0;
-        if( rayTerrainHit.collider != null)
-        {
-            //Use the triangle formed by ray origin, ray intersection with terrain, and its projection on.
-            //h0 = height of ray at intersection with block.
-            //h = ray origin height
-            //d = distance in xz-plane from ray origin to ray-terrain intersection.
-            //d0 = distance in xz-plane from block interseciton to ray-terrain intersecion
-            //Solve for h0
-            //  d0 / d = h0 / h -->
-            //  h0 = d0 / d * h
-            Vector2 rtIsx = new Vector2(rayTerrainHit.point.x, rayTerrainHit.point.z);
-            Vector2 rayOxz = new Vector2(ray.origin.x, ray.origin.z);
-            float d = ( rayOxz - rtIsx).magnitude;
-            //Check if ix is further from ray origin than rtIsx, which means it's below the terrain/ground
-            if ((ix - rayOxz).magnitude > d)
-                return float.MaxValue; //signifies no possible intersection
-            float d0 = (ix - rtIsx ).magnitude;
-            h0 = d0 / d * ray.origin.y;
-        }
-        else
-        {
-            //The ray doesn't intersect with terrain/ground, so it's either flat, almost flat or
-            // pointing up. In all these cases we'll just do a simple distance calc. Assume that when pointing
-            // up, it won't be by much since user will rarely be that deep in data to point up much.
-            h0 = ray.origin.y;
-        }
-
-        return h0;
-    }
 
     /// <summary> Hide any UI elements managed by this component </summary>
     public void Hide()
@@ -442,6 +362,7 @@ public class DataInspector : MonoBehaviour {
 
     /// <summary>
     /// Take a game object for a cube and scale and position it based on data vals so it can overlay the block in the scene.
+    /// Used for both of the cubes used for the block visual overlay and the block interection test.
     /// </summary>
     /// <param name="cube"></param>
     /// <param name="dataHeightValue"></param>
@@ -457,13 +378,13 @@ public class DataInspector : MonoBehaviour {
         float depth = HeatVRML.Instance.rowDepthDataOnly;
         cube.transform.localScale = new Vector3(width, height, depth) * extraScale;
 
-        Vector3 pos = new Vector3();
-        pos.y = height / 2f + HeatVRML.Instance.xzySceneCorner.y;
-
         //Debug.Log("heightValue, minDataHeight, dataHeightRangeScale, zSceneSize, currGraphHeightScale, xzySceneCorner");
         //Debug.Log(triData.heightValue + ", " + HeatVRML.Instance.minDataHeight + ", " + HeatVRML.Instance.dataHeightRangeScale + ", " + HeatVRML.Instance.zSceneSize + ", " + HeatVRML.Instance.currGraphHeightScale + ", " + HeatVRML.Instance.xzySceneCorner);
-
-        pos.x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.xSceneSize) / HeatVRML.Instance.numCols) + HeatVRML.Instance.xzySceneCorner.x;
+        Vector3 pos = new Vector3()
+        {
+            y = height / 2f + HeatVRML.Instance.xzySceneCorner.y,
+            x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.xSceneSize) / HeatVRML.Instance.numCols) + HeatVRML.Instance.xzySceneCorner.x
+        };
 
         //Remember orig developer switched y & z - I really should rename these!
         float yoff = dataRow * HeatVRML.Instance.rowDepthFull;
