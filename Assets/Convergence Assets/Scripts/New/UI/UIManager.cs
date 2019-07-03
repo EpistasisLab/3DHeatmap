@@ -25,8 +25,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     //private GameObject dataVarsTopPanel; not using here currently
     public GameObject messageDialogPrefab;
 
-    private List<int> debugStatusPanelID;
-
     /// <summary> The UI object that's currently being highlighted in some way </summary>
     private int currentUIActionPromptee;
     /// <summary> List of UI elements to use for prompting user action, in order of
@@ -65,8 +63,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         TooltipHide();
 
         currentUIActionPromptee = -1;
-
-        debugStatusPanelID = new List<int>();
     }
 
     private void Start()
@@ -280,7 +276,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     }
     
     /// <summary> If the passed Gameobject is currently prompting, then stop it and start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
-    public void ShowNextUIActionPromptIfPrompting(GameObject go)
+    public void ShowNextUIActionPrompt(GameObject go)
     {
         if (currentUIActionPromptee < 0 || currentUIActionPromptee >= UIActionPromptees.Length)
             return;

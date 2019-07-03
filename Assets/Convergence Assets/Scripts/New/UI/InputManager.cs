@@ -349,7 +349,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             ! contDataInpectionTempDisable &&
             (Time.time - contDataInspectionPrevTime) > contDataInspectionInterval)
         {
-            TriDataPoint tri = dataInspector.InspectDataAtScreenPosition(Input.mousePosition, true, true);
+            dataInspector.InspectDataAtScreenPosition(Input.mousePosition, true, true);
             contDataInspectionPrevTime = Time.time;
         }
 

@@ -99,7 +99,7 @@ public class DataVarUIHandler : MonoBehaviour {
             dataVar.Label = GetLabel();
         UIManager.Instance.RefreshUI();
         //Switch prompting behavior to the next UI element if this element is currently prompting.
-        UIManager.Instance.ShowNextUIActionPromptIfPrompting(go);
+        UIManager.Instance.ShowNextUIActionPrompt(go);
     }
 
     private string GetLabel()
@@ -112,7 +112,7 @@ public class DataVarUIHandler : MonoBehaviour {
         if( filepathLocal != "")
             SetFileNeedsLoading(true);
         //Switch prompting behavior to the next UI element if this element is currently prompting.
-        UIManager.Instance.ShowNextUIActionPromptIfPrompting(go);
+        UIManager.Instance.ShowNextUIActionPrompt(go);
     }
 
     /// <summary>
@@ -134,12 +134,13 @@ public class DataVarUIHandler : MonoBehaviour {
             return;
         if( dataVar != null)
         {
+            //TODO - also should clear label to make it clear we've removed the data var
             DataManager.Instance.Remove(dataVar); //NOTE - why is this done here and not in DataManager ???
         }
         filepathLocal = result;
         SetFileNeedsLoading(true);
         //Switch prompting behavior to the next UI element if this element is currently prompting.
-        UIManager.Instance.ShowNextUIActionPromptIfPrompting(go);
+        UIManager.Instance.ShowNextUIActionPrompt(go);
         RefreshUI();
     }
 
@@ -200,11 +201,9 @@ public class DataVarUIHandler : MonoBehaviour {
             //dataVar already added to variable list by above method call
             //Error handling and reporting handled by ChooseLoadAddFile()
             Debug.Log("Success: file loaded.");
-            //If this already had a data var assigned, remove it. (Ignores if null)
-            DataManager.Instance.Remove(dataVar);
             dataVar = newDataVar;
             //Switch prompting behavior to the next UI element if this element is currently prompting.
-            UIManager.Instance.ShowNextUIActionPromptIfPrompting(loadButton.gameObject);
+            UIManager.Instance.ShowNextUIActionPrompt(loadButton.gameObject);
         }
         else
         {

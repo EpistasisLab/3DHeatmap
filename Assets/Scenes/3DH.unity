@@ -1181,8 +1181,6 @@ GameObject:
   - component: {fileID: 117}
   - component: {fileID: 115}
   - component: {fileID: 113}
-  - component: {fileID: 112}
-  - component: {fileID: 111}
   m_Layer: 8
   m_Name: protomesh_SceneObj
   m_TagString: Untagged
@@ -1190,33 +1188,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!64 &111
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 110}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 0
-  m_SkinWidth: 0.01
-  m_Mesh: {fileID: 4300000, guid: a3eb18c6cbe714d30b15fad9b4733903, type: 3}
---- !u!114 &112
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 110}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 61260c698b5af47c7b320c115fbaf847, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  row: 0
-  bin: 0
 --- !u!23 &113
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1312,7 +1283,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 370.35898, y: 57.28205}
+  m_SizeDelta: {x: 347.63116, y: 56.594593}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &11538871
 MonoBehaviour:
@@ -4833,7 +4804,7 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: SMView.OnUpdateEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-  doDebugLogging: 1
+  doDebugLogging: 0
 --- !u!4 &685562161
 Transform:
   m_ObjectHideFlags: 0
@@ -7257,8 +7228,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 185.17949, y: -27.641027}
-  m_SizeDelta: {x: 350.35898, y: 35.28205}
+  m_AnchoredPosition: {x: 173.81558, y: -27.297298}
+  m_SizeDelta: {x: 327.63116, y: 34.594593}
   m_Pivot: {x: 0.5, y: 0.49999997}
 --- !u!114 &1131258133
 MonoBehaviour:

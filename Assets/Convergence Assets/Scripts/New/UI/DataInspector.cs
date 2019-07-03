@@ -16,7 +16,9 @@ public class DataInspector : MonoBehaviour {
     private GameObject dataIndicatorCube;
     private GameObject blockIntersectionCube;
     private Collider blockIntersectionCollider;
+    #pragma warning disable 414
     private RaycastHit blockHit;
+    #pragma warning restore 414
 
     /// <summary> Simple display panel object with component SimpleTextPanelHandler </summary>
     public GameObject displayPanel;
@@ -118,52 +120,6 @@ public class DataInspector : MonoBehaviour {
     }
 
     /// <summary>
-    /// Use the ridge mesh collider to determine column that's being pointed at.
-    /// </summary>
-    /// <returns>True if find an intersection, false if not</returns>
-    private bool SelectAtScreenPositionUsingCollider(Vector3 pointerPosition, out int row, out int col)
-    {
-        row = col = 0;
-
-        //Hack during VR dev
-        if (Camera.main == null)
-            return false;
-
-        //Stauffer - this code mostly taken from old HeatVRML.CapturePointedAt method that was unused. 
-        Ray ray = Camera.main.ScreenPointToRay(pointerPosition);
-
-        RaycastHit hit;
-        if (!Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << DataObjectLayer))
-        {
-            return false;
-        }
-        //Debug.Log("Raycast gameObject name: " + hit.transform.gameObject.name);
-        IdentifyRidge idScript = (IdentifyRidge) hit.transform.gameObject.GetComponent(typeof(IdentifyRidge));
-
-        // Calculate column from x position of hit
-        // It is possible for this to be one too high if it hits on the right side of a column, so check for this condition
-   
-        float floatCol = (((hit.point.x - HeatVRML.Instance.xzySceneCorner.x) * HeatVRML.Instance.numCols) / HeatVRML.Instance.xSceneSize) + HeatVRML.Instance.minCol;
-        if (((floatCol - Mathf.Floor(floatCol)) < 0.1f) && (hit.normal.x > 0.95f))
-        {
-            floatCol = floatCol - 1f;
-        }
-
-        col = (int)Mathf.Floor(floatCol);
-        row = idScript.row;
-    
-        return true;
-    }
-
-
-    /// <summary> Simple struct used by SelectAtScreenPositionUsingGridIntersection </summary>
-    struct Intersection
-    {
-        public int row;
-        public int col;
-    }
-
-    /// <summary>
     /// Determine which column we're pointing at by manually doing grid intersections. 
     /// Does not require meshes so is faster.
     /// </summary>
@@ -194,8 +150,7 @@ public class DataInspector : MonoBehaviour {
         int row = 0;
         int col = 0;
         Ray ray = new Ray(dbgRayOrigin, dbgRayDirex);
-        bool res = SelectWithRayUsingGridIntersection(ray, out row, out col);
-        //Debug.Log("Result " + res + " row, col " + row + ", " + col);
+        SelectWithRayUsingGridIntersection(ray, out row, out col);
     }
 
     /// <summary> Working method so we can easily send it controlled rays for debugging </summary>
@@ -262,9 +217,6 @@ public class DataInspector : MonoBehaviour {
             if (ray.direction.z <= 0)
                 return false;
         
-        //List of data cell positions that are crossed by the line and are intersecting the ray
-        List<Intersection> isx = new List<Intersection>();
-
         //Step through columns, including the right-side of the last column.
         //We operate in unit widths and depths.
         //We check the z intersection at the left side of each column (and right side of last column),

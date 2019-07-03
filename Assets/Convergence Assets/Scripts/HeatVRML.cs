@@ -34,7 +34,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     //Stauffer - Data
     //See DataManager singleton - new model of self-contained data objects
-    
+
     // window numbers
     private int DSwin = 0;
     private int STYLEwin;
@@ -107,14 +107,17 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> Stauffer - starting corner of plot area in scene units. The left/front, 1st row/1st column. </summary>
     public Vector3 xzySceneCorner
     {
-        get { return xzySceneCorner_; }
+        get { return _xzySceneCorner; }
         set
         {
-            Debug.Log("xzySceneCorner setter! " + value.ToString("F2"));
-            xzySceneCorner_.Set(value.x, value.y, value.z);
+            //NOTE - made a setter so I could put a breakpoint here and see where the var's value
+            // was getting changed inexplicably. However with the setter now, the value isn't getting
+            // changed, so go figure.
+            //Debug.Log("xzySceneCorner setter! " + value.ToString("F2"));
+            _xzySceneCorner.Set(value.x, value.y, value.z);
         }
     }
-    private Vector3 xzySceneCorner_;
+    private Vector3 _xzySceneCorner;
     /// <summary> Stauffer - separtion in scene units between bins, whether bins are interleaved or not. So if not interleaved,
     /// it's separation between groups of rows of each bin. If interleaved, this is separation between each row (different than rowGap, however). </summary>
     public float binSeparation;
@@ -167,7 +170,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int numMarkers;
     private int currBin;
     private bool bScrollBin = false; //Stauffer - compiler says this val never changes from default of false, so set it to false explicitly
-    private float lastScrollTime; //Stauffer mod
     public float minScrollSecs; // minimum time between changes of scrolling value
     private int choiceHeight = 0; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     private int choiceFOV;
@@ -205,7 +207,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     ///   So this workaround is in here to avoid the second symptom, but can't address the first.
     /// </summary>
     private float _minGraphSceneHeight;
-    private float MinGraphSceneHeight {
+    private float MinGraphSceneHeight
+    {
         set { _minGraphSceneHeight = value; }
         get { return DataManager.Instance.Cols > 18 ? 0f : _minGraphSceneHeight; }
     }
@@ -220,13 +223,11 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> Stauffer - fractional amount of data row scene depth to apply to determining bin separation. </summary>
     private float binSeparationFrac;
     private float lowSepRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
-    private float highSepRange =0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
+    private float highSepRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     /// <summary> Stauffer - fractional value applied to rowDepthDataOnly to calculate gap between rows. Separate from binSeparation </summary>
     private float rowGapFrac;
     private float lowGapRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     private float highGapRange;
-    private PointedData pointedData;
-    private GameObject signPost;
 
     // Database related
     private Vector2 dbPos;
@@ -237,7 +238,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int isDetecting;
     private string[] rowLabels;
     private int numRowLabels;
-    private string connStrn;
     //Stauffer - removing Sqlite stuff to work on webGL build
     //private SqliteDataReader reader;
     //private SqliteConnection connection;
@@ -307,7 +307,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.MinGraphSceneHeight = 15.0f;
 
         //Uses a property now for debugging, so can't be in ctor
-        this.xzySceneCorner = new Vector3(0,0,0);
+        this.xzySceneCorner = new Vector3(0, 0, 0);
     }
 
     //
@@ -315,7 +315,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
 
         int i = 0;
-        this.lastScrollTime = Time.time; //Stauffer move init here
         this.isWindowOpen = new bool[this.NUMwin];
         this.windowRects = new Rect[this.NUMwin];
         this.windowRects[this.DSwin] = this.dsRect;
@@ -364,10 +363,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //this.baseCube = GameObject.Find("basecube");
         //this.MakeUnitCube(this.baseCube);
         this.protolabel = GameObject.Find("protolabel");
-        this.signPost = UnityEngine.Object.Instantiate(GameObject.Find("SignPost"), new Vector3(-1000, -1000, -1000), Quaternion.identity);
-
-        // Open database
-        this.connStrn = "URI=file:" + Const.dataBase;
 
         /* Stauffer - removing Sqlite stuff to work on webGL build
         this.connection = new SqliteConnection(this.connStrn);
@@ -376,7 +371,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         */
         //this.myCameraOld = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
         //Stauffer - change this to my new camera for now while new camera controls are implemented
-        this.myCameraOld = GameObject.Find("Camera").GetComponent<Camera>() as Camera; 
+        this.myCameraOld = GameObject.Find("Camera").GetComponent<Camera>() as Camera;
         this.currFOV = (this.lowFOVRange + this.highFOVRange) - this.myCameraOld.fieldOfView; // hokey, but we want currFOV to increase as fieldOfView decreases
         this.myController = GameObject.Find("FPC");
         this.allVariableDescs = new VariableDesc[2];
@@ -551,10 +546,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 this.DoWind(i);
                 ++i;
             }
-        }
-        if (this.pointedData.ready)
-        {
-            this.pointedWindowRect = GUILayout.Window(this.NUMwin, this.pointedWindowRect, this.DoPointedWindow, "Data Point", new GUILayoutOption[] { });
         }
         if (this.showXRay)
         {
@@ -1055,18 +1046,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         return shrink;
     }
 
-    public virtual void DoPointedWindow(int windowID)
-    {
-        GUILayout.Label("x:" + this.pointedData.position.x, new GUILayoutOption[] { });
-        GUILayout.Label("y:" + this.pointedData.position.y, new GUILayoutOption[] { });
-        GUILayout.Label("z:" + this.pointedData.position.z, new GUILayoutOption[] { });
-        GUILayout.Label("row:" + this.pointedData.row, new GUILayoutOption[] { });
-        GUILayout.Label("col:" + this.pointedData.col, new GUILayoutOption[] { });
-        GUILayout.Label("bin:" + this.pointedData.bin, new GUILayoutOption[] { });
-        GUILayout.Label("height:" + this.pointedData.height, new GUILayoutOption[] { });
-        GUI.DragWindow();
-    }
-
     public virtual void DoXRayWindow(int windowID)
     {
         GUILayout.Label(this.xray, new GUILayoutOption[] { });
@@ -1264,7 +1243,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// </summary>
     public virtual void TranslateRidges(float x, float y, float z)
     {
-        foreach(XRidge xr in this.xRidges)
+        foreach (XRidge xr in this.xRidges)
         {
             xr.Translate(x, y, z);
         }
@@ -1298,7 +1277,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         //Constrain row depth to not exceed max total depth of plot. This is necessary for data that has many more
         // rows than columns
-        if ( this.numRows > (int)(this.numCols * 1.25f))
+        if (this.numRows > (int)(this.numCols * 1.25f))
         {
             this.rowDepthDataOnly = this.ySceneSizeApproxMax / (this.numRows * (1f + this.rowGapFrac));
         }
@@ -1903,110 +1882,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         return new Color(0.5f, 0.5f, 0.5f, 1);// isSide ? 0.7f : 0.9f);
     }
 
-    public static RaycastHit hit;
-    public static int dataPointMask;
-    //Stauffer - NOTE this isn't called from anywhere.
-    public virtual void CapturePointedAt()
-    {
-        this.pointedData.ready = false;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        ray.origin = Camera.main.transform.position;
-        if (!Physics.Raycast(ray, out HeatVRML.hit, Mathf.Infinity, HeatVRML.dataPointMask))
-        {
-            return;
-        }
-        this.pointedData.position = HeatVRML.hit.point;
-        IdentifyRidge idScript = (IdentifyRidge)HeatVRML.hit.transform.gameObject.GetComponent(typeof(IdentifyRidge));
-        this.pointedData.row = idScript.row;
-        this.pointedData.bin = idScript.bin;
-        // Calculate column from x position of hit
-        // It is possible for this to be one too high if it hits on the right side of a column, so check for this condition
-        float floatCol = (((HeatVRML.hit.point.x - this.xzySceneCorner.x) * this.numCols) / this.xSceneSize) + this.minCol;
-        if (((floatCol - Mathf.Floor(floatCol)) < 0.1f) && (HeatVRML.hit.normal.x > 0.95f))
-        {
-            floatCol = floatCol - 1f;
-        }
-        this.pointedData.col = (int)Mathf.Floor(floatCol);
-
-        Debug.LogError("Deprecated to be removed");
-        /* Stauffer - removing Sqlite stuff to work on webGL build
-        this.dbcmd.CommandText = ((((((("Select height from " + this.selTable) + " where row = ") + this.pointedData.row) + " and col = ") + this.pointedData.col) + " and bin = ") + this.pointedData.bin) + ";";
-        Debug.Log(this.dbcmd.CommandText);
-        this.reader = this.dbcmd.ExecuteReader();
-        if (this.reader.Read())
-        {
-            this.pointedData.height = this.reader.GetFloat(0);
-            this.pointedData.ready = true;
-        }
-        this.reader.Close();
-        */
-        this.ShowPointedData();
-    }
-
-    //OLD ROUTINE to be removed
-    public virtual void ShowPointedData()
-    {
-        if (this.pointedData.ready)
-        {
-            float sceney = ((((this.pointedData.height - this.minDataHeight) * this.dataHeightRangeScale) * this.zSceneSize) * this.currGraphHeightScale) + this.xzySceneCorner.y;
-            float scenex = ((((this.pointedData.col + 0.5f) - this.minCol) * this.xSceneSize) / this.numCols) + this.xzySceneCorner.x;
-            float yoff = this.pointedData.row * this.rowDepthFull;
-            if (this.binInterleave)
-            {
-                yoff = yoff + (this.pointedData.bin * this.binSeparation);
-            }
-            else
-            {
-                yoff = yoff + (this.pointedData.bin * this.ySceneSizeByBinWithSep);
-            }
-            float scenez = (this.xzySceneCorner.z + yoff) + (this.rowDepthDataOnly / 2f);
-            this.signPost.transform.position = new Vector3(scenex, sceney, scenez);
-            float signSize = Mathf.Min(this.rowDepthDataOnly, this.xSceneSize / this.numCols);
-            this.signPost.transform.localScale = new Vector3(signSize, signSize, signSize);
-            this.signPost.GetComponent<Renderer>().enabled = true;
-        }
-        else
-        {
-            this.signPost.GetComponent<Renderer>().enabled = false;
-        }
-    }
-
-    // OLD ROUTINE
-    // debugging
-    public virtual void MakeXRay()
-    {
-        int x = 0;
-        int y = 0;
-        Color pColor = default(Color);
-        int maxx = Screen.width;
-        int maxy = Screen.height;
-        Color backColor = new Color(0, 0, 0);
-        Color foreColor = new Color(1, 1, 1);
-        y = 0;
-        while (y < maxy)
-        {
-            x = 0;
-            while (x < maxx)
-            {
-                Ray ray = Camera.main.ScreenPointToRay(new Vector3(x, y, 0));
-                ray.origin = Camera.main.transform.position;
-                if (!Physics.Raycast(ray, out HeatVRML.hit, Mathf.Infinity, HeatVRML.dataPointMask))
-                {
-                    pColor = backColor;
-                }
-                else
-                {
-                    pColor = foreColor;
-                }
-                this.xray.SetPixel(x / 2, y / 2, pColor);
-                x = x + 2;
-            }
-            y = y + 2;
-        }
-        this.xray.Apply();
-        this.showXRay = true;
-    }
-
     public virtual void ScrollingSelected(int newScroll)
     {
         this.scrollChoice = newScroll;
@@ -2092,7 +1967,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //float cubeHeight = this.xSceneSize * 0.05f;
         //baseCube.transform.localScale = Vector3(xSceneSize + 2.0, cubeHeight, ySceneSizeFull + 2.0);
         //baseCube.transform.position = Vector3(xzySceneCorner.x - 1.0, xzySceneCorner.y - (cubeHeight * 0.9), xzySceneCorner.z - 1.0);
-        this.ShowPointedData();
     }
 
     // if selBin < 0, all bins visible
@@ -2170,7 +2044,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         //Refresh the UI
         UIManager.Instance.RefreshUI();
-        
+
         //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
         // which also handles the case when user jumps ahead of the prompts to here.
         UIManager.Instance.StopAllUIActionPrompts();
@@ -2188,9 +2062,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         // some verification of data, so we don't have to check things every time we access dataMgr
         // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
         string errorMsg;
-        if( ! DataManager.Instance.PrepareAndVerify(out errorMsg))
+        if (!DataManager.Instance.PrepareAndVerify(out errorMsg))
         {
-            if( ! quiet)
+            if (!quiet)
             {
                 string msg = "Error with data prep and verification: \n\n" + errorMsg;
                 Debug.LogError(msg);
@@ -2198,7 +2072,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             }
             return;
         }
-        
+
         //Axis extents
         NewGetAxisExtents();
 
@@ -2225,7 +2099,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.numRowLabels = DataManager.Instance.HeightVar.hasRowHeaders ? DataManager.Instance.HeightVar.numDataRows : 0;
         this.rowLabels = new string[this.numRowLabels + 1];
         //Copy
-        for( int i = 0; i < this.numRowLabels; i++)
+        for (int i = 0; i < this.numRowLabels; i++)
         {
             this.rowLabels[i] = DataManager.Instance.HeightVar.rowHeaders[i];
         }
@@ -2248,10 +2122,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.dataChanged = false;
         this.wantRedraw = false;
         this.waitCount = 0;
-        //Stauffer - has to do with clicking on graph and showing details
-        this.pointedData.ready = false;
-        this.ShowPointedData();
-
     }
 
     /// <summary>
@@ -2281,8 +2151,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.numBins = (this.maxBin - this.minBin) + 1;
         this.dataHeightRange = this.maxDataHeight - this.minDataHeight;
     }
-    
-    
+
+
     public virtual void NewShowData()
     {
         this.drawn = true;
@@ -2327,13 +2197,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         DataVariable hVar = DataManager.Instance.HeightVar;
 
         //Build the ridges
-        for ( int row = 0; row < hVar.numDataRows; row++)
+        for (int row = 0; row < hVar.numDataRows; row++)
         {
             //NOTE - these are class properties, that then get used in BuildRidge
             this.heightVals = hVar.Data[row];
             this.NewBuildRidge(row, this.numCols, this.minBin);//always one bin for now
         }
-        DebugRidge(this.xRidges[0]);
+        //DebugRidge(this.xRidges[0]);
     }
 
     private void DebugRidge(XRidge ridge)
@@ -2341,7 +2211,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         string s = "--- Debug Ridge ---\n";
         s += " pos: " + ridge.trans.position + "\n";
         s += " scl: " + ridge.trans.localScale + "\n";
-        for(int i=0; i < 16; i++)
+        for (int i = 0; i < 16; i++)
         {
             s += ridge.myMesh.vertices[i].ToString("F3") + "\n";
         }
@@ -2405,9 +2275,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeightScale, this.rowDepthDataOnly);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
-        IdentifyRidge idScript = (IdentifyRidge)newRidge.gameObject.GetComponent(typeof(IdentifyRidge));
-        idScript.row = row;
-        idScript.bin = binindex + this.minBin;
 
         //Row labels
         GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.xzySceneCorner.x + this.xSceneSize, this.xzySceneCorner.y + 1f, (this.xzySceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
@@ -2421,7 +2288,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
 
         {
-            float _39 = 
+            float _39 =
             /*
 	        // The following causes an error in setting the sharedMesh whenever it traps an error
 	        try{
@@ -2451,14 +2318,14 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             _44.x = _43;
             newLabel.transform.localScale = _44;
         }
-        float minZ = 0.1f;
+        //float minZ = 0.1f; never used
         int lastInd = numx - 1;
         float slabZ = 0.006f;
         float edgeBite = this.bevelFraction / this.numCols;
         // Note: this makes a 45 degree bevel at the curreent graph height, but it will be a different angle when height is changed.
         float topBite = (edgeBite * this.xSceneSize) / (this.zSceneSize * this.currGraphHeightScale);
         MeshMaker mm = new MeshMaker();
-        
+
         for (int colNum = 0; colNum < numx; colNum++) //loop over columns
         {
             if ((colNum % 2) == 0)
@@ -2665,11 +2532,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         mm.Attach(amesh);
 
-        // Set the mesh as the collider mesh for use in DataInspector
-        // NOTE - this slows down drawing noticably on large data files (60% slower on 1000x1000 data set)
-        // See notes in dev doc about MeshCollider Cooking Options (in short, use 'none' for much better speed - seems to work well)
-        newRidge.transform.GetComponent<MeshCollider>().sharedMesh = amesh;
-
         this.xRidges[this.numRidges].AddRidge(newRidge, amesh, binindex, row);
         this.xRidges[this.numRidges++].AddLabel(newLabel);
     }
@@ -2806,8 +2668,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
 
         //Look for table with row labels and parse if found
-        string rowtable = "heatrows_" + this.selTable.Substring(5);
-          
+        //string rowtable = "heatrows_" + this.selTable.Substring(5);
+
         /* Stauffer - removing Sqlite stuff to work on webGL build
         this.dbcmd.CommandText = ("SELECT count(*) from " + rowtable) + ";";
         
@@ -2843,9 +2705,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.dataChanged = false;
         this.wantRedraw = false;
         this.waitCount = 0;
-        //Stauffer - has to do with clicking on graph and showing details
-        this.pointedData.ready = false;
-        this.ShowPointedData();
     }
 
     /// <summary>
@@ -2893,7 +2752,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         this.currGraphHeightScale = newGraphHeight;
         this.ScaleRidges(this.currGraphHeightScale);
-        //this.ShowPointedData();
     }
 
     public virtual void FOVSelected(float newFOV)
@@ -2988,7 +2846,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         r = 0;
         while (r < this.numRidges)
         {
-             //Debug.Log("Ridge " + r);
+            //Debug.Log("Ridge " + r);
             this.WriteVRMLMesh(this.xRidges[r].myMesh, this.xRidges[r].trans, false);
             ++r;
         }
@@ -3100,27 +2958,27 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         avert = 0;
         while (avert < numVerts)
         {
-             //Debug.Log("vertex " + avert);
+            //Debug.Log("vertex " + avert);
             if (avert > 0)
             {
                 cstring = cstring + ", ";
             }
             if (makeColors)
             {
-                 //cstring += "0.5 0.5 0.5, 0.5 0.5 0.5, 0.5 0.5 0.5";
+                //cstring += "0.5 0.5 0.5, 0.5 0.5 0.5, 0.5 0.5 0.5";
                 cstring = cstring + "0.5 0.5 0.5";
             }
             else
             {
-                 /*
-				cstring += (colors[avert].r + " ");
-				cstring += (colors[avert].g + " ");
-				cstring += (colors[avert++].b + ", ");
-				cstring += (colors[avert].r + " ");
-				cstring += (colors[avert].g + " ");
-				cstring += (colors[avert++].b + ", ");
-				*/
-        cstring = cstring + (colors[avert].r + " ");
+                /*
+               cstring += (colors[avert].r + " ");
+               cstring += (colors[avert].g + " ");
+               cstring += (colors[avert++].b + ", ");
+               cstring += (colors[avert].r + " ");
+               cstring += (colors[avert].g + " ");
+               cstring += (colors[avert++].b + ", ");
+               */
+                cstring = cstring + (colors[avert].r + " ");
                 cstring = cstring + (colors[avert].g + " ");
                 cstring = cstring + colors[avert].b;
             }
@@ -3183,7 +3041,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.binSeparationFrac = 1.1f;
         this.highGapRange = 4f;
         this.rowGapFrac = 1f;
-        this.pointedData = new PointedData();
         this.pixPerLine = 25;
         this.rowHeight = 25;
         //this.colWidth = 100; stauffer - not used
@@ -3198,10 +3055,4 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.doingEdges = false; //If want to change this, see declaration of doingEdges
         this.bevelFraction = 0.05f;
     }
-
-    static HeatVRML()
-    {
-        HeatVRML.dataPointMask = 1 << 8;
-    }
-
 }

@@ -63,7 +63,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
             return;
         }
         AssignVarsByCurrentLabelChoices();
-        UIManager.Instance.ShowNextUIActionPromptIfPrompting(go);
+        UIManager.Instance.ShowNextUIActionPrompt(go);
         //DataManager.Instance.DebugDumpVariables(false);
     }
 
