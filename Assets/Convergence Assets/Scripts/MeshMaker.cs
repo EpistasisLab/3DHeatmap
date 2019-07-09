@@ -156,7 +156,8 @@ public class MeshMaker : object
         amesh.RecalculateNormals();
         amesh.RecalculateBounds();
 
-        amesh.UploadMeshData(false);
+        //mark mesh as no longer readable to save memory, since we aren't using mesh collider for data inspection
+        amesh.UploadMeshData(true);
 
         this.Reset();
     }
