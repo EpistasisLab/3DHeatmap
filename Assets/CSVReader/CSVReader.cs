@@ -122,6 +122,10 @@ public class CSVReader
     {
         errorMsg = "no error";
 
+        //For matching no data - NaN and None. This list (initially at least) from what python recognizes according to https://stackoverflow.com/questions/46612576/counting-number-of-nan-not-zeros-or-blanks-in-csv
+        //NOTE - we'll do a case insensitive comparison
+        string[] noDataStrings = new string[] { "none", "#N/A", "#N/A N/A", "#NA", "-1.#IND", "-1.#QNAN", "-nan", "1.#IND", "1.#QNAN", "N/A", "NA", "NULL", "nan" };
+        
         if ( result == null )
             result = new CSVReaderData();
 
@@ -188,11 +192,10 @@ public class CSVReader
             return false;
         }
 
-        //Read in the lines
+        //Parse the data lines
         int start = columnHeadersExpected ? 1 : 0;
         for (var fileRow = start; fileRow < lines.Length; fileRow++)
         {
-
             var values = Regex.Split(lines[fileRow], SPLIT_RE);
             //or try string.split for simpler: https://docs.microsoft.com/en-us/dotnet/csharp/how-to/parse-strings-using-split
 
@@ -209,42 +212,63 @@ public class CSVReader
             for (var fileCol = 0; fileCol < numAllColumns; fileCol++)
             {
                 string value = values[fileCol];
-                //empty data cell?
-                if (value == "" && (!columnHeadersExpected || (columnHeadersExpected && fileCol > 0)))
+                int ii = fileRow - (columnHeadersExpected ? 1 : 0);
+                int jj = fileCol - (rowHeadersExpected ? 1 : 0);
+
+                //empty data cell? Call it NaN
+                if (value == "" && (rowHeadersExpected && fileCol > 0))
                 {
+                    /* were not supporting NaN originally
                     errorMsg = "Empty data cell. Row, col: " + fileRow + ", " + fileCol + ". Aborting.";
                     Debug.Log(errorMsg);
                     result.Clear();
                     return false;
+                    */
+                    result.Data[ii][jj] = float.NaN;
+                    continue;
+
                 }
-                value = value.TrimStart(TRIM_CHARS).TrimEnd(TRIM_CHARS).Replace("\\", "");
+                //Trim chars in TRIM_CHARS, remove trailing and leading white space, replace \
+                value = value.Trim(TRIM_CHARS).Trim().Replace("\\", "");
                 if (rowHeadersExpected && fileCol == 0)
                 {
                     //Header
                     result.rowHeaders.Add(value);
+                    continue;
+                }
+                
+                //data
+                float f;
+                if (float.TryParse(value, out f))
+                {
+                    result.Data[ii][jj] = f;
                 }
                 else
                 {
-                    //data
-                    float f;
-                    if (float.TryParse(value, out f))
+                    //first check for NaN or None (note that "NaN" may be parsed by TryParse above)
+                    bool foundNaN = false;
+                    foreach( string s in noDataStrings)
                     {
-                        int ii = fileRow - (columnHeadersExpected ? 1 : 0);
-                        int jj = fileCol - (rowHeadersExpected ? 1 : 0);
-                        result.Data[ii][jj] = f;
+                        if( value.Equals(s, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            result.Data[ii][jj] = float.NaN;
+                            foundNaN = true;
+                            break;
+                        }
                     }
-                    else
-                    {
-                        string ex = "";
-                        if (fileRow == 0 && !columnHeadersExpected)
-                            ex = "Wasn't expecting first row to be headers. But is it maybe? ";
-                        else if (fileCol == 0 && !rowHeadersExpected)
-                            ex = "Wasn't expecting first columns to be headers. But is it maybe? ";
-                        errorMsg = ex + "Expected a number but got non-numeric value '" + value + "', at row, col: " + fileRow + ", " + fileCol + ". Aborting.";
-                        Debug.Log(errorMsg);
-                        result.Clear();
-                        return false;
-                    }
+                    if (foundNaN)
+                        continue;
+
+                    //error
+                    string ex = "";
+                    if (fileRow == 0 && !columnHeadersExpected)
+                        ex = "Wasn't expecting first row to be headers. But is it maybe? ";
+                    else if (fileCol == 0 && !rowHeadersExpected)
+                        ex = "Wasn't expecting first columns to be headers. But is it maybe? ";
+                    errorMsg = ex + "Expected a number but got non-numeric value '" + value + "', at row, col: " + fileRow + ", " + fileCol + ". Aborting.";
+                    Debug.Log(errorMsg);
+                    result.Clear();
+                    return false;
                 }
             }
         }
