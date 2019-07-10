@@ -4,4 +4,4 @@
 100, -nan, 1.#IND, 1.#QNAN,104
 1000, N/A, NA, NULL,1004
 10000, nan ,NAn,NoNE,10004
-100000,  nAN,Null   ,  1.#ind  ,#N/A
+,  nAN,Null   ,  1.#ind  ,#N/A

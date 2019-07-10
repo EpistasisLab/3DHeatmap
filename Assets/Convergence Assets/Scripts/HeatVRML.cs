@@ -1697,12 +1697,11 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         bool isSide = mapping == DataManager.Mapping.SideColor;
 
-        DataVariable var = DataManager.Instance.GetVariableByMapping(mapping);
         int colorTableID = DataManager.Instance.GetColorTableIdByMapping(mapping);
-        float inv = 0f;
 
-        float value = var.Data[row][column];
-        inv = (value - var.MinValue) / var.Range;
+        float value = DataManager.Instance.GetValueByMapping(mapping, row, column, true);
+        DataVariable var = DataManager.Instance.GetVariableByMapping(mapping);
+        float inv = (value - var.MinValue) / var.Range;
 
         Color retColor;
         switch (colorTableID)
@@ -1723,7 +1722,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 retColor = this.ConstantColor(inv, isSide);
                 break;
             default:
-                retColor = this.GreenRed(inv, isSide);
+                retColor = this.GrayScale(inv, isSide);
                 Debug.LogWarning("Unmatched color table ID: " + colorTableID);
                 break;
         }
@@ -2218,26 +2217,31 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         Debug.Log(s);
     }
 
-    /// <summary> For the given data value (of data var assigned to height), return the *unscaled* column height, i.e. the height of the mesh before any object scaling for the scene </summary>
-    public float GetColumnMeshHeight(float heightValue)
+    /// <summary> For the given data value (of data var assigned to height, a number or NaN), return the *unscaled* block height,
+    /// i.e. the height of the mesh before any object scaling for the scene.
+    /// NaN Values - pass them here as NaN and will be handled. </summary>
+    public float GetBlockMeshHeight(float heightValue)
     {
+        if (float.IsNaN(heightValue))
+            return this.ridgeMeshMinHeight;
+
         return ((heightValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
     }
-    /// <summary> For the given data value, return the *scaled* column height, i.e. the height of the mesh WITH scene scaling and minimum scene height </summary>
-    public float GetColumnSceneHeight(float heightValue)
+    /// <summary> For the given data value, return the *scaled* block height, i.e. the height of the mesh WITH scene scaling and minimum scene height </summary>
+    public float GetBlockSceneHeight(float heightValue)
     {
-        return (GetColumnMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y + this.MinGraphSceneHeight;
+        return (GetBlockMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y + this.MinGraphSceneHeight;
     }
 
-    /// <summary> Get the scene height for the column at a particular data position (row, column) </summary>
-    /// <returns>Will return 0 if data not set or row or col is out of range</returns>
-    public float GetColumnSceneHeightByPosition(int row, int col)
+    /// <summary> Get the scene height for the block at a particular data position (row, column) </summary>
+    /// <returns>Will return minimum height if data not set, is NaN, or if row or col is out of range</returns>
+    public float GetBlockSceneHeightByPosition(int row, int col)
     {
-        return GetColumnSceneHeight(DataManager.Instance.GetHeightVariableValue(row, col));
+        return GetBlockSceneHeight(DataManager.Instance.GetHeightValue(row, col, false));
     }
 
-    /// <summary> Get the width of each column in scene units </summary>
-    public float GetColumnSceneWidth()
+    /// <summary> Get the width of each block in scene units </summary>
+    public float GetBlockSceneWidth()
     {
         return HeatVRML.Instance.xSceneSize / HeatVRML.Instance.numCols;
     }
@@ -2246,6 +2250,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         Color topColor = new Color(); // default(Color);
         Color sideColor = new Color(); //default(Color);
+        /// <summary> Flag for whether current top data value is valid number or NaN/NoData </summary>
         float thisX = 0.0f;
         float thisZ = 0.0f;
         float prevX = 0.0f;
@@ -2338,8 +2343,15 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 front = 0.001f;
                 back = 1.001f;
             }
+
+            //For the values at this row/col, set up state
             topColor = this.NewMakeColor(DataManager.Mapping.TopColor, row, colNum);
             sideColor = this.NewMakeColor(DataManager.Mapping.SideColor, row, colNum);
+            //Used to set vert properties depending on whether data is a valid number or NaN
+            bool topIsANumber = ! DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.TopColor, row, colNum);
+            bool sideIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.SideColor, row, colNum);
+            bool heightIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.Height, row, colNum);
+            mm.SetIsANumber(heightIsANumber, topIsANumber, sideIsANumber);
 
             //Height
             if (colNum > 0)
@@ -2350,10 +2362,10 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 thisZ = nextZ;
             }
             else
-            {
+            {   //column 0
                 thisX = ((0.5f) - this.minCol) * this.xScale;
                 //thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
-                thisZ = GetColumnMeshHeight(DataManager.Instance.HeightVar.Data[row][0]);
+                thisZ = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, 0, false)); //send NaN if value is NaN
                 prevX = thisX - this.xScale;
                 prevZ = thisZ;
             }
@@ -2361,13 +2373,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             {
                 nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.xScale;
                 //nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
-                nextZ = GetColumnMeshHeight(DataManager.Instance.HeightVar.Data[row][colNum + 1]);
-
+                nextZ = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, colNum + 1, false));
             }
             else
             {
                 nextX = nextX + this.xScale;
             }
+
             leftZ = (prevZ + thisZ) / 2f;
             leftX = (prevX + thisX) / 2f;
             rightZ = (thisZ + nextZ) / 2f;
@@ -2376,38 +2388,38 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             mm.SetColor(topColor);
             if (this.bConnectX) // ribbon
             {
-                mm.Verts(leftX, leftZ, front, 1, 0);
-                mm.Verts(leftX, leftZ, back, 0, 0);
-                mm.Verts(thisX, thisZ, front, 1, 1);
-                mm.Verts(thisX, thisZ, back, 0, 1);
-                mm.Verts(rightX, rightZ, front, 1, 0);
-                mm.Verts(rightX, rightZ, back, 0, 0);
+                mm.Verts(false, leftX, leftZ, front, 1, 0);
+                mm.Verts(false, leftX, leftZ, back, 0, 0);
+                mm.Verts(false, thisX, thisZ, front, 1, 1);
+                mm.Verts(false, thisX, thisZ, back, 0, 1);
+                mm.Verts(false, rightX, rightZ, front, 1, 0);
+                mm.Verts(false, rightX, rightZ, back, 0, 0);
                 mm.Tris(0, 1, 2, 2, 1, 3, 2, 3, 4, 5, 4, 3);
                 // make bottom
                 if (!this.bExtendZ)
                 {
-                    mm.Verts(leftX, leftZ - slabZ, front, 1, 0);
-                    mm.Verts(leftX, leftZ - slabZ, back, 0, 0);
-                    mm.Verts(thisX, thisZ - slabZ, front, 1, 1);
-                    mm.Verts(thisX, thisZ - slabZ, back, 0, 1);
-                    mm.Verts(rightX, rightZ - slabZ, front, 1, 0);
-                    mm.Verts(rightX, rightZ - slabZ, back, 0, 0);
+                    mm.Verts(false, leftX, leftZ - slabZ, front, 1, 0);
+                    mm.Verts(false, leftX, leftZ - slabZ, back, 0, 0);
+                    mm.Verts(false, thisX, thisZ - slabZ, front, 1, 1);
+                    mm.Verts(false, thisX, thisZ - slabZ, back, 0, 1);
+                    mm.Verts(false, rightX, rightZ - slabZ, front, 1, 0);
+                    mm.Verts(false, rightX, rightZ - slabZ, back, 0, 0);
                     mm.Tris(2, 1, 0, 3, 1, 2, 4, 3, 2, 3, 4, 5);
                 }
                 // make sides
                 mm.SetColor(sideColor);
-                mm.Verts(leftX, leftZ, front, 0, 1);
-                mm.Verts(leftX, leftZ, back, 1, 1);
-                mm.Verts(leftX, this.bExtendZ ? 0f : leftZ - slabZ, front, 0, 0);
-                mm.Verts(leftX, this.bExtendZ ? 0f : leftZ - slabZ, back, 1, 0);
-                mm.Verts(thisX, thisZ, front, 0.5f, 1);
-                mm.Verts(thisX, thisZ, back, 0.5f, 1);
-                mm.Verts(thisX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0.5f, 0);
-                mm.Verts(thisX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0.5f, 0);
-                mm.Verts(rightX, rightZ, front, 0, 1);
-                mm.Verts(rightX, rightZ, back, 1, 1);
-                mm.Verts(rightX, this.bExtendZ ? 0f : rightZ - slabZ, front, 0, 0);
-                mm.Verts(rightX, this.bExtendZ ? 0f : rightZ - slabZ, back, 0, 0);
+                mm.Verts(true, leftX, leftZ, front, 0, 1);
+                mm.Verts(true, leftX, leftZ, back, 1, 1);
+                mm.Verts(true, leftX, this.bExtendZ ? 0f : leftZ - slabZ, front, 0, 0);
+                mm.Verts(true, leftX, this.bExtendZ ? 0f : leftZ - slabZ, back, 1, 0);
+                mm.Verts(true, thisX, thisZ, front, 0.5f, 1);
+                mm.Verts(true, thisX, thisZ, back, 0.5f, 1);
+                mm.Verts(true, thisX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0.5f, 0);
+                mm.Verts(true, thisX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0.5f, 0);
+                mm.Verts(true, rightX, rightZ, front, 0, 1);
+                mm.Verts(true, rightX, rightZ, back, 1, 1);
+                mm.Verts(true, rightX, this.bExtendZ ? 0f : rightZ - slabZ, front, 0, 0);
+                mm.Verts(true, rightX, this.bExtendZ ? 0f : rightZ - slabZ, back, 0, 0);
                 mm.Tris(0, 4, 6, 0, 6, 2, 1, 7, 5, 1, 3, 7);
                 mm.Tris(4, 10, 6, 4, 8, 10, 5, 7, 11, 5, 11, 9);
             }
@@ -2422,37 +2434,37 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                     edgeZ = thisZ - topBite;
                     // draw top
                     mm.SetColor(topColor);
-                    mm.Verts(leftX + edgeBite, thisZ, front, 0, 0); //0
-                    mm.Verts(leftX + edgeBite, thisZ, back, 0, 1);  //1
-                    mm.Verts(rightX - edgeBite, thisZ, front, 1, 0);//2
-                    mm.Verts(rightX - edgeBite, thisZ, back, 1, 1); //3
+                    mm.Verts(false, leftX + edgeBite, thisZ, front, 0, 0); //0
+                    mm.Verts(false, leftX + edgeBite, thisZ, back, 0, 1);  //1
+                    mm.Verts(false, rightX - edgeBite, thisZ, front, 1, 0);//2
+                    mm.Verts(false, rightX - edgeBite, thisZ, back, 1, 1); //3
                     // draw bevel
                     // Stauffer - the bevel amount is tiny (topBite) at around 0.001
                     // but still makes a difference. If I remove it and use my unlit shader,
                     // I see black edges on most of edges but not all. 
-                    mm.Verts(leftX, edgeZ, front, 0, 0); //4
-                    mm.Verts(leftX, edgeZ, back, 0, 0.9f);  //5
-                    mm.Verts(rightX, edgeZ, front, 0.9f, 0);//6
-                    mm.Verts(rightX, edgeZ, back, 1, 0.9f); //7
+                    mm.Verts(false, leftX, edgeZ, front, 0, 0); //4
+                    mm.Verts(false, leftX, edgeZ, back, 0, 0.9f);  //5
+                    mm.Verts(false, rightX, edgeZ, front, 0.9f, 0);//6
+                    mm.Verts(false, rightX, edgeZ, back, 1, 0.9f); //7
                     mm.Tris(0, 1, 2, 2, 1, 3);
                     mm.Tris(4, 2, 6, 2, 4, 0, 6, 3, 7, 3, 6, 2);
                     mm.Tris(7, 1, 5, 1, 7, 3, 5, 0, 4, 0, 5, 1);
                     // draw bottom
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 1);
+                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
+                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
+                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 1);
                     mm.Tris(2, 1, 0, 3, 1, 2);
                     // draw sides
                     mm.SetColor(sideColor);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
-                    mm.Verts(leftX, edgeZ, front, 0, 0.9f);
-                    mm.Verts(rightX, edgeZ, front, 1, 0.9f);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
-                    mm.Verts(leftX, edgeZ, back, 1, 0.9f);
-                    mm.Verts(rightX, edgeZ, back, 0, 0.9f);
+                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
+                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
+                    mm.Verts(true, leftX, edgeZ, front, 0, 0.9f);
+                    mm.Verts(true, rightX, edgeZ, front, 1, 0.9f);
+                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
+                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
+                    mm.Verts(true, leftX, edgeZ, back, 1, 0.9f);
+                    mm.Verts(true, rightX, edgeZ, back, 0, 0.9f);
                     mm.Tris(0, 2, 1, 1, 2, 3);
                     mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
                     mm.Tris(1, 3, 5, 3, 7, 5);
@@ -2503,27 +2515,27 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
                     // draw top
                     mm.SetColor(topColor);
-                    mm.Verts(leftX, edgeZ, front, 0, 0); //Stauffer changed these uvs to what seems correct
-                    mm.Verts(leftX, edgeZ, back, 0, 1);
-                    mm.Verts(rightX, edgeZ, front, 1, 0);
-                    mm.Verts(rightX, edgeZ, back, 1, 1);
+                    mm.Verts(false, leftX, edgeZ, front, 0, 0); //Stauffer changed these uvs to what seems correct
+                    mm.Verts(false, leftX, edgeZ, back, 0, 1);
+                    mm.Verts(false, rightX, edgeZ, front, 1, 0);
+                    mm.Verts(false, rightX, edgeZ, back, 1, 1);
                     mm.Tris(0, 1, 2, 2, 1, 3);
                     // draw bottom
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
+                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
+                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
                     mm.Tris(0, 1, 2, 2, 1, 3);
                     // draw sides
                     mm.SetColor(sideColor);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
-                    mm.Verts(leftX, edgeZ, front, 0, 1);
-                    mm.Verts(rightX, edgeZ, front, 1, 1);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
-                    mm.Verts(leftX, edgeZ, back, 1, 1);
-                    mm.Verts(rightX, edgeZ, back, 0, 1);
+                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
+                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
+                    mm.Verts(true, leftX, edgeZ, front, 0, 1);
+                    mm.Verts(true, rightX, edgeZ, front, 1, 1);
+                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
+                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
+                    mm.Verts(true, leftX, edgeZ, back, 1, 1);
+                    mm.Verts(true, rightX, edgeZ, back, 0, 1);
                     mm.Tris(0, 2, 1, 1, 2, 3);
                     mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
                     mm.Tris(1, 3, 5, 3, 7, 5);

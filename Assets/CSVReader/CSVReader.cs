@@ -51,7 +51,7 @@ public class CSVReaderData
     /// <summary>
     /// Debug dump of non-data properties of this class
     /// </summary>
-    public virtual void DumpNonData()
+    public virtual void DumpMetaData()
     {
         Debug.Log("hasColumnHeaders: " + hasColumnHeaders + " hasRowHeaders: " + hasRowHeaders);
         Debug.Log("numDataRows: " + numDataRows + " numDataCols: " + numDataCols);
@@ -215,8 +215,8 @@ public class CSVReader
                 int ii = fileRow - (columnHeadersExpected ? 1 : 0);
                 int jj = fileCol - (rowHeadersExpected ? 1 : 0);
 
-                //empty data cell? Call it NaN
-                if (value == "" && (rowHeadersExpected && fileCol > 0))
+                //empty data cell? Call it NaN if we're not expecting row or columns headers, or we're past the first column
+                if (value == "" && ( (rowHeadersExpected && fileCol > 0) || !rowHeadersExpected || !columnHeadersExpected ) )
                 {
                     /* were not supporting NaN originally
                     errorMsg = "Empty data cell. Row, col: " + fileRow + ", " + fileCol + ". Aborting.";
@@ -226,7 +226,6 @@ public class CSVReader
                     */
                     result.Data[ii][jj] = float.NaN;
                     continue;
-
                 }
                 //Trim chars in TRIM_CHARS, remove trailing and leading white space, replace \
                 value = value.Trim(TRIM_CHARS).Trim().Replace("\\", "");

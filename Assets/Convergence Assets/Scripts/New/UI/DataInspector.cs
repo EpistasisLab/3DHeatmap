@@ -179,7 +179,7 @@ public class DataInspector : MonoBehaviour {
         }
         else
         {
-            terrainHitIntX = Mathf.FloorToInt((terrainHit.point.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetColumnSceneWidth());
+            terrainHitIntX = Mathf.FloorToInt((terrainHit.point.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth());
             terrainHitIntZ = Mathf.FloorToInt((terrainHit.point.z - HeatVRML.Instance.xzySceneCorner.z) / HeatVRML.Instance.rowDepthFull);
         }
         if (dbgOutput)
@@ -196,7 +196,7 @@ public class DataInspector : MonoBehaviour {
         float m = ray.direction.x != 0 ? ray.direction.z / ray.direction.x / slopeRatio : float.MaxValue;
         //A point on the line in normalized grid space. Using the ray origin
         float pz = (ray.origin.z - HeatVRML.Instance.xzySceneCorner.z) / HeatVRML.Instance.rowDepthFull;
-        float px = (ray.origin.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetColumnSceneWidth();
+        float px = (ray.origin.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth();
         //Intercept, relative to graph front-left corner at 0,0
         float b = pz - m * px;
 
@@ -344,9 +344,9 @@ public class DataInspector : MonoBehaviour {
     /// <param name="extraScale">Small scale factor that helps with visual overlay not causing visual artifacts.</param>
     private void PrepareBlockOverlay(GameObject cube, int dataRow, int dataCol, int dataBin, float extraScale = 1f)
     {
-        //Size a cube to the size of the selected column and flash it.
-        float width = HeatVRML.Instance.GetColumnSceneWidth();
-        float height = HeatVRML.Instance.GetColumnSceneHeightByPosition(dataRow, dataCol);
+        //Size a cube to the size of the selected column
+        float width = HeatVRML.Instance.GetBlockSceneWidth();
+        float height = HeatVRML.Instance.GetBlockSceneHeightByPosition(dataRow, dataCol);
         float depth = HeatVRML.Instance.rowDepthDataOnly;
         cube.transform.localScale = new Vector3(width, height, depth) * extraScale;
 

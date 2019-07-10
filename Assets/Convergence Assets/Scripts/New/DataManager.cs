@@ -115,7 +115,8 @@ public class DataVariable : CSVReaderData
     //Derive from CSVReaderData for now.
     //Will need to rework if we take this project further and have other data sources.
 
-    public override float[][] Data { get { return _data; } set { minMaxReady = false; _data = value; } }
+    //Make Data private here so we can force user to use accessors, because of NaN/NoData values
+    private new float[][] Data { get { return _data; } set { minMaxReady = false; _data = value; } }
 
     private float minValue;
     private float maxValue;
@@ -196,10 +197,14 @@ public class DataVariable : CSVReaderData
             foreach ( float[] row in Data)
                 foreach( float val in row)
                 {
-                    if (val > max)
-                        max = val;
-                    if (val < min)
-                        min = val;
+                    //Skip NaN's
+                    if( ! float.IsNaN(val))
+                    {
+                        if (val > max)
+                            max = val;
+                        if (val < min)
+                            min = val;
+                    }
                 }
             MaxValue = max;
             MinValue = min;
@@ -211,12 +216,12 @@ public class DataVariable : CSVReaderData
         }
     }
 
-    public override void DumpNonData()
+    public override void DumpMetaData()
     {
         Debug.Log("Label:    " + Label);
         Debug.Log("Filename: " + Filepath);
         Debug.Log("Min, Max, Range: " + MinValue + ", " + MaxValue + ", " + range);
-        base.DumpNonData();
+        base.DumpMetaData();
     }
 }
 
@@ -279,18 +284,45 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
     /// <summary> For the given row & column, return the value of the variable mapped to Height.
     /// If nothing mapped, returns 0.
     /// If row or col is out of range, returns 0 and prints error </summary>
-    public float GetHeightVariableValue(int row, int col)
+    public float GetHeightValue(int row, int col, bool returnZeroForNaN)
     {
         if (!HeightVarIsAssigned)
             return 0;
 
-        return GetVariableValueByMapping(Mapping.Height, row, col);
+        return GetValueByMapping(Mapping.Height, row, col, returnZeroForNaN);
+    }
+
+    public float GetTopValue(int row, int col, bool returnZeroForNaN)
+    {
+        if (!TopColorVarIsAssigned)
+            return 0;
+
+        return GetValueByMapping(Mapping.TopColor, row, col, returnZeroForNaN);
+    }
+
+    public float GetSideValue(int row, int col, bool returnZeroForNaN)
+    {
+        if (!SideColorVarIsAssigned) //???
+            return 0;
+
+        return GetValueByMapping(Mapping.SideColor, row, col, returnZeroForNaN);
+    }
+
+    /// <summary>
+    /// For the given variable mapping and row, int, return if the value is NaN/NoData.
+    /// If no data loaded, returns true. </summary>
+    public bool GetIsNanByMapping(Mapping mapping, int row, int col)
+    {
+        if (!DataIsLoaded)
+            return true;
+        float val = GetValueByMapping(mapping, row, col, false);
+        return float.IsNaN(val);
     }
 
     /// <summary> For the given row & column, return the value of the variable mapped to 'mapping'.
     /// If nothing mapped, returns 0.
     /// If row or col is out of range, returns 0 and prints error </summary>
-    public float GetVariableValueByMapping(Mapping mapping, int rowIn, int colIn)
+    public float GetValueByMapping(Mapping mapping, int rowIn, int colIn, bool returnZeroForNaN)
     {
         if (!DataIsLoaded)
             return 0;
@@ -298,11 +330,12 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         if ( rowIn < 0 || rowIn >= DataManager.Instance.Rows ||
              colIn < 0 || colIn >= DataManager.Instance.Cols)
         {
-            Debug.LogError("GetVariableValueByMapping: row or col out of range: " + rowIn + ", " + colIn);
+            Debug.LogError("GetValueByMapping: row or col out of range: " + rowIn + ", " + colIn);
             return 0;
         }
 
-        return GetVariableByMapping(mapping).Data[rowIn][colIn];
+        float val = GetVariableByMapping(mapping).Data[rowIn][colIn];
+        return (returnZeroForNaN && float.IsNaN(val)) ? 0 : val;
     }
 
     /// <summary> Accessor to variable currently assigned to height param 
@@ -589,7 +622,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         foreach(DataVariable var in variables)
         {
             if (verbose)
-                var.DumpNonData();
+                var.DumpMetaData();
             else
                 Debug.Log("Label: " + var.Label);
             if(verbose)

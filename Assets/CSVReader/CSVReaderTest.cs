@@ -53,7 +53,7 @@ public class CSVReaderTest : MonoBehaviour {
             }
             else
             {
-                dataVariable.DumpNonData();
+                dataVariable.DumpMetaData();
                 dataVariable.DumpData();
                 dataVariable.Clear();
             }
