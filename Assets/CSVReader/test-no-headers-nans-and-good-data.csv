@@ -1,0 +1,7 @@
+﻿0.1,0.2,0.3,0.4,0.5
+1,none, #N/A, #N/A N/A,5
+10, #NA, -1.#IND, -1.#QNAN,14
+100, -nan, 1.#IND, 1.#QNAN,104
+1000, N/A, NA, NULL,1004
+10000, nan ,NAn,NoNE,10004
+,  nAN,Null   ,  1.#ind  ,#N/A
