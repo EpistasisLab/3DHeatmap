@@ -9,7 +9,9 @@ Shader "Custom/UnlitShadedVertexColor" {
 		_EdgeShadeAmount("Edge Shade Amount", Range(0.0,0.9)) = 0.2
 		_EdgeShadeWidth("Edge Shade Width", Range(0.0,0.5)) = 0.05
 		_EdgeShadeHeight("Edge Shade Height", Range(0.0,0.5)) = 0
-		[NoScale] _NanTex("NaN/NoData Texture", 2D) = "white" {}
+		_NanTex("NaN/NoData Texture", 2D) = "white" {}
+		_NanTexHeight("Height NaN/NoData Texture", 2D) = "white" {}
+		_NanTexAll("All NaN/NoData Texture", 2D) = "white" {}
 	}
 
 	SubShader{
@@ -87,16 +89,35 @@ Shader "Custom/UnlitShadedVertexColor" {
 
 		// texture for Nan/NoData
 		sampler2D _NanTex;
+		// texture for Nan/NoData in height variable
+		sampler2D _NanTexHeight;
+		sampler2D _NanTexAll;
 
 		fixed4 frag(v2f i) : SV_Target{
 			float4 color = i.color;
 
-			//If NaN/NoData, use special texture and skeedaddle
+			//If all values are NaN, use this texture
+			if (i.uvIsANumber.y == 0) 
+			{
+				color = tex2D(_NanTexAll, i.uvs);
+				return color;
+			}
+
+			//If side/top is NaN/NoData, use special texture
 			//We're using color alpha to code for NaN for top and side colors
 			if (color.a == 0) 
 			{
 				color = tex2D(_NanTex, i.uvs);
-				return color;
+			}
+
+			//If height value is NaN, overlay a texture for that.
+			//Using 2nd set of uvs to track this.
+			if (i.uvIsANumber.x == 0) 
+			{
+				//Overlay the opaque parts from the texture
+				float4 tex = tex2D(_NanTexHeight, i.uvs);
+				if (tex.a > 0)
+					color.rgb = tex.rgb;
 			}
 
 			//Draw some simple edges based on uv values

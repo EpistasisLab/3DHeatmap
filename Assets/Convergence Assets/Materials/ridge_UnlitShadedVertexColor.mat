@@ -50,6 +50,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: e675be2725489324695363b850774815, type: 3}
         m_Scale: {x: 1, y: 2}
         m_Offset: {x: 0, y: 0}
+    - _NanTexAll:
+        m_Texture: {fileID: 2800000, guid: 377c97f1f321e964cb48dbb4f0c71bff, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NanTexHeight:
+        m_Texture: {fileID: 2800000, guid: 37be79e9228f85c44b4a6f77d9779f04, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
