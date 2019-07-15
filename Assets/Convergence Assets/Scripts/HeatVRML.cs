@@ -2126,7 +2126,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         //Desktop camera 
         CameraManager.Instance.ResetView();
-
+        //VR player hmd
+        VRManager.Instance.ResetPlayerPosition();
     }
 
     /// <summary>

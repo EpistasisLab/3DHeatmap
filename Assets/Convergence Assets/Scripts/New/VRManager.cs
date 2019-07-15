@@ -13,6 +13,12 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         return sis == SteamVR_Input_Sources.LeftHand ? Hand.left : Hand.right;
     }
 
+    /// <summary> The default player/hmd offset from the plot's center/front edge </summary>
+    public Vector3 defaultPlayerOffset;
+
+    /// <summary> The headset, camera rig object </summary>
+    public GameObject HmdRig;
+
     /// <summary> Flags for whether a controller grab is currently happening.
     /// Array with element for each hand. </summary>
     private bool[] grabDown = new bool[2];
@@ -81,19 +87,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         //Debug.Log("handPos " + handPos[0].ToString("F3") + " " + handPos[1].ToString("F3"));
     }
 
-
-    /*
-    public void OnGrabGripChangeLeft(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
+    //Reset the player/hmd to default position
+    public void ResetPlayerPosition()
     {
-        Debug.Log("OnGrabGribChangeLeft, sbb " + sbb.actionSet.ToString() + " sis " + sis.ToString() + " " + state);
-        //Grab(Hand.left, state);
+        Vector3 center = HeatVRML.Instance.GetPlotCenter();
+        HmdRig.transform.position = new Vector3(center.x, HeatVRML.Instance.xzySceneCorner.y + defaultPlayerOffset.y, HeatVRML.Instance.xzySceneCorner.z + defaultPlayerOffset.z);
     }
-
-    public void OnGrabGripChangeRight(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
-    {
-        Debug.Log("OnGrabGribChangeRight, sbb " + sbb.actionSet.ToString() + " sis " + sis.ToString() + " " + state);
-        //Grab(Hand.right, state);
-    }
-    */
-
 }
