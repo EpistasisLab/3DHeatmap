@@ -2106,8 +2106,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Draw it!
         this.NewShowData();
 
-        //Point the camera to the middle of the plot 
-        CameraManager.Instance.LookAt(GetPlotCenter());
+        ResetView();
 
         /* Stauffer - this code is never reached because bScrollBin never changes from its default val of false
         if (this.bScrollBin)
@@ -2121,6 +2120,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.dataChanged = false;
         this.wantRedraw = false;
         this.waitCount = 0;
+    }
+
+    public void ResetView()
+    {
+        //Desktop camera 
+        CameraManager.Instance.ResetView();
+
     }
 
     /// <summary>

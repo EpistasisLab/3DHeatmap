@@ -6,7 +6,8 @@ using UnityEngine.UI;
 //Script for managing camera movement, etc
 public class CameraManager : MonoBehaviorSingleton<CameraManager> {
 
-    public Vector3 defaultPosition;
+    /// <summary> The default camera view position relative to center of front of plot area </summary>
+    public Vector3 defaultViewOffset;
 
     private Camera ourCamera;
 
@@ -47,7 +48,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     public void ResetView()
     {
         Vector3 center = heatVRML.GetPlotCenter();
-        ourCamera.transform.position = new Vector3(center.x, defaultPosition.y, defaultPosition.z);
+        ourCamera.transform.position = new Vector3(center.x, heatVRML.xzySceneCorner.y + defaultViewOffset.y, heatVRML.xzySceneCorner.z + defaultViewOffset.z);
         LookAt(center);
     }
 
