@@ -212,6 +212,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         //float spaceButton = Input.GetAxisRaw("Jump");
 
         //test translation via moving the graph instead of camera
+        /*
         if( Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
         {
             if ((vertButton != 0f || horzButton != 0f))
@@ -221,6 +222,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             }
 
         }
+        */
 
         //Forward / backward translation parallel to ground plane.
         //NOT movement along camera-forward
@@ -279,7 +281,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 
             dataInspector.DbgSelectWithDebugRay();
 
-            //GameObject newRidge = UnityEngine.Object.Instantiate(HeatVRML.Instance.Proto, new Vector3(HeatVRML.Instance.xzySceneCorner.x, HeatVRML.Instance.xzySceneCorner.y, HeatVRML.Instance.xzySceneCorner.z), Quaternion.identity);
+            //GameObject newRidge = UnityEngine.Object.Instantiate(HeatVRML.Instance.Proto, new Vector3(HeatVRML.Instance.sceneCorner.x, HeatVRML.Instance.sceneCorner.y, HeatVRML.Instance.sceneCorner.z), Quaternion.identity);
             //newRidge.name = "testRidge";
 
             //UIManager.Instance.StartUIActionPrompts();

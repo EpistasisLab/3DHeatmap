@@ -179,8 +179,8 @@ public class DataInspector : MonoBehaviour {
         }
         else
         {
-            terrainHitIntX = Mathf.FloorToInt((terrainHit.point.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth());
-            terrainHitIntZ = Mathf.FloorToInt((terrainHit.point.z - HeatVRML.Instance.xzySceneCorner.z) / HeatVRML.Instance.rowDepthFull);
+            terrainHitIntX = Mathf.FloorToInt((terrainHit.point.x - HeatVRML.Instance.sceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth());
+            terrainHitIntZ = Mathf.FloorToInt((terrainHit.point.z - HeatVRML.Instance.sceneCorner.z) / HeatVRML.Instance.rowDepthFull);
         }
         if (dbgOutput)
             dbgStr += "terrainHit, HitInt X Z: " + terrainHit.point.ToString("F1") + " " + terrainHitIntX + " " + terrainHitIntZ + "\n";
@@ -195,13 +195,13 @@ public class DataInspector : MonoBehaviour {
         //The slope, taking slopeRatio into account. So this should now be in normalized unit for a regularized data grid.
         float m = ray.direction.x != 0 ? ray.direction.z / ray.direction.x / slopeRatio : float.MaxValue;
         //A point on the line in normalized grid space. Using the ray origin
-        float pz = (ray.origin.z - HeatVRML.Instance.xzySceneCorner.z) / HeatVRML.Instance.rowDepthFull;
-        float px = (ray.origin.x - HeatVRML.Instance.xzySceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth();
+        float pz = (ray.origin.z - HeatVRML.Instance.sceneCorner.z) / HeatVRML.Instance.rowDepthFull;
+        float px = (ray.origin.x - HeatVRML.Instance.sceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth();
         //Intercept, relative to graph front-left corner at 0,0
         float b = pz - m * px;
 
         if (dbgOutput)
-            dbgStr += "m, px, pz, b, sceneCorner: " + m + ", " + px + ", " + pz + ", " + b + ", " + HeatVRML.Instance.xzySceneCorner + "\n";
+            dbgStr += "m, px, pz, b, sceneCorner: " + m + ", " + px + ", " + pz + ", " + b + ", " + HeatVRML.Instance.sceneCorner + "\n";
 
         //If we're pointing away from the data, skeedaddle
         if (px >= HeatVRML.Instance.numCols)
@@ -350,12 +350,12 @@ public class DataInspector : MonoBehaviour {
         float depth = HeatVRML.Instance.rowDepthDataOnly;
         cube.transform.localScale = new Vector3(width, height, depth) * extraScale;
 
-        //Debug.Log("heightValue, minDataHeight, dataHeightRangeScale, zSceneSize, currGraphHeightScale, xzySceneCorner");
-        //Debug.Log(triData.heightValue + ", " + HeatVRML.Instance.minDataHeight + ", " + HeatVRML.Instance.dataHeightRangeScale + ", " + HeatVRML.Instance.zSceneSize + ", " + HeatVRML.Instance.currGraphHeightScale + ", " + HeatVRML.Instance.xzySceneCorner);
+        //Debug.Log("heightValue, minDataHeight, dataHeightRangeScale, sceneHeight, currGraphHeightScale, sceneCorner");
+        //Debug.Log(triData.heightValue + ", " + HeatVRML.Instance.minDataHeight + ", " + HeatVRML.Instance.dataHeightRangeScale + ", " + HeatVRML.Instance.sceneHeight + ", " + HeatVRML.Instance.currGraphHeightScale + ", " + HeatVRML.Instance.sceneCorner);
         Vector3 pos = new Vector3()
         {
-            y = height / 2f + HeatVRML.Instance.xzySceneCorner.y,
-            x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.xSceneSize) / HeatVRML.Instance.numCols) + HeatVRML.Instance.xzySceneCorner.x
+            y = height / 2f + HeatVRML.Instance.sceneCorner.y,
+            x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.sceneWidth) / HeatVRML.Instance.numCols) + HeatVRML.Instance.sceneCorner.x
         };
 
         //Remember orig developer switched y & z - I really should rename these!
@@ -366,9 +366,9 @@ public class DataInspector : MonoBehaviour {
         }
         else
         {
-            yoff = yoff + (dataBin * HeatVRML.Instance.ySceneSizeByBinWithSep);
+            yoff = yoff + (dataBin * HeatVRML.Instance.sceneDepthByBinWithSep);
         }
-        pos.z = (HeatVRML.Instance.xzySceneCorner.z + yoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
+        pos.z = (HeatVRML.Instance.sceneCorner.z + yoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
 
         cube.transform.position = pos;
     }
@@ -440,7 +440,7 @@ public class DataInspector : MonoBehaviour {
                 dist = hit.distance;
             Debug.DrawRay(dbgRay.origin, dbgRay.direction * dist, Color.red);
             Vector3 o = dbgRay.origin;
-            o.y = HeatVRML.Instance.xzySceneCorner.y;
+            o.y = HeatVRML.Instance.sceneCorner.y;
             Vector3 d = dbgRay.direction;
             d.y = 0;
             Debug.DrawRay(o, d * 10000f, Color.yellow);

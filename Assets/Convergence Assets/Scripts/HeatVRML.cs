@@ -93,38 +93,37 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     // scene related
     //Stauffer - plotting area width in scene units. Row width. Seems hardcoded
-    public float xSceneSize;
+    public float sceneWidth;
     /// <summary> Stauffer - full plotting area DEPTH in scene units, including possible multiple bins and bin increment
-    /// (Named with "Y" and not "Z" since coder swapped y and z in variable naming). Gets updated when data is redrawn. </summary>
-    private float ySceneSizeFull;
+    private float sceneDepthFull;
     /// <summary> Stauffer - added this. Max size of full plot in Y scene units of (i.e. Unity Z) dim, i.e. depth when viewed from default camera positiona long unity z axis.
     /// Added this to constrain row depth when data has many more rows than columns. </summary>
-    private float ySceneSizeApproxMax;
+    private float sceneDepthMaxApprox;
     /// <summary> Stauffer - plotting area DEPTH in scene units, for single bin (or for all bins when interleaved) </summary>
-    public float ySceneSizeByBin;
+    public float sceneDepthByBin;
     /// <summary> Stauffer - plotting area HEIGHT in scene units. </summary>
-    public float zSceneSize;
+    public float sceneHeight;
     /// <summary> Stauffer - starting corner of plot area in scene units. The left/front, 1st row/1st column. </summary>
-    public Vector3 xzySceneCorner
+    public Vector3 sceneCorner
     {
-        get { return _xzySceneCorner; }
+        get { return _sceneCorner; }
         set
         {
             //NOTE - made a setter so I could put a breakpoint here and see where the var's value
             // was getting changed inexplicably. However with the setter now, the value isn't getting
             // changed, so go figure.
-            //Debug.Log("xzySceneCorner setter! " + value.ToString("F2"));
-            _xzySceneCorner.Set(value.x, value.y, value.z);
+            //Debug.Log("sceneCorner setter! " + value.ToString("F2"));
+            _sceneCorner.Set(value.x, value.y, value.z);
         }
     }
-    private Vector3 _xzySceneCorner;
+    private Vector3 _sceneCorner;
     /// <summary> Stauffer - separtion in scene units between bins, whether bins are interleaved or not. So if not interleaved,
     /// it's separation between groups of rows of each bin. If interleaved, this is separation between each row (different than rowGap, however). </summary>
     public float binSeparation;
     /// <summary> Stauffer - full scene depth of each row, including gap beetween rows (and bin separation when interleaved) </summary>
     public float rowDepthFull;
     /// <summary> Stauffer - plotting area DEPTH in scene units, for single bin (or for all bins when interleaved) INCLUDING gap between bin groups </summary>
-    public float ySceneSizeByBinWithSep;
+    public float sceneDepthByBinWithSep;
 
     // chart related
     /// <summary> Stauffer - as best I can tell, this flag controls interleaving of bins within the plot. i.e. if each bin is shown as separate group of rows, or interleaved by row </summary>
@@ -147,7 +146,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private float ridgeMeshMinHeight;
     /// <summary> Depth (unity z-dimension) of data representation, i.e. the depth of the tower representing the data point. Does NOT include gap between rows. </summary>
     public float rowDepthDataOnly;
-    private float xScale;
+    /// <summary> Normalized scene width of each block (column of data). </summary>
+    private float blockWidthNorm;
     private int minRow;
     private int maxRow;
     public int minCol;
@@ -180,9 +180,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int sideStyleChoice;
     private int topStyleChoice;
     private int scrollChoice;
-    /// <summary> The lowest height scaling factor allowed. Must be above 0. Actually ridge height gets scaled by zSceneSize </summary>
+    /// <summary> The lowest height scaling factor allowed. Must be above 0. Actually ridge height gets scaled by sceneHeight </summary>
     private float lowGraphHeightScaleRange;
-    /// <summary> The largest height scaling factor allowed. Actually ridge height gets scaled by zSceneSize </summary>
+    /// <summary> The largest height scaling factor allowed. Actually ridge height gets scaled by sceneHeight </summary>
     private float highGraphHeightScaleRange;
     /// <summary> Current scaling of height of bar/ridges, within min/max of range, added to abs min height</summary>
     public float currGraphHeightScale;
@@ -260,7 +260,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     // feature inclusion
     public bool includeVRML;
-    public bool includeBalls;
     public bool includeTriangles;
 
     // Layout
@@ -304,10 +303,10 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Also adding variables that I've added to keep them separate
 
         this.CurrGraphHeightFrac = 0.5f;
-        this.MinGraphSceneHeight = 15.0f;
+        this.MinGraphSceneHeight = 1.5f;
 
         //Uses a property now for debugging, so can't be in ctor
-        this.xzySceneCorner = new Vector3(0, 0, 0);
+        this.sceneCorner = new Vector3(0, 0, 0);
     }
 
     //
@@ -348,13 +347,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         // Can't figure out how to have ArrayFromQuery re-allocate these, so pick a big size
         this.dbChoices = new string[100];
 
-        // If the falling ball feature is present, we want to have a small scene so gravity looks more realistic
-        if (!this.includeBalls)
-        {
-            this.xSceneSize = this.xSceneSize * 4f;
-            this.ySceneSizeByBin = this.ySceneSizeByBin * 4f;
-            this.zSceneSize = this.zSceneSize * 4f;
-        }
         // Find the prototype mesh object, if present
         this.proto = GameObject.Find("protomesh_SceneObj");
         if (this.proto == null)
@@ -402,12 +394,12 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         //var i : int;
         //for(i = 0; i < allBalls.length; ++i) Destroy(allBalls[i].gameObject);
-        spread = (this.xSceneSize * spread) / rowcols;
+        spread = (this.sceneWidth * spread) / rowcols;
         int numBalls = rowcols * rowcols;
         this.allBalls = new Rigidbody[numBalls];
-        float startX = (this.xzySceneCorner.x + (this.xSceneSize * 0.5f)) - ((rowcols * 0.5f) * spread);
-        float startZ = (this.xzySceneCorner.z + (this.ySceneSizeByBin * 0.5f)) - ((rowcols * 0.5f) * spread);
-        float startY = this.zSceneSize * 2f;
+        float startX = (this.sceneCorner.x + (this.sceneWidth * 0.5f)) - ((rowcols * 0.5f) * spread);
+        float startZ = (this.sceneCorner.z + (this.sceneDepthByBin * 0.5f)) - ((rowcols * 0.5f) * spread);
+        float startY = this.sceneHeight * 2f;
         int i = 0;
         this.protoBall.transform.localScale = new Vector3(this.rowDepthDataOnly, this.rowDepthDataOnly, this.rowDepthDataOnly);
         row = 0;
@@ -738,13 +730,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         {
             GUILayout.Label("Writing Triangles . . .", Const.greenCenterLabel, new GUILayoutOption[] { });
         }
-        if (this.includeBalls)
-        {
-            if (GUILayout.Button("Drop Balls", Const.buttonToggle, new GUILayoutOption[] { }))
-            {
-                this.doDrop = true;
-            }
-        }
+
         GUILayout.EndVertical();
         GUILayout.BeginVertical(Const.grayStyle, new GUILayoutOption[] { });
         GUILayout.Label("Top Color", Const.littleCenterLabel, new GUILayoutOption[] { });
@@ -1241,15 +1227,20 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary>
     /// Stauffer added for testing
     /// </summary>
-    public virtual void TranslateRidges(float x, float y, float z)
+    public virtual void TranslateRidges(float x, float y, float z, float maxy)
     {
+        //Constrain yposition
+        float newy = sceneCorner.y + y;
+        if (newy < 0 || newy > maxy)
+            y = 0;
+
         foreach (XRidge xr in this.xRidges)
         {
             xr.Translate(x, y, z);
         }
 
         //Update the scene corner state
-        xzySceneCorner = xzySceneCorner + new Vector3(0, y, 0);
+        sceneCorner = sceneCorner + new Vector3(0, y, 0);
 
         //Needs some updating
         UpdateSceneDrawingParams();
@@ -1258,7 +1249,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public virtual void ScaleRidges(float frac)
     {
         int i = 0;
-        float newSize = frac * this.zSceneSize;
+        float newSize = frac * this.sceneHeight;
         i = 0;
         while (i < this.numRidges)
         {
@@ -1267,19 +1258,19 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
     }
 
-    public virtual void CalcDimensions()//	baseCube.transform.position = Vector3(xzySceneCorner.x - 1.0, xzySceneCorner.y - (cubeHeight * 0.9), xzySceneCorner.z - 1.0);
+    public virtual void CalcDimensions()//	baseCube.transform.position = Vector3(sceneCorner.x - 1.0, sceneCorner.y - (cubeHeight * 0.9), sceneCorner.z - 1.0);
     {
-        //Stauffer xSceneSize is set to fixed val (400) during init
-        this.rowDepthDataOnly = (this.xSceneSize * Mathf.Pow(2, this.currDepthToWidthRatioExp)) / this.numCols;
+        //Stauffer sceneWidth is set to fixed val (400) during init
+        this.rowDepthDataOnly = (this.sceneWidth * Mathf.Pow(2, this.currDepthToWidthRatioExp)) / this.numCols;
 
-        //Update this in case xSceneSize has changed
-        this.ySceneSizeApproxMax = 2f * this.xSceneSize;
+        //Update this in case sceneWidth has changed
+        this.sceneDepthMaxApprox = 2f * this.sceneWidth;
 
         //Constrain row depth to not exceed max total depth of plot. This is necessary for data that has many more
         // rows than columns
         if (this.numRows > (int)(this.numCols * 1.25f))
         {
-            this.rowDepthDataOnly = this.ySceneSizeApproxMax / (this.numRows * (1f + this.rowGapFrac));
+            this.rowDepthDataOnly = this.sceneDepthMaxApprox / (this.numRows * (1f + this.rowGapFrac));
         }
         this.binSeparation = this.rowDepthDataOnly * this.binSeparationFrac;
         //Stauffer - this flag seems to control interleaving rows by bin or not
@@ -1287,22 +1278,22 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         {
             //Show bins interleaved
             this.rowDepthFull = (this.binSeparation * (this.numBins - 1)) + ((1f + this.rowGapFrac) * this.rowDepthDataOnly);
-            this.ySceneSizeByBinWithSep = (this.rowDepthFull * this.numRows) - (this.rowGapFrac * this.rowDepthDataOnly);
-            this.ySceneSizeByBin = this.ySceneSizeByBinWithSep;
-            this.ySceneSizeFull = this.ySceneSizeByBin;
+            this.sceneDepthByBinWithSep = (this.rowDepthFull * this.numRows) - (this.rowGapFrac * this.rowDepthDataOnly);
+            this.sceneDepthByBin = this.sceneDepthByBinWithSep;
+            this.sceneDepthFull = this.sceneDepthByBin;
         }
         else
         {
             //Show bins as separate groups of rows
             this.rowDepthFull = (1f + this.rowGapFrac) * this.rowDepthDataOnly;
-            //ySceneSizeByBinWithSep = (rowDepthFull * numRows) + (binSeparationFrac * tokenWidth);
-            //ySceneSizeByBin = rowDepthFull * numRows - rowGapFrac;
-            //ySceneSizeFull = (ySceneSizeByBinWithSep * numBins) - (binSeparationFrac * tokenWidth);
-            this.ySceneSizeByBin = this.rowDepthDataOnly * (this.numRows + ((this.numRows - 1) * this.rowGapFrac));
-            this.ySceneSizeByBinWithSep = this.ySceneSizeByBin + this.binSeparation;
-            this.ySceneSizeFull = (this.ySceneSizeByBin * this.numBins) + ((this.numBins - 1) * this.binSeparation);
+            //sceneDepthByBinWithSep = (rowDepthFull * numRows) + (binSeparationFrac * tokenWidth);
+            //sceneDepthByBin = rowDepthFull * numRows - rowGapFrac;
+            //sceneDepthFull = (sceneDepthByBinWithSep * numBins) - (binSeparationFrac * tokenWidth);
+            this.sceneDepthByBin = this.rowDepthDataOnly * (this.numRows + ((this.numRows - 1) * this.rowGapFrac));
+            this.sceneDepthByBinWithSep = this.sceneDepthByBin + this.binSeparation;
+            this.sceneDepthFull = (this.sceneDepthByBin * this.numBins) + ((this.numBins - 1) * this.binSeparation);
         }
-        //float cubeHeight = this.xSceneSize * 0.05f;
+        //float cubeHeight = this.sceneWidth * 0.05f;
     }
 
     public virtual void ShowDataOld()
@@ -1336,7 +1327,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         this.numRidges = 0;
         this.CalcDimensions();
-        this.xScale = 1f / this.numCols;
+        this.blockWidthNorm = 1f / this.numCols;
         this.dataHeightRangeScale = 1f / (this.maxDataHeight - this.minDataHeight);
         this.xRidges = new XRidge[this.numRows * this.numBins];
         // In case we have changed datasets
@@ -1916,9 +1907,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             }
             else
             {
-                yoff = yoff + (this.xRidges[i].myBin * this.ySceneSizeByBinWithSep);
+                yoff = yoff + (this.xRidges[i].myBin * this.sceneDepthByBinWithSep);
             }
-            thisz = this.xzySceneCorner.z + yoff;
+            thisz = this.sceneCorner.z + yoff;
 
             {
                 float _45 = thisz;
@@ -1935,7 +1926,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             }
 
             {
-                float _49 = (this.xzySceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f);
+                float _49 = (this.sceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f);
                 Vector3 _50 = this.xRidges[i].myLabel.transform.position;
                 _50.z = _49;
                 this.xRidges[i].myLabel.transform.position = _50;
@@ -1963,9 +1954,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             }
             ++i;
         }
-        //float cubeHeight = this.xSceneSize * 0.05f;
-        //baseCube.transform.localScale = Vector3(xSceneSize + 2.0, cubeHeight, ySceneSizeFull + 2.0);
-        //baseCube.transform.position = Vector3(xzySceneCorner.x - 1.0, xzySceneCorner.y - (cubeHeight * 0.9), xzySceneCorner.z - 1.0);
+        //float cubeHeight = this.sceneWidth * 0.05f;
+        //baseCube.transform.localScale = Vector3(sceneWidth + 2.0, cubeHeight, sceneDepthFull + 2.0);
+        //baseCube.transform.position = Vector3(sceneCorner.x - 1.0, sceneCorner.y - (cubeHeight * 0.9), sceneCorner.z - 1.0);
     }
 
     // if selBin < 0, all bins visible
@@ -2002,8 +1993,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     //Return the scene/plot center in scene units.
     public Vector3 GetPlotCenter()
     {
-        //Debug.Log("xzySceneCorner: " + xzySceneCorner);
-        return new Vector3(xzySceneCorner.x + xSceneSize / 2f, 0f, xzySceneCorner.z + ySceneSizeFull / 2f);
+        //Debug.Log("sceneCorner: " + sceneCorner);
+        return new Vector3(sceneCorner.x + sceneWidth / 2f, 0f, sceneCorner.z + sceneDepthFull / 2f);
     }
 
     /// <summary> This coroutine simply lets us put up a message and then start the
@@ -2028,7 +2019,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         // we can use a simple txf scaling to change height while viewing and avoid
         // redrawing the meshes - i.e. for speed.
         Shader.SetGlobalFloat("_gMinimumHeight", this.MinGraphSceneHeight);
-        Shader.SetGlobalFloat("_gSceneCornerY", this.xzySceneCorner.y);
+        Shader.SetGlobalFloat("_gSceneCornerY", this.sceneCorner.y);
     }
 
     /// <summary> Start redrawing the graph for the current data. </summary>
@@ -2139,10 +2130,11 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //In DatasetSelected, the ranges get set for the optional subsequent int columns.
         //
         DataVariable heightVar = DataManager.Instance.HeightVar;
+        
         this.minRow = 0;
-        this.maxRow = heightVar.numDataRows - 1;
+        this.maxRow = DataManager.Instance.Rows - 1;
         this.minCol = 0;
-        this.maxCol = heightVar.numDataCols - 1;
+        this.maxCol = DataManager.Instance.Cols - 1;
         this.minBin = 0; //Just always have 1 bin for now. Empirically, we want its number to be 0, otherwise a space for a phantom bin appears in render.
         this.maxBin = 0;
         this.minDataHeight = heightVar.MinValue;
@@ -2151,6 +2143,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         // debugging
         if (this.maxCol > this.colLimit)
         {
+            Debug.LogError("maxCol > colLimit " + maxCol + " > " + colLimit + " Limiting to colLimit");
             this.maxCol = this.colLimit;
         }
         this.numCols = (this.maxCol - this.minCol) + 1;
@@ -2183,7 +2176,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Calculates dimensions of full plot in unity scene units, among other things.
         this.CalcDimensions();
 
-        this.xScale = 1f / this.numCols;
+        this.blockWidthNorm = 1f / this.numCols;
         this.dataHeightRangeScale = 1f / (this.maxDataHeight - this.minDataHeight);
         this.xRidges = new XRidge[this.numRows * this.numBins];
         // In case we have changed datasets
@@ -2237,7 +2230,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> For the given data value, return the *scaled* block height, i.e. the height of the mesh WITH scene scaling and minimum scene height </summary>
     public float GetBlockSceneHeight(float heightValue)
     {
-        return (GetBlockMeshHeight(heightValue) * this.zSceneSize * this.currGraphHeightScale) + this.xzySceneCorner.y + this.MinGraphSceneHeight;
+        return (GetBlockMeshHeight(heightValue) * this.sceneHeight * this.currGraphHeightScale) + this.sceneCorner.y + this.MinGraphSceneHeight;
     }
 
     /// <summary> Get the scene height for the block at a particular data position (row, column) </summary>
@@ -2250,7 +2243,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> Get the width of each block in scene units </summary>
     public float GetBlockSceneWidth()
     {
-        return HeatVRML.Instance.xSceneSize / HeatVRML.Instance.numCols;
+        return HeatVRML.Instance.sceneWidth / HeatVRML.Instance.numCols;
     }
 
     public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
@@ -2278,18 +2271,18 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         else
         {
-            yoff = yoff + (binindex * this.ySceneSizeByBinWithSep);
+            yoff = yoff + (binindex * this.sceneDepthByBinWithSep);
         }
         //Stauffer - 'proto' is from protomesh scene object. It's a private global instanced above.
-        GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z + yoff), Quaternion.identity);
+        GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + yoff), Quaternion.identity);
         //Stauffer these vals used to set localScale are calc'ed in CalcDimensions, I believe.
         //NOTE z is used in variable names for up, i.e. y in unity.
-        newRidge.transform.localScale = new Vector3(this.xSceneSize, this.zSceneSize * this.currGraphHeightScale, this.rowDepthDataOnly);
+        newRidge.transform.localScale = new Vector3(this.sceneWidth, this.sceneHeight * this.currGraphHeightScale, this.rowDepthDataOnly);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
 
         //Row labels
-        GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.xzySceneCorner.x + this.xSceneSize, this.xzySceneCorner.y + 1f, (this.xzySceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
+        GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth, this.sceneCorner.y + 1f, (this.sceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
         if ((row > this.numRowLabels) || (this.rowLabels[row] == null))
         {
             ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = row.ToString();
@@ -2335,7 +2328,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         float slabZ = 0.006f;
         float edgeBite = this.bevelFraction / this.numCols;
         // Note: this makes a 45 degree bevel at the curreent graph height, but it will be a different angle when height is changed.
-        float topBite = (edgeBite * this.xSceneSize) / (this.zSceneSize * this.currGraphHeightScale);
+        float topBite = (edgeBite * this.sceneWidth) / (this.sceneHeight * this.currGraphHeightScale);
         MeshMaker mm = new MeshMaker();
 
         for (int colNum = 0; colNum < numx; colNum++) //loop over columns
@@ -2370,21 +2363,21 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             }
             else
             {   //column 0
-                thisX = ((0.5f) - this.minCol) * this.xScale;
+                thisX = ((0.5f) - this.minCol) * this.blockWidthNorm;
                 //thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
                 thisZ = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, 0, false)); //send NaN if value is NaN
-                prevX = thisX - this.xScale;
+                prevX = thisX - this.blockWidthNorm;
                 prevZ = thisZ;
             }
             if (colNum < lastInd)
             {
-                nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.xScale;
+                nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.blockWidthNorm;
                 //nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
                 nextZ = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, colNum + 1, false));
             }
             else
             {
-                nextX = nextX + this.xScale;
+                nextX = nextX + this.blockWidthNorm;
             }
 
             leftZ = (prevZ + thisZ) / 2f;
@@ -2811,42 +2804,42 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         switch (newZip)
         {
             case 0:
-                myY = this.xzySceneCorner.z + (this.ySceneSizeByBin / 2f);
-                myX = this.xzySceneCorner.x + (this.xSceneSize / 2f);
-                //Debug.Log("xzySceneCorner.y is " + xzySceneCorner.y);
-                //Debug.Log("(zSceneSize * currGraphHeightScale) is " + (zSceneSize * currGraphHeightScale));
+                myY = this.sceneCorner.z + (this.sceneDepthByBin / 2f);
+                myX = this.sceneCorner.x + (this.sceneWidth / 2f);
+                //Debug.Log("sceneCorner.y is " + sceneCorner.y);
+                //Debug.Log("(sceneHeight * currGraphHeightScale) is " + (sceneHeight * currGraphHeightScale));
                 //Debug.Log("myCameraOld.fieldOfView is " + myCameraOld.fieldOfView);
                 //Debug.Log("Mathf.Tan(myCameraOld.fieldOfView / 2.0) is " + Mathf.Tan(myCameraOld.fieldOfView * Mathf.PI / 360.0));
-                myZ = (this.xzySceneCorner.y + (this.zSceneSize * this.currGraphHeightScale)) + ((this.ySceneSizeByBin / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
+                myZ = (this.sceneCorner.y + (this.sceneHeight * this.currGraphHeightScale)) + ((this.sceneDepthByBin / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
                 //Debug.Log("myZ is " + myZ);
                 Fly.NewRotation(0f, -90f);
                 break;
             case 1:
-                myX = this.xzySceneCorner.x + (this.xSceneSize / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
-                myY = this.xzySceneCorner.z - ((this.xSceneSize / 2f) / Mathf.Tan(hFOV));
+                myX = this.sceneCorner.x + (this.sceneWidth / 2f);
+                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
+                myY = this.sceneCorner.z - ((this.sceneWidth / 2f) / Mathf.Tan(hFOV));
                 Fly.NewRotation(0f, 0f);
                 break;
             case 2:
-                myX = this.xzySceneCorner.x + (this.xSceneSize / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
-                myY = (this.xzySceneCorner.z + this.ySceneSizeByBin) + ((this.xSceneSize / 2f) / Mathf.Tan(hFOV));
+                myX = this.sceneCorner.x + (this.sceneWidth / 2f);
+                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
+                myY = (this.sceneCorner.z + this.sceneDepthByBin) + ((this.sceneWidth / 2f) / Mathf.Tan(hFOV));
                 if ((this.numBins > 1) && !this.binInterleave)
                 {
-                    myY = myY + (this.ySceneSizeByBin * (this.numBins - 1));
+                    myY = myY + (this.sceneDepthByBin * (this.numBins - 1));
                 }
                 Fly.NewRotation(180f, 0f);
                 break;
             case 3:
-                myY = this.xzySceneCorner.z + (this.ySceneSizeByBin / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
-                myX = this.xzySceneCorner.x - ((this.ySceneSizeByBin / 2f) / Mathf.Tan(hFOV));
+                myY = this.sceneCorner.z + (this.sceneDepthByBin / 2f);
+                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
+                myX = this.sceneCorner.x - ((this.sceneDepthByBin / 2f) / Mathf.Tan(hFOV));
                 Fly.NewRotation(90f, 0f);
                 break;
             case 4:
-                myY = this.xzySceneCorner.z + (this.ySceneSizeByBin / 2f);
-                myZ = this.xzySceneCorner.y + ((this.zSceneSize * this.currGraphHeightScale) / 2f);
-                myX = (this.xzySceneCorner.x + this.xSceneSize) + ((this.ySceneSizeByBin / 2f) / Mathf.Tan(hFOV));
+                myY = this.sceneCorner.z + (this.sceneDepthByBin / 2f);
+                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
+                myX = (this.sceneCorner.x + this.sceneWidth) + ((this.sceneDepthByBin / 2f) / Mathf.Tan(hFOV));
                 Fly.NewRotation(-90f, 0f);
                 break;
         }
@@ -2858,7 +2851,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public virtual void DrawVRML()
     {
         int r = 0;
-        this.vrmlScale = this.vrmlModelMM / (this.ySceneSizeFull > this.xSceneSize ? this.ySceneSizeFull : this.xSceneSize);
+        this.vrmlScale = this.vrmlModelMM / (this.sceneDepthFull > this.sceneWidth ? this.sceneDepthFull : this.sceneWidth);
         this.vrout = File.CreateText("heat.wrl");
         this.vrout.WriteLine("#VRML V2.0 utf8");
         this.vrout.WriteLine("Group { children [");
@@ -2882,7 +2875,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         int r = 0;
         Debug.Log("in DrawTriangle");
-        this.vrmlScale = this.vrmlModelMM / (this.ySceneSizeFull > this.xSceneSize ? this.ySceneSizeFull : this.xSceneSize);
+        this.vrmlScale = this.vrmlModelMM / (this.sceneDepthFull > this.sceneWidth ? this.sceneDepthFull : this.sceneWidth);
         this.trout = File.CreateText("triangles.txt");
         r = 0;
         while (r < this.numRidges)
@@ -2920,7 +2913,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 }
                 thisVertex = triangles[thisTri++];
                 Vector3 apos = trans.TransformPoint(vertices[thisVertex]);
-                apos = apos - new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z);
+                apos = apos - new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z);
                 apos = apos * this.vrmlScale;
                 cstring = cstring + ((((apos.x + " ") + apos.y) + " ") + apos.z);
                 ++corner;
@@ -2949,7 +2942,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         while (avert < numVerts)
         {
             Vector3 apos = trans.TransformPoint(vertices[avert]);
-            apos = apos - new Vector3(this.xzySceneCorner.x, this.xzySceneCorner.y, this.xzySceneCorner.z);
+            apos = apos - new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z);
             apos = apos * this.vrmlScale;
             if (avert > 0)
             {
@@ -3031,10 +3024,10 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.xrayWindowRect = new Rect(200, 200, 800, 800);
         this.helpWindowRect = new Rect(10, 10, 10, 10);
         this.windNames = new string[] { "Data Selection", "Chart Style", "Zip to Viewpoint", "Chart View" };
-        this.xSceneSize = 400f;
-        this.ySceneSizeByBin = 400f;
-        this.ySceneSizeApproxMax = 2f * this.xSceneSize;
-        this.zSceneSize = 200f;
+        this.sceneWidth = 20f; // 400f;
+        this.sceneDepthByBin = sceneWidth; // 400f;
+        this.sceneDepthMaxApprox = 2f * this.sceneWidth;
+        this.sceneHeight = 5f; // 200f;
         this.dbPos = new Vector2(0, 0);
         this.currDB = -1;
         this.includeTriangles = true;

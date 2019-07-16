@@ -19,6 +19,11 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// <summary> The headset, camera rig object </summary>
     public GameObject HmdRig;
 
+    /// <summary> Scaling in each direction for movement of data by grab-and-move </summary>
+    public Vector3 grabMoveScale;
+    /// <summary> Exponent of scaling of movement during grab </summary>
+    public float grabMoveScaleExp = 1;
+
     /// <summary> Flags for whether a controller grab is currently happening.
     /// Array with element for each hand. </summary>
     private bool[] grabDown = new bool[2];
@@ -60,7 +65,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
             
             //Debug.Log("d: " + d.ToString("F4"));
 
-            HeatVRML.Instance.TranslateRidges(d.x * 250f, d.y*100f, d.z * 250f); //hack in a larger movement until we get scaling figured out in VR
+            HeatVRML.Instance.TranslateRidges(Mathf.Pow(Mathf.Abs(d.x), grabMoveScaleExp) * Mathf.Sign(d.x) * grabMoveScale.x,
+                                              Mathf.Pow(Mathf.Abs(d.y), grabMoveScaleExp) * Mathf.Sign(d.y) * grabMoveScale.y,
+                                              Mathf.Pow(Mathf.Abs(d.z), grabMoveScaleExp) * Mathf.Sign(d.z) * grabMoveScale.z,
+                                              HmdRig.transform.position.y * 0.95f /*quick hack to keep data plot from going over head of player*/);
         }
     }
 
@@ -91,6 +99,6 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     public void ResetPlayerPosition()
     {
         Vector3 center = HeatVRML.Instance.GetPlotCenter();
-        HmdRig.transform.position = new Vector3(center.x, HeatVRML.Instance.xzySceneCorner.y + defaultPlayerOffset.y, HeatVRML.Instance.xzySceneCorner.z + defaultPlayerOffset.z);
+        HmdRig.transform.position = new Vector3(center.x, HeatVRML.Instance.sceneCorner.y + defaultPlayerOffset.y, HeatVRML.Instance.sceneCorner.z + defaultPlayerOffset.z);
     }
 }

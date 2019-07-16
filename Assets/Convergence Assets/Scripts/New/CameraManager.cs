@@ -48,7 +48,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     public void ResetView()
     {
         Vector3 center = heatVRML.GetPlotCenter();
-        ourCamera.transform.position = new Vector3(center.x, heatVRML.xzySceneCorner.y + defaultViewOffset.y, heatVRML.xzySceneCorner.z + defaultViewOffset.z);
+        ourCamera.transform.position = new Vector3(center.x, heatVRML.sceneCorner.y + defaultViewOffset.y, heatVRML.sceneCorner.z + defaultViewOffset.z);
         LookAt(center);
     }
 
