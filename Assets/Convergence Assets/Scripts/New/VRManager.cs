@@ -27,6 +27,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// <summary> Flags for whether a controller grab is currently happening.
     /// Array with element for each hand. </summary>
     private bool[] grabDown = new bool[2];
+    private bool[] triggerDown = new bool[2];
 
     /// <summary> Current hand/controller position. Vector with one elem for each hand. </summary>
     private Vector3[] handPos = new Vector3[2];
@@ -34,7 +35,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// <summary> Controller position at previous frame </summary>
     private Vector3[] handPosPrev = new Vector3[2];
 
-    // Use this for initialization
+    // Use this for initialization instead of Awake()
     override protected void Initialize() {
         grabDown[0] = grabDown[1] = false;
 	}
@@ -48,7 +49,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     {
         //Do things in late update so we can grab current action states first via the event handlers
 
+        //Check for trigger
+        LookForTriggerActivity();
 
+        //Check for grip button
         LookForGrabActivity();
 
         //Update hand position
@@ -56,6 +60,13 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         handPosPrev[1] = handPos[1];
     }
 
+    private void LookForTriggerActivity()
+    {
+        if( triggerDown[0])
+        {
+
+        }
+    }
 
     private void LookForGrabActivity()
     {
@@ -82,10 +93,22 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         if (sis != SteamVR_Input_Sources.LeftHand && sis != SteamVR_Input_Sources.RightHand)
             return;
 
-        //Debug.Log("Grab with " + GetHand(sis).ToString() + " state " + state);
+        //Debug.Log("GrabGrip with " + GetHand(sis).ToString() + " state " + state);
 
         grabDown[(int)GetHand(sis)] = state;
         handPosPrev[(int)GetHand(sis)] = handPos[(int)GetHand(sis)];
+    }
+
+    /// <summary> GrabPinch is trigger press </summary>
+    public void OnGrabPinchChange(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
+    {
+        //I figure we should only get grip changes from left and right hand controllers, but just in case...
+        if (sis != SteamVR_Input_Sources.LeftHand && sis != SteamVR_Input_Sources.RightHand)
+            return;
+
+        Debug.Log("GrabPinch with " + GetHand(sis).ToString() + " state " + state);
+
+        triggerDown[(int)GetHand(sis)] = state;
     }
 
     //Controller/hand has changed position/rotation

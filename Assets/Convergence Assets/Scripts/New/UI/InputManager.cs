@@ -58,8 +58,6 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 
     //Data Inspection
     //
-    /// <summary> Ref to component for getting data via pointer </summary>
-    DataInspector dataInspector;
     /// <summary> Flag to enable continuous data inspection, so data under the mouse pointer is queried under continuously as pointer is moved </summary>
     public bool contDataInspectionEnabled = true;
     /// <summary> Flag to temporarily disable continuous data inspection. Used to lock the inspection when mouse is clicked </summary>
@@ -78,10 +76,6 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 	void Start () {
         firstTouchTime = 0;
         currentTouchAction = prevTouchActionDbg = TouchAction.None;
-        dataInspector = GetComponent<DataInspector>();
-        if (dataInspector == null)
-            Debug.LogError("dataInspector == null!");
-
     }
 	
     /// <summary> Call this when you want to check for touch actions and respond to them </summary>
@@ -279,7 +273,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         {
             //Debugging
 
-            dataInspector.DbgSelectWithDebugRay();
+            DataInspector.Instance.DbgSelectWithDebugRay();
 
             //GameObject newRidge = UnityEngine.Object.Instantiate(HeatVRML.Instance.Proto, new Vector3(HeatVRML.Instance.sceneCorner.x, HeatVRML.Instance.sceneCorner.y, HeatVRML.Instance.sceneCorner.z), Quaternion.identity);
             //newRidge.name = "testRidge";
@@ -307,7 +301,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
                 //Process single click
 
                 //Initiate a data inspection
-                TriDataPoint triPoint = dataInspector.InspectDataAtScreenPosition(Input.mousePosition, true, true);
+                TriDataPoint triPoint = DataInspector.Instance.InspectDataAtScreenPosition(Input.mousePosition);
                 //If we get a valid point, lock the data inspection to this point by setting this flag.
                 contDataInpectionTempDisable = triPoint.isValid;
                 //triPoint.DebugDump();
@@ -351,7 +345,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             ! contDataInpectionTempDisable &&
             (Time.time - contDataInspectionPrevTime) > contDataInspectionInterval)
         {
-            dataInspector.InspectDataAtScreenPosition(Input.mousePosition, true, true);
+            DataInspector.Instance.InspectDataAtScreenPosition(Input.mousePosition);
             contDataInspectionPrevTime = Time.time;
         }
 
@@ -360,7 +354,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Reset anything that should be reset when new data loaded, etc. </summary>
     public void Reset()
     {
-        dataInspector.Hide();
+        DataInspector.Instance.Hide(); //probably not a great place to do this - DataInspector could get its own Reset() method
     }
 
     // Update is called once per frame

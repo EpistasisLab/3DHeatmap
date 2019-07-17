@@ -6,7 +6,7 @@ using UnityEngine;
 /// Tools for selecting data, initially from screen, mouse or touch.
 /// Initially from
 /// </summary>
-public class DataInspector : MonoBehaviour {
+public class DataInspector : MonoBehaviorSingleton<DataInspector> {
 
     /// <summary> Unity layer assigned to data objects. For ray-casting. </summary>
     public int DataObjectLayer = 8;
@@ -28,6 +28,11 @@ public class DataInspector : MonoBehaviour {
     /// <summary> Maximum alpha value used for the indicator when it's overlaid </summary>
     public float indicatorMaxAlpha;
 
+    /// <summary> Flag to control showing of the data indicator (flashing block) when inspecting </summary>
+    public bool showDataIndicator = true;
+    /// <summary> Flag to control showing of the data inspector (UI panel with data vals) when inspecting </summary>
+    public bool showDataInspector = true;
+
     /// <summary> Show the ray we cast for data intersection for debugging </summary>
     public bool dbgShowRay;
     /// <summary> Flag to show some debugging info  </summary>
@@ -39,12 +44,14 @@ public class DataInspector : MonoBehaviour {
     private Ray dbgRay;
 
     /// <summary> True if the DataIndicator is currently being shown </summary>
-    private bool isShowing;
+    private bool indicatorIsShowing;
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization instea of awake
+    override protected void Initialize() { }
+
+    void Start ()
     {
-        isShowing = false;
+        indicatorIsShowing = false;
         displayPanelHandler = displayPanel.GetComponent<SimpleTextPanelHandler>();
         if (displayPanelHandler == null)
             Debug.LogError("displayPanelHandler == null");
@@ -68,18 +75,8 @@ public class DataInspector : MonoBehaviour {
 
     //	}
 
-    /// <summary>
-    /// Get TriDataPoint data object from a screen position, and optionally show UI features for the selected point.
-    /// Returned object will have isValid field set true if valid.
-    /// </summary>
-    /// <param name="pointerPosition">Screen position, expected from mouse or touch</param>
-    /// <param name="showDataIndicator">True to highlight the data column that's being inspected</param>
-    /// <param name="showDataInspector">True to show data point info in UI</param>
-    /// <returns></returns>
-    public TriDataPoint InspectDataAtScreenPosition(Vector3 pointerPosition, bool showDataIndicator, bool showDataInspector)
+    private void UpdateVisualFeedback(TriDataPoint triData)
     {
-        TriDataPoint triData = GetDataAtScreenPosition(pointerPosition);
-
         if (triData.isValid)
         {
             if (showDataIndicator)
@@ -91,6 +88,30 @@ public class DataInspector : MonoBehaviour {
             else
                 HideDataInspector();
         }
+    }
+
+    /// <summary>
+    /// Get TriDataPoint data object from a screen position, and optionally show UI features for the selected point.
+    /// Returned object will have isValid field set true if valid.
+    /// </summary>
+    /// <param name="pointerPosition">Screen position, expected from mouse or touch</param>
+    /// <param name="showDataIndicator">True to highlight the data column that's being inspected</param>
+    /// <param name="showDataInspector">True to show data point info in UI</param>
+    /// <returns></returns>
+    public TriDataPoint InspectDataAtScreenPosition(Vector3 pointerPosition)
+    {
+        TriDataPoint triData = GetDataAtScreenPosition(pointerPosition);
+
+        UpdateVisualFeedback(triData);
+
+        return triData;
+    }
+
+    public TriDataPoint InspectDataWithRay(Ray ray)
+    {
+        TriDataPoint triData = GetDataAtWithRay(ray);
+
+        UpdateVisualFeedback(triData);
 
         return triData;
     }
@@ -106,6 +127,24 @@ public class DataInspector : MonoBehaviour {
         int row, col;
 
         if( !SelectAtScreenPositionUsingGridIntersection(pointerPosition, out row, out col) )
+        {
+            //Hide any ui elements
+            Hide();
+            //Return empty data object, with isValid = false
+            return new TriDataPoint();
+        }
+
+        TriDataPoint result = new TriDataPoint(row, col);
+
+        //This will hold the data for the data variables at [row,col]
+        return result;
+    }
+
+    private TriDataPoint GetDataAtWithRay(Ray ray)
+    {
+        int row, col;
+
+        if (!SelectWithRayUsingGridIntersection(ray, out row, out col))
         {
             //Hide any ui elements
             Hide();
@@ -153,7 +192,7 @@ public class DataInspector : MonoBehaviour {
         SelectWithRayUsingGridIntersection(ray, out row, out col);
     }
 
-    /// <summary> Working method so we can easily send it controlled rays for debugging </summary>
+    /// <summary> Select data using a ray </summary>
     private bool SelectWithRayUsingGridIntersection(Ray ray, out int rowOut, out int colOut)
     {
         rowOut = colOut = 0;
@@ -386,19 +425,19 @@ public class DataInspector : MonoBehaviour {
 
         dataIndicatorCube.SetActive(true);
 
-        isShowing = true;
+        indicatorIsShowing = true;
         StartCoroutine(DataIndicatorAnimate());
     }
 
     public void HideDataIndicator()
     {
-        isShowing = false;
+        indicatorIsShowing = false;
         dataIndicatorCube.SetActive(false);
     }
 
     IEnumerator DataIndicatorAnimate()
     {
-        while (isShowing)
+        while (indicatorIsShowing)
         {
             float phase = Mathf.Sin(Mathf.PI * 2f * Time.time * indicatorFlashFreq );
             Color color = dataIndicatorCube.GetComponent<Renderer>().material.color;
