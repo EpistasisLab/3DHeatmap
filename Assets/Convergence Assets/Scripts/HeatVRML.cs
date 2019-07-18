@@ -1243,7 +1243,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
 
         //Update the scene corner state
-        sceneCorner = sceneCorner + new Vector3(0, y, 0);
+        sceneCorner = sceneCorner + new Vector3(x, y, z);
 
         //Needs some updating
         UpdateSceneDrawingParams();
