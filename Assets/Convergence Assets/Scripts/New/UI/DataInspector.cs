@@ -33,6 +33,12 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     /// <summary> Flag to control showing of the data inspector (UI panel with data vals) when inspecting </summary>
     public bool showDataInspector = true;
 
+    /// <summary> The ray that's currently in use for inspecting data </summary>
+    private Ray inspectionRay;
+    private float inspectionRayLength;
+    private bool inspectionRayShow;
+    private LineRenderer inspectionRayLineRenderer;
+
     /// <summary> Show the ray we cast for data intersection for debugging </summary>
     public bool dbgShowRay;
     /// <summary> Flag to show some debugging info  </summary>
@@ -67,7 +73,12 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         blockIntersectionCollider = blockIntersectionCube.GetComponent<Collider>();
         if (blockIntersectionCollider == null)
             Debug.LogError("blockIntersectionCollider == null");
-        
+
+        inspectionRayLineRenderer = GetComponent<LineRenderer>();
+        if (inspectionRayLineRenderer == null)
+            Debug.LogError("inspectionRayLineRenderer == null");
+        inspectionRayLineRenderer.enabled = false;
+        inspectionRayShow = false;
     }
 
     // Update is called once per frame
@@ -107,9 +118,9 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         return triData;
     }
 
-    public TriDataPoint InspectDataWithRay(Ray ray)
+    public TriDataPoint InspectDataWithRay(Ray ray, bool showRay)
     {
-        TriDataPoint triData = GetDataAtWithRay(ray);
+        TriDataPoint triData = GetDataWithRay(ray, showRay);
 
         UpdateVisualFeedback(triData);
 
@@ -140,11 +151,11 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         return result;
     }
 
-    private TriDataPoint GetDataAtWithRay(Ray ray)
+    private TriDataPoint GetDataWithRay(Ray ray, bool showRay)
     {
         int row, col;
 
-        if (!SelectWithRayUsingGridIntersection(ray, out row, out col))
+        if (!SelectWithRayUsingGridIntersection(ray, out row, out col, showRay))
         {
             //Hide any ui elements
             Hide();
@@ -176,7 +187,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             return false;
 
         Ray ray = Camera.main.ScreenPointToRay(pointerPosition);
-        return SelectWithRayUsingGridIntersection(ray, out rowOut, out colOut);
+        return SelectWithRayUsingGridIntersection(ray, out rowOut, out colOut, false);
     }
 
     /// <summary>
@@ -189,11 +200,11 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         int row = 0;
         int col = 0;
         Ray ray = new Ray(dbgRayOrigin, dbgRayDirex);
-        SelectWithRayUsingGridIntersection(ray, out row, out col);
+        SelectWithRayUsingGridIntersection(ray, out row, out col, false);
     }
 
     /// <summary> Select data using a ray </summary>
-    private bool SelectWithRayUsingGridIntersection(Ray ray, out int rowOut, out int colOut)
+    private bool SelectWithRayUsingGridIntersection(Ray ray, out int rowOut, out int colOut, bool showRay)
     {
         rowOut = colOut = 0;
         string dbgStr = "";
@@ -341,7 +352,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
 
                 //Scale and move the cube for raycasted intersection testing.
                 PrepareBlockOverlay(blockIntersectionCube, rr, c, 0/*bin - just always do 0, for now at least*/);
-                if( blockIntersectionCollider.Raycast(ray, out blockHit, 100000f))
+                if (blockIntersectionCollider.Raycast(ray, out blockHit, 100000f))
                 {
                     rowOut = rr;
                     colOut = c;
@@ -353,11 +364,21 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
                     // huge data sets, we could reverse the order of columns traversal above
                     // for right-to-left rays, and then pick the first one.
                     foundAnIntersection = true;
+                    inspectionRayLength = blockHit.distance;
                 }
+                else
+                    inspectionRayLength = 1000;
             }
         }
 
-        if(dbgOutput)
+        //Show the ray using line renderer, and not Debug.DrawRay() which requires gizmos to be enabled
+        if (showRay)
+        {
+            DrawInspectionRay(ray, inspectionRayLength);
+        }
+        inspectionRayShow = showRay; //need this??
+
+        if (dbgOutput)
             Debug.Log(dbgStr);
 
         return foundAnIntersection;
@@ -467,6 +488,15 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     public void HideDataInspector()
     {
         displayPanelHandler.Hide();
+    }
+
+    private void DrawInspectionRay(Ray ray, float length)
+    {
+        Vector3[] positions = new Vector3[2];
+        positions[0] = ray.origin;
+        inspectionRayLineRenderer.enabled = true;
+        positions[1] = ray.origin + ray.direction * length;
+        inspectionRayLineRenderer.SetPositions(positions);
     }
 
     public void Update()

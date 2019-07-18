@@ -1229,6 +1229,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// </summary>
     public virtual void TranslateRidges(float x, float y, float z, float maxy)
     {
+        if (xRidges == null)
+            return;
+
         //Constrain yposition
         float newy = sceneCorner.y + y;
         if (newy < 0 || newy > maxy)

@@ -24,6 +24,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// <summary> Exponent of scaling of movement during grab </summary>
     public float grabMoveScaleExp = 1;
 
+    /// <summary> Angle in degrees around which to rotate the fwd vector of the 
+    ///  controller to get the direciton we want. </summary>
+    public float laserPointerXRot = 0;
+
     /// <summary> Flags for whether a controller grab is currently happening.
     /// Array with element for each hand. </summary>
     private bool[] grabDown = new bool[2];
@@ -31,9 +35,11 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     /// <summary> Current hand/controller position. Vector with one elem for each hand. </summary>
     private Vector3[] handPos = new Vector3[2];
+    private Quaternion[] handRot = new Quaternion[2];
 
     /// <summary> Controller position at previous frame </summary>
     private Vector3[] handPosPrev = new Vector3[2];
+    private Quaternion[] handRotPrev = new Quaternion[2];
 
     // Use this for initialization instead of Awake()
     override protected void Initialize() {
@@ -58,13 +64,18 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         //Update hand position
         handPosPrev[0] = handPos[0];
         handPosPrev[1] = handPos[1];
+        handRotPrev[0] = handRot[0];
+        handRotPrev[1] = handRot[1];
     }
 
     private void LookForTriggerActivity()
     {
-        if( triggerDown[0])
+        if( triggerDown[1])
         {
-
+            Quaternion correction = new Quaternion();
+            correction.eulerAngles = new Vector3(laserPointerXRot, 0, 0);
+            Ray ray = new Ray(handPos[1], handRot[1] * (correction * Vector3.forward));
+            DataInspector.Instance.InspectDataWithRay(ray, true);
         }
     }
 
@@ -79,7 +90,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
             HeatVRML.Instance.TranslateRidges(Mathf.Pow(Mathf.Abs(d.x), grabMoveScaleExp) * Mathf.Sign(d.x) * grabMoveScale.x,
                                               Mathf.Pow(Mathf.Abs(d.y), grabMoveScaleExp) * Mathf.Sign(d.y) * grabMoveScale.y,
                                               Mathf.Pow(Mathf.Abs(d.z), grabMoveScaleExp) * Mathf.Sign(d.z) * grabMoveScale.z,
-                                              HmdRig.transform.position.y * 0.95f /*quick hack to keep data plot from going over head of player*/);
+                                              HmdRig.transform.position.y * 0.975f /*quick hack to keep data plot from going over head of player*/);
         }
     }
 
@@ -106,7 +117,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         if (sis != SteamVR_Input_Sources.LeftHand && sis != SteamVR_Input_Sources.RightHand)
             return;
 
-        Debug.Log("GrabPinch with " + GetHand(sis).ToString() + " state " + state);
+        //Debug.Log("GrabPinch with " + GetHand(sis).ToString() + " state " + state);
 
         triggerDown[(int)GetHand(sis)] = state;
     }
@@ -115,6 +126,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     public void OnControllerTransformChange(SteamVR_Behaviour_Pose sbb, SteamVR_Input_Sources sis)
     {
         handPos[(int)GetHand(sis)] = sbb.transform.position;
+        handRot[(int)GetHand(sis)] = sbb.transform.rotation;
         //Debug.Log("handPos " + handPos[0].ToString("F3") + " " + handPos[1].ToString("F3"));
     }
 
