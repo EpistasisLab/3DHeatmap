@@ -228,9 +228,9 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         //m = slope (z/x)
         //b = intercept
         //
-        //First calc the slope ratio, since our grid cells in scene are not square  - because each ridge (row of blocks)
-        // can have separator space between them.
-        float slopeRatio = (HeatVRML.Instance.rowDepthFull / HeatVRML.Instance.rowDepthDataOnly);
+        //First calc the slope ratio (z/x, or row-depth/column-width), since our grid cells in scene are not square. 
+        // Each ridge (row of blocks) can have separator space between them, AND row depth can be different than column width.
+        float slopeRatio = HeatVRML.Instance.rowDepthFull / HeatVRML.Instance.GetBlockSceneWidth();
         //The slope, taking slopeRatio into account. So this should now be in normalized unit for a regularized data grid.
         float m = ray.direction.x != 0 ? ray.direction.z / ray.direction.x / slopeRatio : float.MaxValue;
         //A point on the line in normalized grid space. Using the ray origin
