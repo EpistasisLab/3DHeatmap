@@ -73,8 +73,8 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _EdgeShadeAmount: 0.9
-    - _EdgeShadeHeight: 0.015
-    - _EdgeShadeWidth: 0.064
+    - _EdgeShadeHeight: 0
+    - _EdgeShadeWidth: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1

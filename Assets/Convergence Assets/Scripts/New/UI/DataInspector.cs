@@ -33,11 +33,8 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     /// <summary> Flag to control showing of the data inspector (UI panel with data vals) when inspecting </summary>
     public bool showDataInspector = true;
 
-    /// <summary> The ray that's currently in use for inspecting data </summary>
-    private Ray inspectionRay;
-    private float inspectionRayLength;
-    private bool inspectionRayShow;
     private LineRenderer inspectionRayLineRenderer;
+    private float inspectionRayPrevTime = 0;
 
     /// <summary> Show the ray we cast for data intersection for debugging </summary>
     public bool dbgShowRay;
@@ -78,7 +75,6 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         if (inspectionRayLineRenderer == null)
             Debug.LogError("inspectionRayLineRenderer == null");
         inspectionRayLineRenderer.enabled = false;
-        inspectionRayShow = false;
     }
 
     // Update is called once per frame
@@ -291,8 +287,13 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         }
 
         bool foundAnIntersection = false;
+        bool finished = false;
+        float inspectionRayLength = 1000;
         for ( int c = cStart; c <= cEnd; c++)
         {
+            if (finished)
+                break;
+
             //For the left side of this column, calc the z intersection point, i.e. the row
             float z = m * c + b;
             //the rows at which ray passes through left and right edges of column
@@ -356,27 +357,27 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
                 {
                     rowOut = rr;
                     colOut = c;
-                    //For rays going left-to-right, we just return the first intersection
-                    if (ray.direction.x >= 0)
-                        return true;
-                    //Otherwise for right-to-left rays we return the last one we find.
-                    //NOTE if it gets too slow to do all these intersection tests with 
-                    // huge data sets, we could reverse the order of columns traversal above
-                    // for right-to-left rays, and then pick the first one.
                     foundAnIntersection = true;
                     inspectionRayLength = blockHit.distance;
+                    //For rays going left-to-right, we just return the first intersection
+                    //Otherwise for right-to-left rays we return the last one we find, so keep
+                    // overwriting rowOut and colOut and last overwrite will be returned value.
+                    if (ray.direction.x >= 0)
+                    {
+                        finished = true;
+                        break;
+                    }
                 }
-                else
-                    inspectionRayLength = 1000;
             }
         }
 
-        //Show the ray using line renderer, and not Debug.DrawRay() which requires gizmos to be enabled
+        //Show the ray using line renderer (not using Debug.DrawRay() which requires gizmos to be enabled)
         if (showRay)
         {
             DrawInspectionRay(ray, inspectionRayLength);
+            //Track the last time we showed inspection ray so we can turn it off when not in use anymore.
+            inspectionRayPrevTime = Time.time;
         }
-        inspectionRayShow = showRay; //need this??
 
         if (dbgOutput)
             Debug.Log(dbgStr);
@@ -499,8 +500,16 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         inspectionRayLineRenderer.SetPositions(positions);
     }
 
+    private void CheckForHideInspectionRay()
+    {
+        if (Time.time > inspectionRayPrevTime)
+            inspectionRayLineRenderer.enabled = false;
+    }
+
     public void Update()
     {
+        CheckForHideInspectionRay();
+
         if (dbgShowRay && dbgRay.direction.magnitude > 0)
         {
             RaycastHit hit;

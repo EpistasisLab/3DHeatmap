@@ -2230,13 +2230,15 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         return ((heightValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
     }
-    /// <summary> For the given data value, return the *scaled* block height, i.e. the height of the mesh WITH scene scaling and minimum scene height </summary>
+    /// <summary> For the given data value, return the *scaled* block height, i.e. the height of the mesh WITH scene scaling and minimum scene height
+    /// NOT the world y position of top of block, but the height of the block itself, independent of its bottom y position.</summary>
     public float GetBlockSceneHeight(float heightValue)
     {
-        return (GetBlockMeshHeight(heightValue) * this.sceneHeight * this.currGraphHeightScale) + this.sceneCorner.y + this.MinGraphSceneHeight;
+        return (GetBlockMeshHeight(heightValue) * this.sceneHeight * this.currGraphHeightScale) + this.MinGraphSceneHeight;
     }
 
-    /// <summary> Get the scene height for the block at a particular data position (row, column) </summary>
+    /// <summary> Get the height for the block in scene units at a particular data position (row, column).
+    /// NOT the world y position of top of block, but the height of the block itself, independent of its bottom y position.</summary>
     /// <returns>Will return minimum height if data not set, is NaN, or if row or col is out of range</returns>
     public float GetBlockSceneHeightByPosition(int row, int col)
     {
