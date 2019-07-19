@@ -23,6 +23,9 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     /// <summary> Simple display panel object with component SimpleTextPanelHandler </summary>
     public GameObject displayPanel;
     private SimpleTextPanelHandler displayPanelHandler;
+    /// <summary> Data inspection display panel for VR HUD </summary>
+    public GameObject displayPanelVR;
+    private SimpleTextPanelHandler displayPanelVRHandler;
 
     public float indicatorFlashFreq;
     /// <summary> Maximum alpha value used for the indicator when it's overlaid </summary>
@@ -58,6 +61,9 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         displayPanelHandler = displayPanel.GetComponent<SimpleTextPanelHandler>();
         if (displayPanelHandler == null)
             Debug.LogError("displayPanelHandler == null");
+        displayPanelVRHandler = displayPanelVR.GetComponent<SimpleTextPanelHandler>();
+        if (displayPanelVRHandler == null)
+            Debug.LogError("displayPanelVRHandler == null");
 
         dataIndicatorCube = Instantiate(cubePrefab, transform);
         if(dataIndicatorCube == null)
@@ -484,11 +490,13 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             "\n" + triData.sideValue.ToString("F3") + " - " + triData.sideLabel;
 
         displayPanelHandler.Show(str);
+        displayPanelVRHandler.Show(str);
     }
 
     public void HideDataInspector()
     {
         displayPanelHandler.Hide();
+        displayPanelVRHandler.Hide();
     }
 
     private void DrawInspectionRay(Ray ray, float length)

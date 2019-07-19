@@ -42,7 +42,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     //void Awake () {
     protected override void Initialize() { 
         //UI Canvas
-        canvas = GetAndCheckGameObject("Canvas");
+        canvas = GetAndCheckGameObject("CanvasScreenSpace");
         //Main panels
         dataTopPanel = GetAndCheckGameObject("DataTopPanel");
         optionsTopPanel = GetAndCheckGameObject("OptionsTopPanel");
