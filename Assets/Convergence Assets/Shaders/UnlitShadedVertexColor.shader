@@ -12,6 +12,9 @@ Shader "Custom/UnlitShadedVertexColor" {
 		_NanTex("NaN/NoData Texture", 2D) = "white" {}
 		_NanTexHeight("Height NaN/NoData Texture", 2D) = "white" {}
 		_NanTexAll("All NaN/NoData Texture", 2D) = "white" {}
+		_NanColor("Nan Color", Color) = (0.5, 0.5, 0.5, 1.0)
+		_LODfarCutoff("LOD far cutoff", Range(0.0,200.0)) = 70
+		_LODnearCutoff("LOD near cutoff", Range(0.0,200.0)) = 40
 	}
 
 	SubShader{
@@ -35,6 +38,8 @@ Shader "Custom/UnlitShadedVertexColor" {
 		float _EdgeShadeAmount;
 		float _EdgeShadeWidth;
 		float _EdgeShadeHeight;
+		float _LODfarCutoff; //Distance from camera at which to show no details
+		float _LODnearCutoff; //Distance from camera at which to start fading out details
 
 		// vertex input: position, color
 		struct appdata {
@@ -49,6 +54,7 @@ Shader "Custom/UnlitShadedVertexColor" {
 			fixed4 color : COLOR;
 			float2 uvs : TEXCOORD0;
 			float2 uvIsANumber : TEXCOORD1;
+			float distToCamera : TEXCOORD2;
 		};
 
 		v2f vert(appdata v) {
@@ -72,6 +78,7 @@ Shader "Custom/UnlitShadedVertexColor" {
 			o.color = v.color;
 			o.uvs = v.uvs;
 			o.uvIsANumber = v.uvIsANumber;
+			o.distToCamera = length(WorldSpaceViewDir(v.vertex));
 
 			//simple body shading based on uv's - yields corner-based shading diffs which can yield perceptual difference in adjacent same-colored quads
 			float shadeScale = 1.0 - ( (v.uvs.x + v.uvs.y) / 2.0  * _BodyShadeAmount );
@@ -92,14 +99,19 @@ Shader "Custom/UnlitShadedVertexColor" {
 		// texture for Nan/NoData in height variable
 		sampler2D _NanTexHeight;
 		sampler2D _NanTexAll;
+		// texture for showing no/low detail - just grey
+		float4 _NanColor;
 
 		fixed4 frag(v2f i) : SV_Target{
 			float4 color = i.color;
 
+			//LOD scale. 1 = do details, 0 is no details.
+			float LODscale = 1 - clamp( (i.distToCamera - _LODnearCutoff) / (_LODfarCutoff - _LODnearCutoff), 0, 1);
+
 			//If all values are NaN, use this texture
 			if (i.uvIsANumber.y == 0) 
 			{
-				color = tex2D(_NanTexAll, i.uvs);
+				color = tex2D(_NanTexAll, i.uvs) * LODscale + _NanColor * (1 - LODscale);
 				return color;
 			}
 
@@ -107,7 +119,7 @@ Shader "Custom/UnlitShadedVertexColor" {
 			//We're using color alpha to code for NaN for top and side colors
 			if (color.a == 0) 
 			{
-				color = tex2D(_NanTex, i.uvs);
+				color = tex2D(_NanTex, i.uvs) * LODscale + _NanColor * (1 - LODscale);
 			}
 
 			//If height value is NaN, overlay a texture for that.
@@ -115,9 +127,9 @@ Shader "Custom/UnlitShadedVertexColor" {
 			if (i.uvIsANumber.x == 0) 
 			{
 				//Overlay the opaque parts from the texture
-				float4 tex = tex2D(_NanTexHeight, i.uvs);
+				float4 tex = tex2D(_NanTexHeight, i.uvs) ;
 				if (tex.a > 0)
-					color.rgb = tex.rgb;
+					color.rgb = tex.rgb * LODscale + _NanColor.rgb * (1 - LODscale);
 			}
 
 			//Draw some simple edges based on uv values
@@ -125,11 +137,11 @@ Shader "Custom/UnlitShadedVertexColor" {
 			//dx - distance from an edge
 			float dx = 0.5 - abs(0.5 - i.uvs.x);
 			if ( _EdgeShadeWidth > 0 && dx < _EdgeShadeWidth)
-				color.rgb = color.rgb * (1 - (_EdgeShadeWidth - dx) / _EdgeShadeWidth * _EdgeShadeAmount);
+				color.rgb = color.rgb * (1 - (_EdgeShadeWidth - dx) / _EdgeShadeWidth * _EdgeShadeAmount * LODscale);
 			else {
 				float dy = 0.5 - abs(0.5 - i.uvs.y);
 				if( _EdgeShadeHeight > 0 && dy < _EdgeShadeHeight)
-					color.rgb = color.rgb * (1 - (_EdgeShadeHeight - dy) / _EdgeShadeHeight * _EdgeShadeAmount);
+					color.rgb = color.rgb * (1 - (_EdgeShadeHeight - dy) / _EdgeShadeHeight * _EdgeShadeAmount * LODscale);
 			}
 			
 			return color; 
