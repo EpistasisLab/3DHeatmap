@@ -35,6 +35,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     //Stauffer - Data
     //See DataManager singleton - new model of self-contained data objects
 
+    /// <summary> Object to conatain graph elements so they can be manipulated together </summary>
+    public GameObject graphContainer;
+
     // window numbers
     private int DSwin = 0;
     private int STYLEwin;
@@ -1243,7 +1246,11 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
 
         //Update the scene corner state
+        //NOTE - should maybe fold this into graphContainer
         sceneCorner = sceneCorner + new Vector3(x, y, z);
+
+        //Update the graphContainer position
+        graphContainer.transform.position = graphContainer.transform.position + new Vector3(x, y, z);
 
         //Needs some updating
         UpdateSceneDrawingParams();
@@ -2288,6 +2295,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         //Row labels
         GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth, this.sceneCorner.y + 1f, (this.sceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
+        //Add the label to the graph container object for easier manipulation
+        newLabel.transform.SetParent(graphContainer.transform);
+
         if ((row > this.numRowLabels) || (this.rowLabels[row] == null))
         {
             ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = row.ToString();
