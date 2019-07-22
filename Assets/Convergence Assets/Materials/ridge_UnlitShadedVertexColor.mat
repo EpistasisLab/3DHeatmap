@@ -77,13 +77,13 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _EdgeShadeAmount: 0.9
-    - _EdgeShadeHeight: 0.012
-    - _EdgeShadeWidth: 0.126
+    - _EdgeShadeHeight: 0.05
+    - _EdgeShadeWidth: 0.02
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _LODfarCutoff: 12
-    - _LODnearCutoff: 11
+    - _LODfarCutoff: 14
+    - _LODnearCutoff: 6
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
