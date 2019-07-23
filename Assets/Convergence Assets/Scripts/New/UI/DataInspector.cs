@@ -51,6 +51,10 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
 
     /// <summary> True if the DataIndicator is currently being shown </summary>
     private bool indicatorIsShowing;
+    /// <summary> The currently-highlighted data point </summary>
+    private TriDataPoint indicatorTriData;
+    /// <summary> The time at which current indicator started </summary>
+    private float indicatorStartTime;
 
     // Use this for initialization instea of awake
     override protected void Initialize() { }
@@ -425,7 +429,6 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.sceneWidth) / HeatVRML.Instance.numCols) + HeatVRML.Instance.sceneCorner.x
         };
 
-        //Remember orig developer switched y & z - I really should rename these!
         float yoff = dataRow * HeatVRML.Instance.rowDepthFull;
         if (HeatVRML.Instance.binInterleave)
         {
@@ -449,11 +452,19 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         if ( ! triData.isValid )
             return;
 
-        PrepareBlockOverlay(dataIndicatorCube, triData.row, triData.col, triData.bin, 1.02f);
+        //If we're already showing this block, skeedaddle so the start time doesn't get reset and flash fast
+        if (indicatorIsShowing && indicatorTriData.row == triData.row && indicatorTriData.col == triData.col )
+            return;
+
+        //Store what we're currently showing
+        indicatorTriData = triData;
+        indicatorStartTime = Time.time;
+        indicatorIsShowing = true;
+
+        PrepareBlockOverlay(dataIndicatorCube, triData.row, triData.col, triData.bin, 1.002f);
 
         dataIndicatorCube.SetActive(true);
 
-        indicatorIsShowing = true;
         StartCoroutine(DataIndicatorAnimate());
     }
 
@@ -467,10 +478,14 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     {
         while (indicatorIsShowing)
         {
-            float phase = Mathf.Sin(Mathf.PI * 2f * Time.time * indicatorFlashFreq );
+            float phase = Mathf.Abs( Mathf.Cos(Mathf.PI * 2f * (Time.time - indicatorStartTime ) * indicatorFlashFreq ) );
             Color color = dataIndicatorCube.GetComponent<Renderer>().material.color;
-            color.a = phase * indicatorMaxAlpha; //note, if try this: (phase + 1 )/2;  then when alpha goes to 0, the underlying mesh is not drawn/seen
+            color.a = (phase * phase * phase ) * indicatorMaxAlpha; //note, if try this: (phase + 1 )/2;  then when alpha goes to 0, the underlying mesh is not drawn/seen
             dataIndicatorCube.GetComponent<Renderer>().material.color = color;
+
+            //Resize and position the block in case graph settings have changed.
+            PrepareBlockOverlay(dataIndicatorCube, indicatorTriData.row, indicatorTriData.col, indicatorTriData.bin, 1.002f);
+
             yield return null;
         }
     }
