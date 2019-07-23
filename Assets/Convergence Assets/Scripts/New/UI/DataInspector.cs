@@ -461,7 +461,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         indicatorStartTime = Time.time;
         indicatorIsShowing = true;
 
-        PrepareBlockOverlay(dataIndicatorCube, triData.row, triData.col, triData.bin, 1.002f);
+        PrepareBlockOverlay(dataIndicatorCube, triData.row, triData.col, triData.bin, 1.01f);
 
         dataIndicatorCube.SetActive(true);
 
@@ -484,7 +484,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             dataIndicatorCube.GetComponent<Renderer>().material.color = color;
 
             //Resize and position the block in case graph settings have changed.
-            PrepareBlockOverlay(dataIndicatorCube, indicatorTriData.row, indicatorTriData.col, indicatorTriData.bin, 1.002f);
+            PrepareBlockOverlay(dataIndicatorCube, indicatorTriData.row, indicatorTriData.col, indicatorTriData.bin, 1.01f);
 
             yield return null;
         }
