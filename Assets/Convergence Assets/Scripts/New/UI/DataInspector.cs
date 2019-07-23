@@ -497,9 +497,9 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         string str = "";
         str += "row, col #: " + triData.row + ", " + triData.col;
         if (triData.rowHeader != "")
-            str += "\nrow: " + triData.rowHeader;
+            str += "\nrow hdr: " + triData.rowHeader;
         if (triData.colHeader != "")
-            str += "\ncol : " + triData.colHeader;
+            str += "\ncol hdr : " + triData.colHeader;
         str += "\n\n" + triData.heightValue.ToString("F3") + " - " + triData.heightLabel +
             "\n" + triData.topValue.ToString("F3") + " - " + triData.topLabel +
             "\n" + triData.sideValue.ToString("F3") + " - " + triData.sideLabel;

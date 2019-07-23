@@ -1274,7 +1274,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.rowDepthDataOnly = (this.sceneWidth * Mathf.Pow(2, this.currDepthToWidthRatioExp)) / this.numCols;
 
         //Update this in case sceneWidth has changed
-        this.sceneDepthMaxApprox = 2f * this.sceneWidth;
+        this.sceneDepthMaxApprox = 4f * this.sceneWidth;
 
         //Constrain row depth to not exceed max total depth of plot. This is necessary for data that has many more
         // rows than columns
@@ -1282,6 +1282,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         {
             this.rowDepthDataOnly = this.sceneDepthMaxApprox / (this.numRows * (1f + this.rowGapFrac));
         }
+        //Hack in here that row depth shouldn't be < some proportion of block width
+        rowDepthDataOnly = Mathf.Max(rowDepthDataOnly, 0.6f * GetBlockSceneWidth());
+
         this.binSeparation = this.rowDepthDataOnly * this.binSeparationFrac;
         //Stauffer - this flag seems to control interleaving rows by bin or not
         if (this.binInterleave)
