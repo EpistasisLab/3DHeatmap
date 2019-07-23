@@ -282,7 +282,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private int helpCount;
 
     // Components
-    public Camera myCameraOld; //Stauffer - add declare as type Camera
+    //public Camera myCameraOld; //Stauffer - add declare as type Camera
     public GameObject myController;
 
     // VRML
@@ -366,8 +366,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         */
         //this.myCameraOld = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
         //Stauffer - change this to my new camera for now while new camera controls are implemented
-        this.myCameraOld = GameObject.Find("Camera").GetComponent<Camera>() as Camera;
-        this.currFOV = (this.lowFOVRange + this.highFOVRange) - this.myCameraOld.fieldOfView; // hokey, but we want currFOV to increase as fieldOfView decreases
+        //this.myCameraOld = GameObject.Find("Camera").GetComponent<Camera>() as Camera;
+        //this.currFOV = (this.lowFOVRange + this.highFOVRange) - this.myCameraOld.fieldOfView; // hokey, but we want currFOV to increase as fieldOfView decreases
         this.myController = GameObject.Find("FPC");
         this.allVariableDescs = new VariableDesc[2];
         this.allVariableDescs[0] = new VariableDesc();
@@ -2787,7 +2787,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public virtual void FOVSelected(float newFOV)
     {
         this.currFOV = newFOV;
-        this.myCameraOld.fieldOfView = this.lowFOVRange + (this.highFOVRange - this.currFOV);
+        //this.myCameraOld.fieldOfView = this.lowFOVRange + (this.highFOVRange - this.currFOV);
     }
 
     public virtual void LookSelected(int newLook)
@@ -2818,7 +2818,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         float myY = 0.0f;
         float myZ = 0.0f;
         float hFOV = 0.0f;
-        hFOV = Mathf.Atan((Screen.width * Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f)) / Screen.height);
+        //hFOV = Mathf.Atan((Screen.width * Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f)) / Screen.height);
         switch (newZip)
         {
             case 0:
@@ -2828,7 +2828,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 //Debug.Log("(sceneHeight * currGraphHeightScale) is " + (sceneHeight * currGraphHeightScale));
                 //Debug.Log("myCameraOld.fieldOfView is " + myCameraOld.fieldOfView);
                 //Debug.Log("Mathf.Tan(myCameraOld.fieldOfView / 2.0) is " + Mathf.Tan(myCameraOld.fieldOfView * Mathf.PI / 360.0));
-                myZ = (this.sceneCorner.y + (this.sceneHeight * this.currGraphHeightScale)) + ((this.sceneDepthByBin / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
+                //myZ = (this.sceneCorner.y + (this.sceneHeight * this.currGraphHeightScale)) + ((this.sceneDepthByBin / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
                 //Debug.Log("myZ is " + myZ);
                 Fly.NewRotation(0f, -90f);
                 break;
