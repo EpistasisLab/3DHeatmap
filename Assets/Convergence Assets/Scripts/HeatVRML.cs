@@ -2299,7 +2299,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Row labels
         GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth, this.sceneCorner.y + 1f, (this.sceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
         //Add the label to the graph container object for easier manipulation
-        newLabel.transform.SetParent(graphContainer.transform);
+        newLabel.transform.SetParent(graphContainer.transform.Find("Labels"));
 
         if ((row > this.numRowLabels) || (this.rowLabels[row] == null))
         {
