@@ -17,6 +17,24 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <summary> The look-at target for the camera </summary>
     private Vector3 lookAtTarget;
 
+    /// <summary> Flag to enable/disable follow-HMD mode </summary>
+    public bool followHmdEnabled;
+    /// <summary> The HMD transform to use for FollowHMD mode
+    /// NOTE ** Empirically, use the SteamVR "Camera (eye)" object rather than "Camera (head)", the
+    /// latter of which is disabled at runtime and doesn't respond to hmd movement. go figure.</summary>
+    public Transform hmdTransform;
+    /// <summary> Offset along HMD fwd vector for the smooth follow </summary>
+    public float followHmdFwdOffset = -1;
+    /// <summary> Smooth time for position for follow mode </summary>
+    public float followHmdPosTime = 0.7f;
+    public float followHmdPosMaxVel = 4;
+    public float followHmdRotTime = 1;
+    public float followHmdRotMaxVel = 100;
+    /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
+    private SmoothVector3 posSmoother;
+    /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
+    private SmoothQuaternion rotSmoother;
+
     //Use this instead of Awake since this is a MonoBehaviorSingleton
     //void Awake()
     protected override void Initialize()
@@ -35,6 +53,15 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
             Debug.LogError("heatVRML == null");
 
         lookAtTarget = Vector3.zero;
+
+        if (hmdTransform == null)
+            Debug.LogError("HmdTransform == null");
+
+        //Smoothing helpers
+        posSmoother = new SmoothVector3(Vector3.zero);
+        rotSmoother = new SmoothQuaternion(Quaternion.identity);
+
+        followHmdEnabled = false;
     }
 
     /// <summary> Directly set the LookAt target for the camera </summary>
@@ -103,10 +130,30 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         }
     }
 
+    private void FollowHmdUpdate()
+    {
+        //Update for FollowHMD mode
+        if (followHmdEnabled && Time.deltaTime > 0)
+        {
+            //position
+            posSmoother.Target = hmdTransform.position + (hmdTransform.forward * followHmdFwdOffset);
+            posSmoother.Update(followHmdPosTime, Time.deltaTime, followHmdPosMaxVel);
+            ourCamera.transform.position = posSmoother.Value;
+
+            //rotation
+            rotSmoother.Target = hmdTransform.rotation;
+            rotSmoother.Update(followHmdRotTime, Time.deltaTime, followHmdRotMaxVel);
+            ourCamera.transform.rotation = rotSmoother.Value;
+        }
+    }
+
     // Update is called once per frame
     void Update () {
         //Update target
-        ourCamera.transform.LookAt(lookAtTarget);
+        if(followHmdEnabled)
+            FollowHmdUpdate();
+        else
+            ourCamera.transform.LookAt(lookAtTarget);
         //Debug.Log("target: " + target);
 	}
 
