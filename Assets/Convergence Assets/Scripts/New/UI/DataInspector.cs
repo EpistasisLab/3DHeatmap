@@ -34,7 +34,8 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     /// <summary> Flag to control showing of the data indicator (flashing block) when inspecting </summary>
     public bool showDataIndicator = true;
     /// <summary> Flag to control showing of the data inspector (UI panel with data vals) when inspecting </summary>
-    public bool showDataInspector = true;
+    public bool showDataInspectorDesktop = true;
+    public bool showDataInspectorVR = true;
 
     private LineRenderer inspectionRayLineRenderer;
     private float inspectionRayPrevTime = 0;
@@ -100,7 +101,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
                 ShowDataIndicator(triData);
             else
                 HideDataIndicator();
-            if (showDataInspector)
+            if (showDataInspectorDesktop || showDataInspectorVR)
                 ShowDataInspector(triData);
             else
                 HideDataInspector();
@@ -504,8 +505,10 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             "\n" + triData.topValue.ToString("F3") + " - " + triData.topLabel +
             "\n" + triData.sideValue.ToString("F3") + " - " + triData.sideLabel;
 
-        displayPanelHandler.Show(str);
-        displayPanelVRHandler.Show(str);
+        if(showDataInspectorDesktop)
+            displayPanelHandler.Show(str);
+        if(showDataInspectorVR)
+            displayPanelVRHandler.Show(str);
     }
 
     public void HideDataInspector()
