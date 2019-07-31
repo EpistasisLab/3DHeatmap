@@ -95,7 +95,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public float junk;
 
     // scene related
-    //Stauffer - plotting area width in scene units. Row width. Seems hardcoded
+    /// <summary>
+    /// Stauffer - plotting area width in scene units. Row width. Seems hardcoded
+    /// </summary>
     public float sceneWidth;
     /// <summary> Stauffer - full plotting area DEPTH in scene units, including possible multiple bins and bin increment
     private float sceneDepthFull;
@@ -1240,6 +1242,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         if (newy < 0 || newy > maxy)
             y = 0;
 
+        //NOTE - should put these in graphContainer and move all together
         foreach (XRidge xr in this.xRidges)
         {
             xr.Translate(x, y, z);
@@ -1268,7 +1271,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
     }
 
-    public virtual void CalcDimensions()//	baseCube.transform.position = Vector3(sceneCorner.x - 1.0, sceneCorner.y - (cubeHeight * 0.9), sceneCorner.z - 1.0);
+    public virtual void CalcSceneDimensions()//	baseCube.transform.position = Vector3(sceneCorner.x - 1.0, sceneCorner.y - (cubeHeight * 0.9), sceneCorner.z - 1.0);
     {
         //Stauffer sceneWidth is set to fixed val (400) during init
         this.rowDepthDataOnly = (this.sceneWidth * Mathf.Pow(2, this.currDepthToWidthRatioExp)) / this.numCols;
@@ -1339,7 +1342,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             }
         }
         this.numRidges = 0;
-        this.CalcDimensions();
+        this.CalcSceneDimensions();
         this.blockWidthNorm = 1f / this.numCols;
         this.dataHeightRangeScale = 1f / (this.maxDataHeight - this.minDataHeight);
         this.xRidges = new XRidge[this.numRows * this.numBins];
@@ -1908,7 +1911,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.binSeparationFrac = newSep;
         this.rowGapFrac = newGap;
 
-        this.CalcDimensions(); // Stauffer - new values for newThick, newSep, newGap get used here
+        this.CalcSceneDimensions(); // Stauffer - new values for newThick, newSep, newGap get used here
 
         i = 0;
         while (i < this.numRidges)
@@ -2019,12 +2022,18 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         int statusID = UIManager.Instance.StatusShow("Drawing...");
         yield return null;
         NewPrepareAndDrawData(quiet);
+        //For any params that may have changed that need some action
+        UpdateSceneDrawingParams();
+
         UIManager.Instance.StatusComplete(statusID);
     }
 
+    /// <summary>
+    /// Refresh for some drawing params that may have changed.
+    /// Call this AFTER scene dimensions have been updated
+    /// </summary>
     private void UpdateSceneDrawingParams()
     {
-        //Refresh for some drawing params that may have changed.
         //We'll want to put these into a more self-contained class and method at some point,
         // but for now just use this.
         //
@@ -2033,15 +2042,24 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         // redrawing the meshes - i.e. for speed.
         Shader.SetGlobalFloat("_gMinimumHeight", this.MinGraphSceneHeight);
         Shader.SetGlobalFloat("_gSceneCornerY", this.sceneCorner.y);
+
+        //Scale and move the floor of the graph
+        //Need to do this after scene dimensions (sceneWidth and sceneDepthFull) are calc'ed. Would be better to move out of here, though
+        Transform floor = graphContainer.transform.Find("GraphFloor");
+        if (floor == null)
+            Debug.LogError("GraphFloor == null");
+        else
+        {
+            //Floor object is a cube because I was getting weird over-scaling with a plane
+            floor.localScale = new Vector3(sceneWidth - 0.01f, 0.0001f, sceneDepthFull - 0.01f);
+            floor.localPosition = new Vector3(sceneWidth / 2 + 0.01f, 0, sceneDepthFull / 2 + 0.01f);
+        }
     }
 
     /// <summary> Start redrawing the graph for the current data. </summary>
     /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
     public void Redraw(bool quiet = false)
     {
-        //For any params that may have changed that need some action
-        UpdateSceneDrawingParams();
-
         //Start the draw in the next frame, see comments in coroutine
         StartCoroutine(RedrawCoroutine());
 
@@ -2187,7 +2205,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         //Stauffer - this call should be fine for now with member vars we setup previously.
         //Calculates dimensions of full plot in unity scene units, among other things.
-        this.CalcDimensions();
+        this.CalcSceneDimensions();
 
         this.blockWidthNorm = 1f / this.numCols;
         this.dataHeightRangeScale = 1f / (this.maxDataHeight - this.minDataHeight);
@@ -2290,7 +2308,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         //Stauffer - 'proto' is from protomesh scene object. It's a private global instanced above.
         GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + yoff), Quaternion.identity);
-        //Stauffer these vals used to set localScale are calc'ed in CalcDimensions, I believe.
+        //Stauffer these vals used to set localScale are calc'ed in CalcSceneDimensions, I believe.
         //NOTE z is used in variable names for up, i.e. y in unity.
         newRidge.transform.localScale = new Vector3(this.sceneWidth, this.sceneHeight * this.currGraphHeightScale, this.rowDepthDataOnly);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;

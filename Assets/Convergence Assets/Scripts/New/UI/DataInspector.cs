@@ -20,6 +20,9 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     private RaycastHit blockHit;
     #pragma warning restore 414
 
+    /// <summary> Gameobject that holds the floor of the graph. </summary>
+    public GameObject graphFloor;
+
     /// <summary> Simple display panel object with component SimpleTextPanelHandler </summary>
     public GameObject displayPanel;
     private SimpleTextPanelHandler displayPanelHandler;
@@ -223,24 +226,24 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             dbgRay = ray;
         }
 
-        //Find the intersection with ground/terrain.
-        RaycastHit terrainHit;
-        int terrainHitIntX;
-        int terrainHitIntZ;
-        if ( ! Terrain.activeTerrain.GetComponent<Collider>().Raycast(ray, out terrainHit, 100000f))
+        //Find the intersection with bottom of the graph (graphFloor).
+        RaycastHit bottomHit;
+        int bottomHitIntX;
+        int bottomHitIntZ;
+        if ( ! graphFloor.GetComponent<BoxCollider>().Raycast(ray, out bottomHit, 100000f)) //actually we could calc the intersection with just trigonometry
         {
             //If it doesn't intersect, we still might be pointing flat or upwards and hitting something,
             // so set point to some max values based on ray direction, so the tests below will work 
-            terrainHitIntX = ray.direction.x >= 0 ? int.MaxValue : int.MinValue;
-            terrainHitIntZ = ray.direction.z >= 0 ? int.MaxValue : int.MinValue;
+            bottomHitIntX = ray.direction.x >= 0 ? int.MaxValue : int.MinValue;
+            bottomHitIntZ = ray.direction.z >= 0 ? int.MaxValue : int.MinValue;
         }
         else
         {
-            terrainHitIntX = Mathf.FloorToInt((terrainHit.point.x - HeatVRML.Instance.sceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth());
-            terrainHitIntZ = Mathf.FloorToInt((terrainHit.point.z - HeatVRML.Instance.sceneCorner.z) / HeatVRML.Instance.rowDepthFull);
+            bottomHitIntX = Mathf.FloorToInt((bottomHit.point.x - HeatVRML.Instance.sceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth());
+            bottomHitIntZ = Mathf.FloorToInt((bottomHit.point.z - HeatVRML.Instance.sceneCorner.z) / HeatVRML.Instance.rowDepthFull);
         }
         if (dbgOutput)
-            dbgStr += "terrainHit, HitInt X Z: " + terrainHit.point.ToString("F1") + " " + terrainHitIntX + " " + terrainHitIntZ + "\n";
+            dbgStr += "bottomHit, HitInt X Z: " + bottomHit.point.ToString("F1") + " " + bottomHitIntX + " " + bottomHitIntZ + "\n";
 
         //Determine equation of the 2D line that the ray makes in the xz-plane, where z = mx + b
         //m = slope (z/x)
@@ -288,12 +291,12 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         if ( ray.direction.x >= 0)
         {
             cStart = Mathf.Max(0, Mathf.FloorToInt(px));
-            //Only go as far as the intersection of ray with terrain/ground (make sure to adjust this for VR if terrain/ground doesn't end up moving with graph)
-            cEnd = Mathf.Min(terrainHitIntX, HeatVRML.Instance.numCols-1);
+            //Only go as far as the intersection of ray with bottom of graph
+            cEnd = Mathf.Min(bottomHitIntX, HeatVRML.Instance.numCols-1);
         }
         else
         {
-            cStart = Mathf.Max(0, terrainHitIntX);
+            cStart = Mathf.Max(0, bottomHitIntX);
             cEnd = Mathf.Min( Mathf.FloorToInt(px), HeatVRML.Instance.numCols-1);
         }
 
@@ -338,16 +341,16 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             if (ray.direction.z >= 0)
             {
                 rLeft = Mathf.Max(rLeft, Mathf.FloorToInt(pz));
-                rLeft = Mathf.Min(rLeft, terrainHitIntZ);
+                rLeft = Mathf.Min(rLeft, bottomHitIntZ);
                 rRight = Mathf.Max(rRight, Mathf.FloorToInt(pz));
-                rRight = Mathf.Min(rRight, terrainHitIntZ);
+                rRight = Mathf.Min(rRight, bottomHitIntZ);
             }
             else
             {
                 rLeft = Mathf.Min(rLeft, Mathf.FloorToInt(pz));
-                rLeft = Mathf.Max(rLeft, terrainHitIntZ);
+                rLeft = Mathf.Max(rLeft, bottomHitIntZ);
                 rRight = Mathf.Min(rRight, Mathf.FloorToInt(pz));
-                rRight = Mathf.Max(rRight, terrainHitIntZ);
+                rRight = Mathf.Max(rRight, bottomHitIntZ);
             }
 
             if (dbgOutput)
@@ -540,7 +543,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         {
             RaycastHit hit;
             float dist = 10000f;
-            if (Terrain.activeTerrain.GetComponent<Collider>().Raycast(dbgRay, out hit, 10000f))
+            if (graphFloor.GetComponent<BoxCollider>().Raycast(dbgRay, out hit, 10000f))
                 dist = hit.distance;
             Debug.DrawRay(dbgRay.origin, dbgRay.direction * dist, Color.red);
             Vector3 o = dbgRay.origin;

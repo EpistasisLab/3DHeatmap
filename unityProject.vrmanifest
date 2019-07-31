@@ -5,7 +5,7 @@
       "app_key": "application.generated.unity.3dheatmap.exe",
       "launch_type": "url",
       "url": "steam://launch/",
-      "action_manifest_path": "C:\\Users\\mgsta\\Documents\\IBI-local\\3DHM\\3DHeatmap\\actions.json",
+      "action_manifest_path": "C:\\Users\\mgsta\\Documents\\Penn\\IBI\\3dHeatMap\\3DHM-proj-Csharp\\actions.json",
       "strings": {
         "en_us": {
           "name": "3DHeatmap [Testing]"
