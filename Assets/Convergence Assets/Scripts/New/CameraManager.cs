@@ -30,6 +30,12 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     public float followHmdPosMaxVel = 4;
     public float followHmdRotTime = 1;
     public float followHmdRotMaxVel = 100;
+
+    /// <summary> Power to which to zoom scale based on distance </summary>
+    public float zoomScalePower = 1.5f;
+    /// <summary> Distance from graph at which to start accelerating zoom scaling </summary>
+    public float zoomScaleHeight = 10;
+
     /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
     private SmoothVector3 posSmoother;
     /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
@@ -75,7 +81,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     public void ResetView()
     {
         Vector3 center = heatVRML.GetPlotCenter();
-        ourCamera.transform.position = new Vector3(center.x, heatVRML.sceneCorner.y + defaultViewOffset.y, heatVRML.sceneCorner.z + defaultViewOffset.z);
+        SetCameraPositionWithBounds( new Vector3(center.x, heatVRML.sceneCorner.y + defaultViewOffset.y, heatVRML.sceneCorner.z + defaultViewOffset.z) );
         LookAt(center);
     }
 
@@ -91,7 +97,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         //Move fwd/back only parallel to ground plane
         Vector3 forwards = new Vector3(ourCamera.transform.forward.x, 0f, ourCamera.transform.forward.z).normalized * forwardsStep;
         lookAtTarget += lateral + forwards;
-        ourCamera.transform.position += lateral + forwards;
+        SetCameraPositionWithBounds( ourCamera.transform.position + lateral + forwards );
     }
 
     /// <summary> Rotate camera around the lookAtTarget point </summary>
@@ -115,7 +121,8 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <param name="amount">Amount to move by. Use + (zoom in) and - (zoom out) to control direction.</param>
     public void Zoom(float amount)
     {
-        float zoomAmount = amount;
+        //Change speed of zoom based on camera height. Below zoomScaleHeight, we slow down. Above that we speed up
+        float zoomAmount = amount * Mathf.Pow( ourCamera.transform.position.y / zoomScaleHeight, zoomScalePower ) ;
         if(ourCamera.orthographic)
         {
             ourCamera.orthographicSize += zoomAmount;
@@ -124,10 +131,16 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         {
             //perspective. move along fwd vector
             Vector3 newPos = ourCamera.transform.position + ourCamera.transform.forward * zoomAmount;
-            if (newPos.y < 0.1f)
-                return;
-            ourCamera.transform.position = newPos;
+            SetCameraPositionWithBounds( newPos );
         }
+    }
+
+    /// <summary> Set the camera position with some bounds checking and enforcement. </summary>
+    /// <param name="newPos"></param>
+    private void SetCameraPositionWithBounds(Vector3 newPos)
+    {
+        newPos.y = Mathf.Max(Mathf.Min(newPos.y, 200), 0.1f);
+        ourCamera.transform.position = newPos;
     }
 
     private void FollowHmdUpdate()
@@ -138,7 +151,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
             //position
             posSmoother.Target = hmdTransform.position + (hmdTransform.forward * followHmdFwdOffset);
             posSmoother.Update(followHmdPosTime, Time.deltaTime, followHmdPosMaxVel);
-            ourCamera.transform.position = posSmoother.Value;
+            SetCameraPositionWithBounds( posSmoother.Value );
 
             //rotation
             rotSmoother.Target = hmdTransform.rotation;
