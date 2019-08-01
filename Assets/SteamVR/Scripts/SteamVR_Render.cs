@@ -14,7 +14,9 @@ namespace Valve.VR
     public class SteamVR_Render : MonoBehaviour
     {
         public SteamVR_ExternalCamera externalCamera;
-        public string externalCameraConfigPath = "externalcamera.cfg";
+        //Stauffer - rename this file while trying to get LIV working. It's clashing with LIV's search for this file.
+        //public string externalCameraConfigPath = "externalcamera.cfg";
+        public string externalCameraConfigPath = "externalcamera-orig.cfg";
 
         public static EVREye eye { get; private set; }
         
