@@ -433,16 +433,16 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
             x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.sceneWidth) / HeatVRML.Instance.numCols) + HeatVRML.Instance.sceneCorner.x
         };
 
-        float yoff = dataRow * HeatVRML.Instance.rowDepthFull;
+        float zoff = dataRow * HeatVRML.Instance.rowDepthFull;
         if (HeatVRML.Instance.binInterleave)
         {
-            yoff = yoff + (dataBin * HeatVRML.Instance.binSeparation);
+            zoff = zoff + (dataBin * HeatVRML.Instance.binSeparation);
         }
         else
         {
-            yoff = yoff + (dataBin * HeatVRML.Instance.sceneDepthByBinWithSep);
+            zoff = zoff + (dataBin * HeatVRML.Instance.sceneDepthByBinWithSep);
         }
-        pos.z = (HeatVRML.Instance.sceneCorner.z + yoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
+        pos.z = (HeatVRML.Instance.sceneCorner.z + zoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
 
         cube.transform.position = pos;
     }

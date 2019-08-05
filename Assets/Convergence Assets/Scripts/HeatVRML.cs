@@ -38,41 +38,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> Object to conatain graph elements so they can be manipulated together </summary>
     public GameObject graphContainer;
 
-    //Stauffer - Textures - change these from Texture to Texture2D to avoid implicit downcast when assigned to GUIStyle later. 
-    //These get assigned in the 'prefab objectify' GameObject in the editor Hierarchy for the scene. Seems like this HeatVRML script
-    // was added to the instance of 'prefab objectify' that's in the scene, cuz the version in project Prefabs folder doesn't have it.
-    //
-    // Input related
-    private int waitCount;
-    public Texture2D scrollOnLowTexture;
-    public Texture2D scrollOffLowTexture;
-    public Texture2D scrollOnHighTexture;
-    public Texture2D scrollOffHighTexture;
-    public GUIStyle scrollStyle;
-    public GUIStyle grayscaleStyle;
-    public Texture2D grayscaleOnTexture;
-    public Texture2D grayscaleOffTexture;
-    public GUIStyle constantStyle;
-    public Texture2D constantOnTexture;
-    public Texture2D constantOffTexture;
-    public GUIStyle rainbowStyle;
-    public Texture2D rainbowOnTexture;
-    public Texture2D rainbowOffTexture;
-    public GUIStyle redgreenStyle;
-    public Texture2D redgreenOnTexture;
-    public Texture2D redgreenOffTexture;
-    public GUIStyle yellowblueStyle;
-    public Texture2D yellowblueOnTexture;
-    public Texture2D yellowblueOffTexture;
-    private bool initDone;
-    private float scrollAmount;
-
-    public float junk;
-
     // scene related
-    /// <summary>
-    /// Stauffer - plotting area width in scene units. Row width. Seems hardcoded
-    /// </summary>
+    /// <summary> Stauffer - plotting area width in scene units. Row width. Seems hardcoded </summary>
     public float sceneWidth;
     /// <summary> Stauffer - full plotting area DEPTH in scene units, including possible multiple bins and bin increment
     private float sceneDepthFull;
@@ -111,20 +78,16 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private bool bConnectX; //Draw ribbon. Flag
     private bool bExtendZ;
     private bool bHaveLabels = false; //Stauffer - set default val to suppress warning
-    private bool bShowLabels;
-    private int topColorChoice;
-    private int sideColorChoice;
+
     private GameObject proto;
     public GameObject Proto { get { return proto; } }
-    //private GameObject baseCube; Stauffer - seems unused
     private GameObject protolabel;
-    private bool drawn;
     private XRidge[] xRidges;
     //private int shaveCount; Stauffer - never used
     private int numRidges;
     /// <summary> Stauffer added. Minimum height of *mesh* used to make a ridge. Not minimum scene height - see MinGraphSceneHeight for that </summary>
     private float ridgeMeshMinHeight;
-    /// <summary> Depth (unity z-dimension) of data representation, i.e. the depth of the tower representing the data point. Does NOT include gap between rows. </summary>
+    /// <summary> Depth (unity z-dimension) of data representation, i.e. the depth of the block representing the data point. Does NOT include gap between rows. </summary>
     public float rowDepthDataOnly;
     /// <summary> Normalized scene width of each block (column of data). </summary>
     private float blockWidthNorm;
@@ -198,48 +161,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private float lowGapRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     private float highGapRange;
 
-    //NOTE - these can probably be replaced by methods in DataManager
+//NOTE - these can probably be replaced by methods in DataManager
     private string[] rowLabels;
     private int numRowLabels;
 
     // data values for the current row
+//NOTE - should be able to replace these with direct access to loaded data
     private float[] heightVals;
-    private int[] topVals;
-    private int[] sideVals;
-    // Stauffer. Seems to be an array of column numbers, used in BuildRidgeOld. Gets shifted to start at 0 anyway, so not sure what the purpose is. </summary>
-    // Not using in new code.
-    private int[] colVals;
-
-    // feature inclusion
-    public bool includeVRML;
-    public bool includeTriangles;
-
-    // Layout
-    public int pixPerLine;
-    public int rowHeight;
-    //public int colWidth; stauffer - not used
-    public int lineWidth;
-
-    // Specific windows
-    public int scrollHeight;
-
-    // Help window
-    private bool showHelp;
-    private int helpPage;
-    private int oldHelpPage;
-    private Vector2 menuScrollPos;
-    private int helpCount;
-
-    // Components
-    //public Camera myCameraOld; //Stauffer - add declare as type Camera
-    public GameObject myController;
-
-    // VRML
-    //private File fileVRML; //Stauffer - removing this. Not used anywhere, and giving c# compilation error
-    public float vrmlModelMM;
-
-    // Ball dropping
-    private bool doDrop;
 
     // Debugging
     private int colLimit;
@@ -269,8 +197,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             Debug.LogError("Failed to find object for proto ridge");
 
         this.protolabel = GameObject.Find("protolabel");
-
-        this.myController = GameObject.Find("FPC");
 
         //Stauffer
         //
@@ -617,16 +543,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         ResetView();
 
-        /* Stauffer - this code is never reached because bScrollBin never changes from its default val of false
-        if (this.bScrollBin)
-        {
-            //Stauffer - show only ridges with this bin # (or all if currBin < 0)
-            //Why is this done here? As a refresh-type action?
-            this.VisBins(this.currBin);
-        }
-        */
-
-        this.waitCount = 0;
     }
 
     public void ResetView()
@@ -670,7 +586,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     public virtual void NewShowData()
     {
-        this.drawn = true;
         if (!this.proto) // must be functioning only as user interface
         {
             return;
@@ -1108,9 +1023,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.sceneDepthByBin = sceneWidth; // 400f;
         this.sceneDepthMaxApprox = 2f * this.sceneWidth;
         this.sceneHeight = 5f; // 200f;
-        this.includeTriangles = true;
         this.bExtendZ = true;
-        this.bShowLabels = true;
 
         //Keep this tiny, but > 0
         this.lowGraphHeightScaleRange = 0.001f;
@@ -1125,15 +1038,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.binSeparationFrac = 1.1f;
         this.highGapRange = 4f;
         this.rowGapFrac = 1f;
-        this.pixPerLine = 25;
-        this.rowHeight = 25;
-        //this.colWidth = 100; stauffer - not used
-        this.lineWidth = 20;
-        this.scrollHeight = 112;
-        this.showHelp = false;
-        this.oldHelpPage = 1;
-        this.menuScrollPos = new Vector2(0f, 0f);
-        this.vrmlModelMM = 200f;
         this.colLimit = 32000;
         this.doingEdges = false; //If want to change this, see declaration of doingEdges
         this.bevelFraction = 0.05f;
