@@ -144,22 +144,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     public float dataHeightRangeScale;
     public int numRows; //should give these a read-only accessor
     public int numCols;
+    /// <summary> Holdover from orig code that allowed binning of data. Will be replaced by new binning/clustering tools </summary>
     private int numBins;
-    private int minMarker;
-    private int maxMarker;
-    private int numMarkers;
-    private int currBin;
-    private bool bScrollBin = false; //Stauffer - compiler says this val never changes from default of false, so set it to false explicitly
-    public float minScrollSecs; // minimum time between changes of scrolling value
-    private int choiceHeight = 0; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
-    private int choiceFOV;
-    private int choiceThick;
-    private int choiceSep;
-    private int choiceGap;
-    private int choiceBin;
-    private int sideStyleChoice;
-    private int topStyleChoice;
-    private int scrollChoice;
+
     /// <summary> The lowest height scaling factor allowed. Must be above 0. Actually ridge height gets scaled by sceneHeight </summary>
     private float lowGraphHeightScaleRange;
     /// <summary> The largest height scaling factor allowed. Actually ridge height gets scaled by sceneHeight </summary>
@@ -215,11 +202,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private string[] rowLabels;
     private int numRowLabels;
 
-
-    /// <summary> array of descriptions of all the variables (originally called Fields) being visualized </summary>
-// NOTE - looks like I can get rid of this
-    private VariableDesc[] allVariableDescs;
-
     // data values for the current row
     private float[] heightVals;
     private int[] topVals;
@@ -260,8 +242,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private bool doDrop;
 
     // Debugging
-    private Texture2D xray;
-    private bool showXRay;
     private int colLimit;
 
     //Use this instead of Awake since this is a MonoBehaviorSingleton
@@ -291,12 +271,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.protolabel = GameObject.Find("protolabel");
 
         this.myController = GameObject.Find("FPC");
-        this.allVariableDescs = new VariableDesc[2];
-        this.allVariableDescs[0] = new VariableDesc();
-        this.allVariableDescs[0].SetAsFloat("height", 0f, 10f);
-        this.allVariableDescs[1] = new VariableDesc();
-        this.allVariableDescs[1].SetAsInt("bin", 0, 2);
-        this.xray = new Texture2D(Screen.width / 2, Screen.height / 2);
 
         //Stauffer
         //
@@ -627,23 +601,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
         //Axis extents
         NewGetAxisExtents();
-
-        //Old code for now - Clear the (old) variable (field) description list. 
-        for (int i = 0; i < allVariableDescs.Length; i++)
-        {
-            allVariableDescs[i] = new VariableDesc(); // just to destroy old values
-        }
-
-        //Old code - at this point it checks for the optional int-valued columns/fields for top/side 
-        // If found, they get setup and added to allVariableDescs
-        // Also looks for custom colormap table for each additional column/field
-
-        //Old code - the 2 required data fields (height & bin)
-        this.allVariableDescs = new VariableDesc[2];
-        this.allVariableDescs[0] = new VariableDesc();
-        this.allVariableDescs[0].SetAsFloat("height", this.minDataHeight, this.maxDataHeight);
-        this.allVariableDescs[1] = new VariableDesc();
-        this.allVariableDescs[1].SetAsInt("bin", this.minBin, this.maxBin);
 
         //Setup row headers (row labels)
         //
@@ -1154,18 +1111,12 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.includeTriangles = true;
         this.bExtendZ = true;
         this.bShowLabels = true;
-        //this.shaveCount = 3;
-        this.minScrollSecs = 0.1f;
-        this.choiceFOV = 1;
-        this.choiceThick = 2;
-        this.choiceSep = 3;
-        this.choiceGap = 4;
-        this.choiceBin = 5;
-        this.scrollChoice = -1;
+
         //Keep this tiny, but > 0
         this.lowGraphHeightScaleRange = 0.001f;
         this.highGraphHeightScaleRange = 1f;
         //this.currGraphHeightScale = 0.5f; see Initialize()
+
         this.lowFOVRange = 20f;
         this.highFOVRange = 170f;
         this.lowDepthToWidthRatioRange = -4f;
