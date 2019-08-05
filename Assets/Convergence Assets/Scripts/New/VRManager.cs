@@ -87,7 +87,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
             
             //Debug.Log("d: " + d.ToString("F4"));
 
-            HeatVRML.Instance.TranslateRidges(Mathf.Pow(Mathf.Abs(d.x), grabMoveScaleExp) * Mathf.Sign(d.x) * grabMoveScale.x,
+            HeatVRML.Instance.TranslateGraph(Mathf.Pow(Mathf.Abs(d.x), grabMoveScaleExp) * Mathf.Sign(d.x) * grabMoveScale.x,
                                               Mathf.Pow(Mathf.Abs(d.y), grabMoveScaleExp) * Mathf.Sign(d.y) * grabMoveScale.y,
                                               Mathf.Pow(Mathf.Abs(d.z), grabMoveScaleExp) * Mathf.Sign(d.z) * grabMoveScale.z,
                                               HmdRig.transform.position.y * 0.975f /*quick hack to keep data plot from going over head of player*/);

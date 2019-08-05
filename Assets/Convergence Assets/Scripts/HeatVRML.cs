@@ -211,10 +211,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     private float lowGapRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     private float highGapRange;
 
+    //NOTE - these can probably be replaced by methods in DataManager
     private string[] rowLabels;
     private int numRowLabels;
 
+
     /// <summary> array of descriptions of all the variables (originally called Fields) being visualized </summary>
+// NOTE - looks like I can get rid of this
     private VariableDesc[] allVariableDescs;
 
     // data values for the current row
@@ -285,19 +288,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         if (this.proto == null)
             Debug.LogError("Failed to find object for proto ridge");
 
-        //this.baseCube = GameObject.Find("basecube");
-        //this.MakeUnitCube(this.baseCube);
         this.protolabel = GameObject.Find("protolabel");
 
-        /* Stauffer - removing Sqlite stuff to work on webGL build
-        this.connection = new SqliteConnection(this.connStrn);
-        this.connection.Open();
-        this.dbcmd = this.connection.CreateCommand();
-        */
-        //this.myCameraOld = GameObject.FindWithTag("MainCamera").GetComponent("Camera") as Camera;
-        //Stauffer - change this to my new camera for now while new camera controls are implemented
-        //this.myCameraOld = GameObject.Find("Camera").GetComponent<Camera>() as Camera;
-        //this.currFOV = (this.lowFOVRange + this.highFOVRange) - this.myCameraOld.fieldOfView; // hokey, but we want currFOV to increase as fieldOfView decreases
         this.myController = GameObject.Find("FPC");
         this.allVariableDescs = new VariableDesc[2];
         this.allVariableDescs[0] = new VariableDesc();
@@ -305,11 +297,11 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.allVariableDescs[1] = new VariableDesc();
         this.allVariableDescs[1].SetAsInt("bin", 0, 2);
         this.xray = new Texture2D(Screen.width / 2, Screen.height / 2);
-        //SpreadBalls(16, 10.0);
 
         //Stauffer
         //
         this.ridgeMeshMinHeight = 0.1f;
+
         //Quick intro message with instructions
         UIManager.Instance.ShowIntroMessage();
     }
@@ -319,37 +311,40 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     }
 
-    /// <summary>
-    /// Stauffer added for testing
-    /// </summary>
-    public virtual void TranslateRidges(float x, float y, float z, float maxy)
+    /// <summary> Move the whole graph </summary>
+    public virtual void TranslateGraph(float xStep, float yStep, float zStep, float maxy /*constrain how how it can go*/)
     {
         if (xRidges == null)
             return;
 
         //Constrain yposition
-        float newy = sceneCorner.y + y;
+        float newy = sceneCorner.y + yStep;
         if (newy < 0 || newy > maxy)
-            y = 0;
+            yStep = 0;
 
         //NOTE - should put these in graphContainer and move all together
         foreach (XRidge xr in this.xRidges)
         {
-            xr.Translate(x, y, z);
+            xr.Translate(xStep, yStep, zStep);
         }
 
         //Update the scene corner state
         //NOTE - should maybe fold this into graphContainer
-        sceneCorner = sceneCorner + new Vector3(x, y, z);
+        sceneCorner = sceneCorner + new Vector3(xStep, yStep, zStep);
 
         //Update the graphContainer position
-        graphContainer.transform.position = graphContainer.transform.position + new Vector3(x, y, z);
+        graphContainer.transform.position = graphContainer.transform.position + new Vector3(xStep, yStep, zStep);
 
         //Needs some updating
         UpdateSceneDrawingParams();
     }
 
-    public virtual void ScaleRidges(float frac)
+
+    /// <summary>
+    /// Scale the height of ridges as a fraction of max sceneHeight.
+    /// Uses each mesh's transform.localScale so is quick </summary>
+    /// <param name="frac"></param>
+    public virtual void ScaleRidgeHeight(float frac)
     {
         int i = 0;
         float newSize = frac * this.sceneHeight;
@@ -413,7 +408,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         set;
     }
 
-    //Stauffer - seems unused since I removed basecube member
+    //Stauffer - currently unused (8/2019) but keep it in case
+    // we change mesh creating and rendering to use an instanced cube.
     public virtual void MakeUnitCube(GameObject ac)
     {
         Mesh amesh = ((MeshFilter)ac.GetComponent(typeof(MeshFilter))).mesh;
@@ -474,93 +470,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
         return retColor;
     }
-
-
-
-#if false
-    old code to remove
-    // Stauffer - NOTE this seems to work with the currently-loaded row data,
-    //   by accessing the HeatVRML class properties topVals[] and sideVals[]
-    public virtual Color MakeColor(int col, int bin, bool isSide)
-    {
-        float inv = 0.0f;
-        Color retColor = default(Color);
-        int colorChoice = isSide ? this.sideColorChoice : this.topColorChoice;
-        int styleChoice = isSide ? this.sideStyleChoice : this.topStyleChoice;
-        // side
-        if (colorChoice == 0)
-        {
-            // height
-            inv = (this.heightVals[col] - this.minDataHeight) / this.dataHeightRange;
-        }
-        else
-        {
-            //return GreenRed(inv, isSide);
-            if (colorChoice == 1)
-            {
-                // bin
-                if (this.numBins < 2)
-                {
-                    inv = 0f;
-                }
-                else
-                {
-                    inv = ((bin - this.minBin) + 0f) / (this.numBins - 1);
-                }
-            }
-            else
-            {
-                int thisVal = isSide ? this.sideVals[col] : this.topVals[col];
-                //Stauffer this.[side|top]ColorChoice seem to be indicating which of the db record fields is being used for coloring,
-                // i.e. which observational/dependent variable.
-                VariableDesc thisField = isSide ? this.allVariableDescs[this.sideColorChoice] : this.allVariableDescs[this.topColorChoice];
-                if ((styleChoice < 0) && thisField.ColorMap.ContainsKey(thisVal)) //Is this looking up a color via color index/lut?
-                {
-                    //Stauffer - thisField.Fields[n] is type Object from a hashtable, so r,g,b members not defined.
-                    //So, do this via casting to get compiler happy for coversion to C#
-                    OneColor oneField = thisField.ColorMap[thisVal] as OneColor;
-                    return new Color(oneField.r, oneField.g, oneField.b, isSide ? 0.7f : 0.9f);
-                }
-                //ORIG:
-                //var thisR : float = thisField.Fields[thisVal].r;
-                //var thisG : float = thisField.Fields[thisVal].g;
-                //var thisB : float = thisField.Fields[thisVal].b;
-                //return new Color(thisR, thisG, thisB, (isSide) ? 0.7 : 0.9);
-                // no specified color, so interpolate and use the default coloring method
-                if (thisField.range < 0.5f)
-                {
-                    inv = 0f; // really if it's zero, but this is a float so test for < 0.5
-                }
-                else
-                {
-                    inv = ((thisVal - thisField.lowInt) + 0f) / thisField.range;
-                }
-            }
-        }
-        switch (styleChoice)
-        {
-            case 0:
-                retColor = this.GreenRed(inv, isSide);
-                break;
-            case 1:
-                retColor = this.Rainbow(inv, isSide);
-                break;
-            case 2:
-                retColor = this.YellowBlue(inv, isSide);
-                break;
-            case 3:
-                retColor = this.GrayScale(inv, isSide);
-                break;
-            case 4:
-                retColor = this.ConstantColor(inv, isSide);
-                break;
-            default:
-                retColor = this.GreenRed(inv, isSide);
-                break;
-        }
-        return retColor;
-    }
-#endif
 
     //Color Maps
     public virtual Color GreenRed(float inv, bool isSide)
@@ -626,123 +535,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     {
         return new Color(0.5f, 0.5f, 0.5f, 1);// isSide ? 0.7f : 0.9f);
     }
-
-    public virtual void ScrollingSelected(int newScroll)
-    {
-        this.scrollChoice = newScroll;
-        if (this.scrollChoice >= 0)
-        {
-            Const.menuScrolling = true;
-        }
-        else
-        {
-            //VisBins(currBin);
-            Const.menuScrolling = false;
-        }
-    }
-
-    public virtual void Redistribute(float newThick, float newSep, float newGap)
-    {
-        int i = 0;
-        float yoff = 0.0f;
-        float thisz = 0.0f;
-        this.currDepthToWidthRatioExp = newThick;
-        this.binSeparationFrac = newSep;
-        this.rowGapFrac = newGap;
-
-        this.CalcSceneDimensions(); // Stauffer - new values for newThick, newSep, newGap get used here
-
-        i = 0;
-        while (i < this.numRidges)
-        {
-            yoff = (this.xRidges[i].myRow - this.minRow) * this.rowDepthFull;
-            if (this.binInterleave)
-            {
-                yoff = yoff + (this.xRidges[i].myBin * this.binSeparation);
-            }
-            else
-            {
-                yoff = yoff + (this.xRidges[i].myBin * this.sceneDepthByBinWithSep);
-            }
-            thisz = this.sceneCorner.z + yoff;
-
-            {
-                float _45 = thisz;
-                Vector3 _46 = this.xRidges[i].trans.position;
-                _46.z = _45;
-                this.xRidges[i].trans.position = _46;
-            }
-
-            {
-                float _47 = this.rowDepthDataOnly;
-                Vector3 _48 = this.xRidges[i].trans.localScale;
-                _48.z = _47;
-                this.xRidges[i].trans.localScale = _48;
-            }
-
-            {
-                float _49 = (this.sceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f);
-                Vector3 _50 = this.xRidges[i].myLabel.transform.position;
-                _50.z = _49;
-                this.xRidges[i].myLabel.transform.position = _50;
-            }
-
-            {
-                float _51 = this.rowDepthDataOnly * 0.5f;
-                Vector3 _52 = this.xRidges[i].myLabel.transform.localScale;
-                _52.x = _51;
-                this.xRidges[i].myLabel.transform.localScale = _52;
-            }
-
-            {
-                float _53 = this.rowDepthDataOnly * 0.5f;
-                Vector3 _54 = this.xRidges[i].myLabel.transform.localScale;
-                _54.y = _53;
-                this.xRidges[i].myLabel.transform.localScale = _54;
-            }
-
-            {
-                float _55 = this.rowDepthDataOnly * 0.5f;
-                Vector3 _56 = this.xRidges[i].myLabel.transform.localScale;
-                _56.z = _55;
-                this.xRidges[i].myLabel.transform.localScale = _56;
-            }
-            ++i;
-        }
-        //float cubeHeight = this.sceneWidth * 0.05f;
-        //baseCube.transform.localScale = Vector3(sceneWidth + 2.0, cubeHeight, sceneDepthFull + 2.0);
-        //baseCube.transform.position = Vector3(sceneCorner.x - 1.0, sceneCorner.y - (cubeHeight * 0.9), sceneCorner.z - 1.0);
-    }
-
-    // if selBin < 0, all bins visible
-    public virtual void VisBins(int selBin)
-    {
-        int i = 0;
-        if (selBin >= 0)
-        {
-            this.currBin = selBin;
-        }
-        if (selBin >= 0)
-        {
-            i = 0;
-            while (i < this.numRidges)
-            {
-                this.xRidges[i].Show(this.xRidges[i].myBin == selBin);
-                ++i;
-            }
-        }
-        else
-        {
-            i = 0;
-            while (i < this.numRidges)
-            {
-                //Show all the ridges
-                this.xRidges[i].Show(true);
-                ++i;
-            }
-        }
-    }
-
 
     //Stauffer
     //Return the scene/plot center in scene units.
@@ -890,7 +682,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     /// <summary>
     /// Stauffer - new. 
-    /// Get physical axes extents (num rows, columns and height range)
+    /// Get data axes extents (num rows, columns and height range)
     /// </summary>
     public void NewGetAxisExtents()
     {
@@ -979,12 +771,12 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> For the given data value (of data var assigned to height, a number or NaN), return the *unscaled* block height,
     /// i.e. the height of the mesh before any object scaling for the scene.
     /// NaN Values - pass them here as NaN and will be handled. </summary>
-    public float GetBlockMeshHeight(float heightValue)
+    public float GetBlockMeshHeight(float heightDataValue)
     {
-        if (float.IsNaN(heightValue))
+        if (float.IsNaN(heightDataValue))
             return this.ridgeMeshMinHeight;
 
-        return ((heightValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
+        return ((heightDataValue - this.minDataHeight) * this.dataHeightRangeScale) + this.ridgeMeshMinHeight;
     }
     /// <summary> For the given data value, return the *scaled* block height, i.e. the height of the mesh WITH scene scaling and minimum scene height
     /// NOT the world y position of top of block, but the height of the block itself, independent of its bottom y position.</summary>
@@ -1345,99 +1137,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         //Square the height-scaling-fraction so we get more sensitivity in the bottom of the range.
         //This is important for getting a good height scale in larger data sets where ridges need to be short to see an overview.
         this.currGraphHeightScale = this.lowGraphHeightScaleRange + (this.highGraphHeightScaleRange - this.lowGraphHeightScaleRange) * (CurrGraphHeightFrac * CurrGraphHeightFrac);
-        this.ScaleRidges(this.currGraphHeightScale);
-    }
-
-    /// <summary>
-    /// Set new graph height value.
-    /// Does NOT require a redraw of the graph since it scales the ridges using transform scaling.
-    /// See new method UpdateGraphHeight to adjust using [0,1] value.
-    /// </summary>
-    /// <param name="newGraphHeight">proportional between lowGraphHeightScaleRange and highGraphHeightScaleRange</param>
-    public virtual void GraphHeightSelected_OLD(float newGraphHeight)
-    {
-        this.currGraphHeightScale = newGraphHeight;
-        this.ScaleRidges(this.currGraphHeightScale);
-    }
-
-    public virtual void FOVSelected(float newFOV)
-    {
-        this.currFOV = newFOV;
-        //this.myCameraOld.fieldOfView = this.lowFOVRange + (this.highFOVRange - this.currFOV);
-    }
-
-    public virtual void LookSelected(int newLook)
-    {
-        switch (newLook)
-        {
-            case 0:
-                Fly.NewRotation(0f, -90f);
-                break;
-            case 1:
-                Fly.NewRotation(0f, 0f);
-                break;
-            case 2:
-                Fly.NewRotation(180f, 0f);
-                break;
-            case 3:
-                Fly.NewRotation(-90f, 0f);
-                break;
-            case 4:
-                Fly.NewRotation(90f, 0f);
-                break;
-        }
-    }
-
-    public virtual void ZipSelected(int newZip)
-    {
-        float myX = 0.0f;
-        float myY = 0.0f;
-        float myZ = 0.0f;
-        float hFOV = 0.0f;
-        //hFOV = Mathf.Atan((Screen.width * Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f)) / Screen.height);
-        switch (newZip)
-        {
-            case 0:
-                myY = this.sceneCorner.z + (this.sceneDepthByBin / 2f);
-                myX = this.sceneCorner.x + (this.sceneWidth / 2f);
-                //Debug.Log("sceneCorner.y is " + sceneCorner.y);
-                //Debug.Log("(sceneHeight * currGraphHeightScale) is " + (sceneHeight * currGraphHeightScale));
-                //Debug.Log("myCameraOld.fieldOfView is " + myCameraOld.fieldOfView);
-                //Debug.Log("Mathf.Tan(myCameraOld.fieldOfView / 2.0) is " + Mathf.Tan(myCameraOld.fieldOfView * Mathf.PI / 360.0));
-                //myZ = (this.sceneCorner.y + (this.sceneHeight * this.currGraphHeightScale)) + ((this.sceneDepthByBin / 2f) / Mathf.Tan((this.myCameraOld.fieldOfView * Mathf.PI) / 360f));
-                //Debug.Log("myZ is " + myZ);
-                Fly.NewRotation(0f, -90f);
-                break;
-            case 1:
-                myX = this.sceneCorner.x + (this.sceneWidth / 2f);
-                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
-                myY = this.sceneCorner.z - ((this.sceneWidth / 2f) / Mathf.Tan(hFOV));
-                Fly.NewRotation(0f, 0f);
-                break;
-            case 2:
-                myX = this.sceneCorner.x + (this.sceneWidth / 2f);
-                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
-                myY = (this.sceneCorner.z + this.sceneDepthByBin) + ((this.sceneWidth / 2f) / Mathf.Tan(hFOV));
-                if ((this.numBins > 1) && !this.binInterleave)
-                {
-                    myY = myY + (this.sceneDepthByBin * (this.numBins - 1));
-                }
-                Fly.NewRotation(180f, 0f);
-                break;
-            case 3:
-                myY = this.sceneCorner.z + (this.sceneDepthByBin / 2f);
-                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
-                myX = this.sceneCorner.x - ((this.sceneDepthByBin / 2f) / Mathf.Tan(hFOV));
-                Fly.NewRotation(90f, 0f);
-                break;
-            case 4:
-                myY = this.sceneCorner.z + (this.sceneDepthByBin / 2f);
-                myZ = this.sceneCorner.y + ((this.sceneHeight * this.currGraphHeightScale) / 2f);
-                myX = (this.sceneCorner.x + this.sceneWidth) + ((this.sceneDepthByBin / 2f) / Mathf.Tan(hFOV));
-                Fly.NewRotation(-90f, 0f);
-                break;
-        }
-        this.myController.transform.position = new Vector3(myX, myZ, myY);
+        this.ScaleRidgeHeight(this.currGraphHeightScale);
     }
 
     public HeatVRML()
