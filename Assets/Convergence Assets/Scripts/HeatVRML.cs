@@ -145,21 +145,14 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         get { return DataManager.Instance.Cols > 18 ? 0f : _minGraphSceneHeight; }
     }
 
-    private float lowFOVRange;
-    private float highFOVRange;
-    private float currFOV;
     /// <summary> Stauffer - scaling factor for row depth/width - gets used as 2^x for some reason </summary>
     private float currDepthToWidthRatioExp;
     private float lowDepthToWidthRatioRange;
     private float highDepthToWidthRatioRange;
     /// <summary> Stauffer - fractional amount of data row scene depth to apply to determining bin separation. </summary>
     private float binSeparationFrac;
-    private float lowSepRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
-    private float highSepRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
     /// <summary> Stauffer - fractional value applied to rowDepthDataOnly to calculate gap between rows. Separate from binSeparation </summary>
     private float rowGapFrac;
-    private float lowGapRange = 0f; //Stauffer - compiler says this val never changes from default of 0, so set it to 0 explicitly
-    private float highGapRange;
 
 //NOTE - these can probably be replaced by methods in DataManager
     private string[] rowLabels;
@@ -211,52 +204,42 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     }
 
-    /// <summary> Move the whole graph </summary>
-    public virtual void TranslateGraph(float xStep, float yStep, float zStep, float maxy /*constrain how how it can go*/)
+
+    /// <summary> Top-level command to redraw the graph for the current data. </summary>
+    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
+    public void Redraw(bool quiet = false)
     {
-        if (xRidges == null)
-            return;
+        //Start the draw in the next frame, see comments in coroutine
+        StartCoroutine(RedrawCoroutine());
 
-        //Constrain yposition
-        float newy = sceneCorner.y + yStep;
-        if (newy < 0 || newy > maxy)
-            yStep = 0;
+        //Refresh the UI
+        UIManager.Instance.RefreshUI();
 
-        //NOTE - should put these in graphContainer and move all together
-        foreach (XRidge xr in this.xRidges)
-        {
-            xr.Translate(xStep, yStep, zStep);
-        }
+        //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
+        // which also handles the case when user jumps ahead of the prompts to here.
+        UIManager.Instance.StopAllUIActionPrompts();
+    }
 
-        //Update the scene corner state
-        //NOTE - should maybe fold this into graphContainer
-        sceneCorner = sceneCorner + new Vector3(xStep, yStep, zStep);
+    /// <summary> This coroutine simply lets us put up a message and then start the
+    /// drawwing process in the next frame. Would be nice to multi-thread the drawing itself with a unity job. </summary>
+    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
+    /// <returns></returns>
+    IEnumerator RedrawCoroutine(bool quiet = false)
+    {
+        int statusID = UIManager.Instance.StatusShow("Drawing...");
+        yield return null;
+        PrepareAndDrawData(quiet);
 
-        //Update the graphContainer position
-        graphContainer.transform.position = graphContainer.transform.position + new Vector3(xStep, yStep, zStep);
-
-        //Needs some updating
+        //For any params that may have changed that need some action
         UpdateSceneDrawingParams();
+
+        UIManager.Instance.StatusComplete(statusID);
     }
 
 
-    /// <summary>
-    /// Scale the height of ridges as a fraction of max sceneHeight.
-    /// Uses each mesh's transform.localScale so is quick </summary>
-    /// <param name="frac"></param>
-    public virtual void ScaleRidgeHeight(float frac)
-    {
-        int i = 0;
-        float newSize = frac * this.sceneHeight;
-        i = 0;
-        while (i < this.numRidges)
-        {
-            this.xRidges[i].NewHeight(newSize);
-            ++i;
-        }
-    }
 
-    public virtual void CalcSceneDimensions()//	baseCube.transform.position = Vector3(sceneCorner.x - 1.0, sceneCorner.y - (cubeHeight * 0.9), sceneCorner.z - 1.0);
+
+    public virtual void CalcSceneDimensions()
     {
         //Stauffer sceneWidth is set to fixed val (400) during init
         this.rowDepthDataOnly = (this.sceneWidth * Mathf.Pow(2, this.currDepthToWidthRatioExp)) / this.numCols;
@@ -335,7 +318,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     // Stauffer - NOTE this seems to work with the currently-loaded row data,
     //   by accessing the HeatVRML class properties topVals[] and sideVals[]
     //Skipping 'bin' stuff for now
-    public virtual Color NewMakeColor(DataManager.Mapping mapping, int row, int column)
+    public virtual Color MakeColor(DataManager.Mapping mapping, int row, int column)
     {
         bool isSide = mapping == DataManager.Mapping.SideColor;
 
@@ -444,21 +427,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         return new Vector3(sceneCorner.x + sceneWidth / 2f, 0f, sceneCorner.z + sceneDepthFull / 2f);
     }
 
-    /// <summary> This coroutine simply lets us put up a message and then start the
-    /// drawwing process in the next frame. Would be nice to multi-thread the drawing itself with a unity job. </summary>
-    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
-    /// <returns></returns>
-    IEnumerator RedrawCoroutine(bool quiet = false)
-    {
-        int statusID = UIManager.Instance.StatusShow("Drawing...");
-        yield return null;
-        NewPrepareAndDrawData(quiet);
-        //For any params that may have changed that need some action
-        UpdateSceneDrawingParams();
-
-        UIManager.Instance.StatusComplete(statusID);
-    }
-
     /// <summary>
     /// Refresh for some drawing params that may have changed.
     /// Call this AFTER scene dimensions have been updated
@@ -487,20 +455,6 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
     }
 
-    /// <summary> Start redrawing the graph for the current data. </summary>
-    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
-    public void Redraw(bool quiet = false)
-    {
-        //Start the draw in the next frame, see comments in coroutine
-        StartCoroutine(RedrawCoroutine());
-
-        //Refresh the UI
-        UIManager.Instance.RefreshUI();
-
-        //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
-        // which also handles the case when user jumps ahead of the prompts to here.
-        UIManager.Instance.StopAllUIActionPrompts();
-    }
 
     /// <summary>
     /// Stauffer. New routine. Prep and draw data loaded in DataManager.
@@ -508,10 +462,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// Should generally not be called directly. See Redraw().
     /// </summary>
     /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
-    private void NewPrepareAndDrawData(bool quiet = false)
+    private void PrepareAndDrawData(bool quiet = false)
     {
-        //TODO 
-        // some verification of data, so we don't have to check things every time we access dataMgr
+        // Do some verification of data, so we don't have to check things every time we access dataMgr
         // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
         string errorMsg;
         if (!DataManager.Instance.PrepareAndVerify(out errorMsg))
@@ -526,7 +479,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
 
         //Axis extents
-        NewGetAxisExtents();
+        GetAxisExtents();
 
         //Setup row headers (row labels)
         //
@@ -539,10 +492,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         }
 
         //Draw it!
-        this.NewShowData();
+        ShowData();
 
         ResetView();
-
     }
 
     public void ResetView()
@@ -553,11 +505,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         VRManager.Instance.ResetPlayerPosition();
     }
 
-    /// <summary>
-    /// Stauffer - new. 
-    /// Get data axes extents (num rows, columns and height range)
-    /// </summary>
-    public void NewGetAxisExtents()
+    /// <summary> Get data axes extents (num rows, columns and height range) </summary>
+    public void GetAxisExtents()
     {
         //In DatasetSelected, the ranges get set for the optional subsequent int columns.
         //
@@ -584,12 +533,13 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     }
 
 
-    public virtual void NewShowData()
+    public virtual void ShowData()
     {
         if (!this.proto) // must be functioning only as user interface
         {
             return;
         }
+
         //Looks to be deleting old mesh/visualization
         if (this.numRidges > 0)
         {
@@ -638,6 +588,50 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             s += ridge.myMesh.vertices[i].ToString("F3") + "\n";
         }
         Debug.Log(s);
+    }
+
+    /// <summary> Move the whole graph </summary>
+    public virtual void TranslateGraph(float xStep, float yStep, float zStep, float maxy /*constrain how how it can go*/)
+    {
+        if (xRidges == null)
+            return;
+
+        //Constrain yposition
+        float newy = sceneCorner.y + yStep;
+        if (newy < 0 || newy > maxy)
+            yStep = 0;
+
+        //NOTE - should put these in graphContainer and move all together
+        foreach (XRidge xr in this.xRidges)
+        {
+            xr.Translate(xStep, yStep, zStep);
+        }
+
+        //Update the scene corner state
+        //NOTE - should maybe fold this into graphContainer
+        sceneCorner = sceneCorner + new Vector3(xStep, yStep, zStep);
+
+        //Update the graphContainer position
+        graphContainer.transform.position = graphContainer.transform.position + new Vector3(xStep, yStep, zStep);
+
+        //Needs some updating
+        UpdateSceneDrawingParams();
+    }
+    
+    /// <summary>
+    /// Scale the height of ridges as a fraction of max sceneHeight.
+    /// Uses each mesh's transform.localScale so is quick </summary>
+    /// <param name="frac"></param>
+    public virtual void ScaleRidgeHeight(float frac)
+    {
+        int i = 0;
+        float newSize = frac * this.sceneHeight;
+        i = 0;
+        while (i < this.numRidges)
+        {
+            this.xRidges[i].NewHeight(newSize);
+            ++i;
+        }
     }
 
     /// <summary> For the given data value (of data var assigned to height, a number or NaN), return the *unscaled* block height,
@@ -773,8 +767,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             }
 
             //For the values at this row/col, set up state
-            topColor = this.NewMakeColor(DataManager.Mapping.TopColor, row, colNum);
-            sideColor = this.NewMakeColor(DataManager.Mapping.SideColor, row, colNum);
+            topColor = this.MakeColor(DataManager.Mapping.TopColor, row, colNum);
+            sideColor = this.MakeColor(DataManager.Mapping.SideColor, row, colNum);
             //Used to set vert properties depending on whether data is a valid number or NaN
             bool topIsANumber = ! DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.TopColor, row, colNum);
             bool sideIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.SideColor, row, colNum);
@@ -1030,13 +1024,9 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.highGraphHeightScaleRange = 1f;
         //this.currGraphHeightScale = 0.5f; see Initialize()
 
-        this.lowFOVRange = 20f;
-        this.highFOVRange = 170f;
         this.lowDepthToWidthRatioRange = -4f;
         this.highDepthToWidthRatioRange = 4f;
-        this.highSepRange = 4f;
         this.binSeparationFrac = 1.1f;
-        this.highGapRange = 4f;
         this.rowGapFrac = 1f;
         this.colLimit = 32000;
         this.doingEdges = false; //If want to change this, see declaration of doingEdges

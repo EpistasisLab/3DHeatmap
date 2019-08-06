@@ -246,7 +246,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             {
                 //take the new data and draw it
                 Debug.Log("Loaded file with success");
-                NewPrepareAndDrawData();
+                PrepareAndDrawData();
             }
             */
         }
