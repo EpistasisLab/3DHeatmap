@@ -573,7 +573,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         {
             //NOTE - these are class properties, that then get used in BuildRidge
             this.heightVals = hVar.Data[row];
-            this.NewBuildRidge(row, this.numCols, this.minBin);//always one bin for now
+            this.BuildRidge(row, this.minBin);//always one bin for now
         }
         //DebugRidge(this.xRidges[0]);
     }
@@ -665,43 +665,46 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         return HeatVRML.Instance.sceneWidth / HeatVRML.Instance.numCols;
     }
 
-    public virtual void NewBuildRidge(int row, int numx /*== num of columns*/, int binindex)
+    /// <summary> For a given row of data, build a single mesh containing all the blocks in the row </summary>
+    /// <param name="row"></param>
+    /// <param name="numx"></param>
+    /// <param name="binindex"></param>
+    public virtual void BuildRidge(int row, int binindex)
     {
         Color topColor = new Color(); // default(Color);
         Color sideColor = new Color(); //default(Color);
         /// <summary> Flag for whether current top data value is valid number or NaN/NoData </summary>
         float thisX = 0.0f;
-        float thisZ = 0.0f;
+        float thisY = 0.0f;
         float prevX = 0.0f;
-        float prevZ = 0.0f;
+        float prevY = 0.0f;
         float nextX = 0.0f;
-        float nextZ = 0.0f;
-        float leftZ = 0.0f;
-        float rightZ = 0.0f;
+        float nextY = 0.0f;
         float leftX = 0.0f;
         float rightX = 0.0f;
         float front = 0.0f;
         float back = 0.0f;
-        float edgeZ = 0.0f;
-        float yoff = (row - this.minRow) * this.rowDepthFull;
+        float edgeY = 0.0f;
+
+        float zoff = (row - this.minRow) * this.rowDepthFull;
         if (this.binInterleave)
         {
-            yoff = yoff + (binindex * this.binSeparation);
+            zoff = zoff + (binindex * this.binSeparation);
         }
         else
         {
-            yoff = yoff + (binindex * this.sceneDepthByBinWithSep);
+            zoff = zoff + (binindex * this.sceneDepthByBinWithSep);
         }
-        //Stauffer - 'proto' is from protomesh scene object. It's a private global instanced above.
-        GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + yoff), Quaternion.identity);
-        //Stauffer these vals used to set localScale are calc'ed in CalcSceneDimensions, I believe.
-        //NOTE z is used in variable names for up, i.e. y in unity.
+
+        //Stauffer - 'proto' is from protomesh scene object, which is a prefab. It's a private global instanced above.
+        GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + zoff), Quaternion.identity);
+
         newRidge.transform.localScale = new Vector3(this.sceneWidth, this.sceneHeight * this.currGraphHeightScale, this.rowDepthDataOnly);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
 
         //Row labels
-        GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth, this.sceneCorner.y + 1f, (this.sceneCorner.z + yoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
+        GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth, this.sceneCorner.y + 1f, (this.sceneCorner.z + zoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
         //Add the label to the graph container object for easier manipulation
         newLabel.transform.SetParent(graphContainer.transform.Find("Labels"));
 
@@ -714,47 +717,19 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = this.rowLabels[row];
         }
 
-        {
-            float _39 =
-            /*
-	        // The following causes an error in setting the sharedMesh whenever it traps an error
-	        try{
-		        newLabel.GetComponent(TextMesh).text = rowLabels[row];
-	        }
-	        catch(fair)
-	        {
-		        newLabel.GetComponent(TextMesh).text = row.ToString();
-	        }
-	        */
-            this.rowDepthDataOnly * 0.5f;
-            Vector3 _40 = newLabel.transform.localScale;
-            _40.x = _39;
-            newLabel.transform.localScale = _40;
-        }
+        Vector3 newScl = newLabel.transform.localScale;
+        newScl.x = this.rowDepthDataOnly * 0.5f;
+        //newScl.y = this.rowDepthDataOnly * 0.5f;
+        newLabel.transform.localScale = newScl;
 
-        {
-            float _41 = this.rowDepthDataOnly * 0.5f;
-            Vector3 _42 = newLabel.transform.localScale;
-            _42.y = _41;
-            newLabel.transform.localScale = _42;
-        }
-
-        {
-            float _43 = this.rowDepthDataOnly * 0.5f;
-            Vector3 _44 = newLabel.transform.localScale;
-            _44.x = _43;
-            newLabel.transform.localScale = _44;
-        }
-        //float minZ = 0.1f; never used
-        int lastInd = numx - 1;
-        float slabZ = 0.006f;
-        float edgeBite = this.bevelFraction / this.numCols;
-        // Note: this makes a 45 degree bevel at the curreent graph height, but it will be a different angle when height is changed.
-        float topBite = (edgeBite * this.sceneWidth) / (this.sceneHeight * this.currGraphHeightScale);
+        //Helper class to make the mesh
         MeshMaker mm = new MeshMaker();
 
-        for (int colNum = 0; colNum < numx; colNum++) //loop over columns
+        //Loop over the columns and draw each block
+        for (int colNum = 0; colNum < numCols; colNum++)
         {
+            //Not really sure what this is doing. Presumably a
+            // slight offset to avoid overlapping verts.
             if ((colNum % 2) == 0)
             {
                 front = 0f;
@@ -769,79 +744,132 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
             //For the values at this row/col, set up state
             topColor = this.MakeColor(DataManager.Mapping.TopColor, row, colNum);
             sideColor = this.MakeColor(DataManager.Mapping.SideColor, row, colNum);
-            //Used to set vert properties depending on whether data is a valid number or NaN
-            bool topIsANumber = ! DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.TopColor, row, colNum);
+            //Used to set vertex properties depending on whether data is a valid number or NaN
+            bool topIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.TopColor, row, colNum);
             bool sideIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.SideColor, row, colNum);
             bool heightIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.Height, row, colNum);
             mm.SetIsANumber(heightIsANumber, topIsANumber, sideIsANumber);
 
-            //Height
+            //Height & width
+            //Assignment of these vars is more complicated than needed for a simple cuboid because orig code had more mesh-building options
             if (colNum > 0)
             {
                 prevX = thisX;
-                prevZ = thisZ;
+                prevY = thisY;
                 thisX = nextX;
-                thisZ = nextZ;
+                thisY = nextY;
             }
             else
-            {   //column 0
+            {   //column 0, get things init'ed
                 thisX = ((0.5f) - this.minCol) * this.blockWidthNorm;
-                //thisZ = ((DataManager.Instance.HeightVar.Data[row][0] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
-                thisZ = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, 0, false)); //send NaN if value is NaN
+                thisY = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, 0, false /*return NaN if value is NaN*/));
                 prevX = thisX - this.blockWidthNorm;
-                prevZ = thisZ;
+                prevY = thisY;
             }
-            if (colNum < lastInd)
+
+            if (colNum < numCols - 1)
             {
                 nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.blockWidthNorm;
-                //nextZ = ((DataManager.Instance.HeightVar.Data[row][colNum + 1] - this.minDataHeight) * this.dataHeightRangeScale) + minZ;
-                nextZ = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, colNum + 1, false));
+                nextY = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, colNum + 1, false));
             }
             else
             {
+                //last column
                 nextX = nextX + this.blockWidthNorm;
             }
 
-            leftZ = (prevZ + thisZ) / 2f;
-            leftX = (prevX + thisX) / 2f;
-            rightZ = (thisZ + nextZ) / 2f;
-            rightX = (thisX + nextX) / 2f;
+            //////
+            //Draw a simple cube/cubiod
 
+            edgeY = thisY;
+            leftX = (prevX + thisX) / 2f;
+            rightX = (thisX + nextX) / 2f;
+            float slabY = 0.006f;
+
+            // Stauffer - orig code here, UV's seem wrong on first few. Fixed.
+            // This code doesn't draw right when using the orig material and shader - maybe cuz uv's were off?
+
+            // draw top
             mm.SetColor(topColor);
+            mm.Verts(false, leftX, edgeY, front, 0, 0); //Stauffer changed these uvs to what seems correct
+            mm.Verts(false, leftX, edgeY, back, 0, 1);
+            mm.Verts(false, rightX, edgeY, front, 1, 0);
+            mm.Verts(false, rightX, edgeY, back, 1, 1);
+            mm.Tris(0, 1, 2, 2, 1, 3);
+
+            // draw bottom
+            //I don't understand this value of y - it's from the orig code.
+            float y = this.bExtendZ ? 0f : thisY - slabY;
+            mm.Verts(false, leftX, y, front, 1, 1);
+            mm.Verts(false, leftX, y, back, 0, 1);
+            mm.Verts(false, rightX, y, front, 1, 1);
+            mm.Verts(false, rightX, y, back, 0, 1);
+            mm.Tris(0, 1, 2, 2, 1, 3);
+
+            // draw sides
+            mm.SetColor(sideColor);
+            mm.Verts(true, leftX, y, front, 0, 0);
+            mm.Verts(true, rightX, y, front, 1, 0);
+            mm.Verts(true, leftX, edgeY, front, 0, 1);
+            mm.Verts(true, rightX, edgeY, front, 1, 1);
+            mm.Verts(true, leftX, y, back, 1, 0);
+            mm.Verts(true, rightX, y, back, 0, 0);
+            mm.Verts(true, leftX, edgeY, back, 1, 1);
+            mm.Verts(true, rightX, edgeY, back, 0, 1);
+            mm.Tris(0, 2, 1, 1, 2, 3);
+            mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
+            mm.Tris(1, 3, 5, 3, 7, 5);
+
+            //Original code has the two other drawing options, but they haven't been in use
+            // in this new code. But keep them around in case we want to add them back.
+#if false
+            float leftY = 0.0f;
+            float rightY = 0.0f;
+        
+            //We'll only need these for the ribbon code
+            leftY = (prevY + thisY) / 2f;
+            rightY = (thisY + nextY) / 2f;
+
+            float edgeBite = this.bevelFraction / numCols;
+            // Note: this makes a 45 degree bevel at the curreent graph height, but it will be a different angle when height is changed.
+            float topBite = (edgeBite * this.sceneWidth) / (this.sceneHeight * this.currGraphHeightScale);
+
             if (this.bConnectX) // ribbon
             {
-                mm.Verts(false, leftX, leftZ, front, 1, 0);
-                mm.Verts(false, leftX, leftZ, back, 0, 0);
-                mm.Verts(false, thisX, thisZ, front, 1, 1);
-                mm.Verts(false, thisX, thisZ, back, 0, 1);
-                mm.Verts(false, rightX, rightZ, front, 1, 0);
-                mm.Verts(false, rightX, rightZ, back, 0, 0);
+                Debug.Log("GOT HERE bConnectX");
+
+                mm.Verts(false, leftX, leftY, front, 1, 0);
+                mm.Verts(false, leftX, leftY, back, 0, 0);
+                mm.Verts(false, thisX, thisY, front, 1, 1);
+                mm.Verts(false, thisX, thisY, back, 0, 1);
+                mm.Verts(false, rightX, rightY, front, 1, 0);
+                mm.Verts(false, rightX, rightY, back, 0, 0);
                 mm.Tris(0, 1, 2, 2, 1, 3, 2, 3, 4, 5, 4, 3);
                 // make bottom
                 if (!this.bExtendZ)
                 {
-                    mm.Verts(false, leftX, leftZ - slabZ, front, 1, 0);
-                    mm.Verts(false, leftX, leftZ - slabZ, back, 0, 0);
-                    mm.Verts(false, thisX, thisZ - slabZ, front, 1, 1);
-                    mm.Verts(false, thisX, thisZ - slabZ, back, 0, 1);
-                    mm.Verts(false, rightX, rightZ - slabZ, front, 1, 0);
-                    mm.Verts(false, rightX, rightZ - slabZ, back, 0, 0);
+                    mm.Verts(false, leftX, leftY - slabY, front, 1, 0);
+                    mm.Verts(false, leftX, leftY - slabY, back, 0, 0);
+                    mm.Verts(false, thisX, thisY - slabY, front, 1, 1);
+                    mm.Verts(false, thisX, thisY - slabY, back, 0, 1);
+                    mm.Verts(false, rightX, rightY - slabY, front, 1, 0);
+                    mm.Verts(false, rightX, rightY - slabY, back, 0, 0);
                     mm.Tris(2, 1, 0, 3, 1, 2, 4, 3, 2, 3, 4, 5);
                 }
                 // make sides
                 mm.SetColor(sideColor);
-                mm.Verts(true, leftX, leftZ, front, 0, 1);
-                mm.Verts(true, leftX, leftZ, back, 1, 1);
-                mm.Verts(true, leftX, this.bExtendZ ? 0f : leftZ - slabZ, front, 0, 0);
-                mm.Verts(true, leftX, this.bExtendZ ? 0f : leftZ - slabZ, back, 1, 0);
-                mm.Verts(true, thisX, thisZ, front, 0.5f, 1);
-                mm.Verts(true, thisX, thisZ, back, 0.5f, 1);
-                mm.Verts(true, thisX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0.5f, 0);
-                mm.Verts(true, thisX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0.5f, 0);
-                mm.Verts(true, rightX, rightZ, front, 0, 1);
-                mm.Verts(true, rightX, rightZ, back, 1, 1);
-                mm.Verts(true, rightX, this.bExtendZ ? 0f : rightZ - slabZ, front, 0, 0);
-                mm.Verts(true, rightX, this.bExtendZ ? 0f : rightZ - slabZ, back, 0, 0);
+                mm.Verts(true, leftX, leftY, front, 0, 1);
+                mm.Verts(true, leftX, leftY, back, 1, 1);
+                mm.Verts(true, leftX, this.bExtendZ ? 0f : leftY - slabY, front, 0, 0);
+                mm.Verts(true, leftX, this.bExtendZ ? 0f : leftY - slabY, back, 1, 0);
+                mm.Verts(true, thisX, thisY, front, 0.5f, 1);
+                mm.Verts(true, thisX, thisY, back, 0.5f, 1);
+                mm.Verts(true, thisX, this.bExtendZ ? 0f : thisY - slabY, front, 0.5f, 0);
+                mm.Verts(true, thisX, this.bExtendZ ? 0f : thisY - slabY, back, 0.5f, 0);
+                mm.Verts(true, rightX, rightY, front, 0, 1);
+                mm.Verts(true, rightX, rightY, back, 1, 1);
+                mm.Verts(true, rightX, this.bExtendZ ? 0f : rightY - slabY, front, 0, 0);
+                mm.Verts(true, rightX, this.bExtendZ ? 0f : rightY - slabY, back, 0, 0);
                 mm.Tris(0, 4, 6, 0, 6, 2, 1, 7, 5, 1, 3, 7);
                 mm.Tris(4, 10, 6, 4, 8, 10, 5, 7, 11, 5, 11, 9);
             }
@@ -850,43 +878,44 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 // tile
                 if (this.doingEdges) //Seems to mean draw a bevel
                 {
+                    Debug.Log("GOT HERE doingEdges");
                     //STAUFFER - NOTE - this is the orig default branch 
                     // I changed the UV's cuz they seemed wrong in orig code in some places
                     // and now with the orig material I can see some edges made by shading on a little bevel
-                    edgeZ = thisZ - topBite;
+                    edgeY = thisY - topBite;
                     // draw top
                     mm.SetColor(topColor);
-                    mm.Verts(false, leftX + edgeBite, thisZ, front, 0, 0); //0
-                    mm.Verts(false, leftX + edgeBite, thisZ, back, 0, 1);  //1
-                    mm.Verts(false, rightX - edgeBite, thisZ, front, 1, 0);//2
-                    mm.Verts(false, rightX - edgeBite, thisZ, back, 1, 1); //3
+                    mm.Verts(false, leftX + edgeBite, thisY, front, 0, 0); //0
+                    mm.Verts(false, leftX + edgeBite, thisY, back, 0, 1);  //1
+                    mm.Verts(false, rightX - edgeBite, thisY, front, 1, 0);//2
+                    mm.Verts(false, rightX - edgeBite, thisY, back, 1, 1); //3
                     // draw bevel
                     // Stauffer - the bevel amount is tiny (topBite) at around 0.001
                     // but still makes a difference. If I remove it and use my unlit shader,
                     // I see black edges on most of edges but not all. 
-                    mm.Verts(false, leftX, edgeZ, front, 0, 0); //4
-                    mm.Verts(false, leftX, edgeZ, back, 0, 0.9f);  //5
-                    mm.Verts(false, rightX, edgeZ, front, 0.9f, 0);//6
-                    mm.Verts(false, rightX, edgeZ, back, 1, 0.9f); //7
+                    mm.Verts(false, leftX, edgeY, front, 0, 0); //4
+                    mm.Verts(false, leftX, edgeY, back, 0, 0.9f);  //5
+                    mm.Verts(false, rightX, edgeY, front, 0.9f, 0);//6
+                    mm.Verts(false, rightX, edgeY, back, 1, 0.9f); //7
                     mm.Tris(0, 1, 2, 2, 1, 3);
                     mm.Tris(4, 2, 6, 2, 4, 0, 6, 3, 7, 3, 6, 2);
                     mm.Tris(7, 1, 5, 1, 7, 3, 5, 0, 4, 0, 5, 1);
                     // draw bottom
-                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
-                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
-                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
-                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 1);
+                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisY - slabY, front, 0, 0);
+                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisY - slabY, back, 0, 1);
+                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisY - slabY, front, 1, 0);
+                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisY - slabY, back, 1, 1);
                     mm.Tris(2, 1, 0, 3, 1, 2);
                     // draw sides
                     mm.SetColor(sideColor);
-                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
-                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
-                    mm.Verts(true, leftX, edgeZ, front, 0, 0.9f);
-                    mm.Verts(true, rightX, edgeZ, front, 1, 0.9f);
-                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
-                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
-                    mm.Verts(true, leftX, edgeZ, back, 1, 0.9f);
-                    mm.Verts(true, rightX, edgeZ, back, 0, 0.9f);
+                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisY - slabY, front, 0, 0);
+                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisY - slabY, front, 1, 0);
+                    mm.Verts(true, leftX, edgeY, front, 0, 0.9f);
+                    mm.Verts(true, rightX, edgeY, front, 1, 0.9f);
+                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisY - slabY, back, 1, 0);
+                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisY - slabY, back, 0, 0);
+                    mm.Verts(true, leftX, edgeY, back, 1, 0.9f);
+                    mm.Verts(true, rightX, edgeY, back, 0, 0.9f);
                     mm.Tris(0, 2, 1, 1, 2, 3);
                     mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
                     mm.Tris(1, 3, 5, 3, 7, 5);
@@ -894,34 +923,34 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                     /* - orig code - UV's seem wrong
                     // draw top
                     mm.SetColor(topColor);
-                    mm.Verts(leftX + edgeBite, thisZ, front, 1, 1);
-                    mm.Verts(leftX + edgeBite, thisZ, back, 0, 1);
-                    mm.Verts(rightX - edgeBite, thisZ, front, 1, 1);
-                    mm.Verts(rightX - edgeBite, thisZ, back, 0, 1);
+                    mm.Verts(leftX + edgeBite, thisY, front, 1, 1);
+                    mm.Verts(leftX + edgeBite, thisY, back, 0, 1);
+                    mm.Verts(rightX - edgeBite, thisY, front, 1, 1);
+                    mm.Verts(rightX - edgeBite, thisY, back, 0, 1);
                     // draw bevel
-                    mm.Verts(leftX, edgeZ, front, 1, 0.9f);
-                    mm.Verts(leftX, edgeZ, back, 0, 0.9f);
-                    mm.Verts(rightX, edgeZ, front, 1, 0.9f);
-                    mm.Verts(rightX, edgeZ, back, 0, 0.9f);
+                    mm.Verts(leftX, edgeY, front, 1, 0.9f);
+                    mm.Verts(leftX, edgeY, back, 0, 0.9f);
+                    mm.Verts(rightX, edgeY, front, 1, 0.9f);
+                    mm.Verts(rightX, edgeY, back, 0, 0.9f);
                     mm.Tris(0, 1, 2, 2, 1, 3);
                     mm.Tris(4, 2, 6, 2, 4, 0, 6, 3, 7, 3, 6, 2);
                     mm.Tris(7, 1, 5, 1, 7, 3, 5, 0, 4, 0, 5, 1);
                     // draw bottom
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisY - slabY, front, 1, 1);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisY - slabY, back, 0, 1);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisY - slabY, front, 1, 1);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisY - slabY, back, 0, 1);
                     mm.Tris(2, 1, 0, 3, 1, 2);
                     // draw sides
                     mm.SetColor(sideColor);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
-                    mm.Verts(leftX, edgeZ, front, 0, 0.9f);
-                    mm.Verts(rightX, edgeZ, front, 1, 0.9f);
-                    mm.Verts(leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
-                    mm.Verts(rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
-                    mm.Verts(leftX, edgeZ, back, 1, 0.9f);
-                    mm.Verts(rightX, edgeZ, back, 0, 0.9f);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisY - slabY, front, 0, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisY - slabY, front, 1, 0);
+                    mm.Verts(leftX, edgeY, front, 0, 0.9f);
+                    mm.Verts(rightX, edgeY, front, 1, 0.9f);
+                    mm.Verts(leftX, this.bExtendZ ? 0f : thisY - slabY, back, 1, 0);
+                    mm.Verts(rightX, this.bExtendZ ? 0f : thisY - slabY, back, 0, 0);
+                    mm.Verts(leftX, edgeY, back, 1, 0.9f);
+                    mm.Verts(rightX, edgeY, back, 0, 0.9f);
                     mm.Tris(0, 2, 1, 1, 2, 3);
                     mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
                     mm.Tris(1, 3, 5, 3, 7, 5);
@@ -929,47 +958,21 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
                 }
                 else
                 {
-                    edgeZ = thisZ;
-
-                    // Stauffer - orig code here, UV's seem wrong on first few. Fixed.
-                    // When force doingEdges false and we get here, this code doesn't draw right when
-                    // using the orig material and shader - maybe cuz uv's were off?
-
-                    // draw top
-                    mm.SetColor(topColor);
-                    mm.Verts(false, leftX, edgeZ, front, 0, 0); //Stauffer changed these uvs to what seems correct
-                    mm.Verts(false, leftX, edgeZ, back, 0, 1);
-                    mm.Verts(false, rightX, edgeZ, front, 1, 0);
-                    mm.Verts(false, rightX, edgeZ, back, 1, 1);
-                    mm.Tris(0, 1, 2, 2, 1, 3);
-                    // draw bottom
-                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
-                    mm.Verts(false, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
-                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 1);
-                    mm.Verts(false, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 1);
-                    mm.Tris(0, 1, 2, 2, 1, 3);
-                    // draw sides
-                    mm.SetColor(sideColor);
-                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, front, 0, 0);
-                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, front, 1, 0);
-                    mm.Verts(true, leftX, edgeZ, front, 0, 1);
-                    mm.Verts(true, rightX, edgeZ, front, 1, 1);
-                    mm.Verts(true, leftX, this.bExtendZ ? 0f : thisZ - slabZ, back, 1, 0);
-                    mm.Verts(true, rightX, this.bExtendZ ? 0f : thisZ - slabZ, back, 0, 0);
-                    mm.Verts(true, leftX, edgeZ, back, 1, 1);
-                    mm.Verts(true, rightX, edgeZ, back, 0, 1);
-                    mm.Tris(0, 2, 1, 1, 2, 3);
-                    mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
-                    mm.Tris(1, 3, 5, 3, 7, 5);
+                    //Draw simple cube/block
+                    //see code above, moved there
                 }
             }
         }
+#endif
+
+        } //loop to draw each block in a row
+
         mm.Attach(amesh);
 
         this.xRidges[this.numRidges].AddRidge(newRidge, amesh, binindex, row);
         this.xRidges[this.numRidges++].AddLabel(newLabel);
-    }
 
+    }
 
     /// <summary>
     /// Event handler for the SMV Simple Model View system.

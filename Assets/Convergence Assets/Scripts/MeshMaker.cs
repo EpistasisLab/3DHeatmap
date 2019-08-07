@@ -188,7 +188,7 @@ public class MeshMaker : object
         amesh.RecalculateNormals();
         amesh.RecalculateBounds();
 
-        //mark mesh as no longer readable to save memory, since we aren't using mesh collider for data inspection
+        //mark mesh as no longer readable to save cpu memory, since we aren't using mesh collider for data inspection
         amesh.UploadMeshData(true);
 
         this.Reset();
