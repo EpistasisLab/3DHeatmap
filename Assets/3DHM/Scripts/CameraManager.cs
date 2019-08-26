@@ -11,9 +11,6 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
 
     private Camera ourCamera;
 
-    //The main object for the app
-    private Graph heatVRML;
-
     /// <summary> The look-at target for the camera </summary>
     private Vector3 lookAtTarget;
 
@@ -54,9 +51,6 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         ourCamera = transform.GetComponent<Camera>() as Camera;
         if (ourCamera == null)
             Debug.LogError("camera == null");
-        heatVRML = GameObject.Find("Prefab objectify").GetComponent<Graph>();
-        if (heatVRML == null)
-            Debug.LogError("heatVRML == null");
 
         lookAtTarget = Vector3.zero;
 
@@ -80,8 +74,8 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <summary> Reset the camera view to the default view. </summary>
     public void ResetView()
     {
-        Vector3 center = heatVRML.GetPlotCenter();
-        SetCameraPositionWithBounds( new Vector3(center.x, heatVRML.sceneCorner.y + defaultViewOffset.y, heatVRML.sceneCorner.z + defaultViewOffset.z) );
+        Vector3 center = Graph.Instance.GetPlotCenter();
+        SetCameraPositionWithBounds( new Vector3(center.x, Graph.Instance.sceneCorner.y + defaultViewOffset.y, Graph.Instance.sceneCorner.z + defaultViewOffset.z) );
         LookAt(center);
     }
 
