@@ -87,7 +87,7 @@ public class DataVarUIHandler : MonoBehaviour {
             {
                 filenameTextTooltipShowing = true;
                 string path = filepathLocal;
-                UIManager.Instance.TooltipShow(path, transform);
+                UIManager.I.TooltipShow(path, transform);
             }
         }
 	}
@@ -97,9 +97,9 @@ public class DataVarUIHandler : MonoBehaviour {
         Debug.Log("OnLabelEdit");
         if (dataVar != null)
             dataVar.Label = GetLabel();
-        UIManager.Instance.RefreshUI();
+        UIManager.I.RefreshUI();
         //Switch prompting behavior to the next UI element if this element is currently prompting.
-        UIManager.Instance.ShowNextUIActionPrompt(go);
+        UIManager.I.ShowNextUIActionPrompt(go);
     }
 
     private string GetLabel()
@@ -112,7 +112,7 @@ public class DataVarUIHandler : MonoBehaviour {
         if( filepathLocal != "")
             SetFileNeedsLoading(true);
         //Switch prompting behavior to the next UI element if this element is currently prompting.
-        UIManager.Instance.ShowNextUIActionPrompt(go);
+        UIManager.I.ShowNextUIActionPrompt(go);
     }
 
     /// <summary>
@@ -129,18 +129,18 @@ public class DataVarUIHandler : MonoBehaviour {
     /// <summary> Handle button to choose (but not load/read) a file</summary>
     public void OnFileChooseClick(GameObject go)
     {
-        string result = DataManager.Instance.ChooseFile();
+        string result = DataManager.I.ChooseFile();
         if (result == "") //Cancelled
             return;
         if( dataVar != null)
         {
             //TODO - also should clear label to make it clear we've removed the data var
-            DataManager.Instance.Remove(dataVar); //NOTE - why is this done here and not in DataManager ???
+            DataManager.I.Remove(dataVar); //NOTE - why is this done here and not in DataManager ???
         }
         filepathLocal = result;
         SetFileNeedsLoading(true);
         //Switch prompting behavior to the next UI element if this element is currently prompting.
-        UIManager.Instance.ShowNextUIActionPrompt(go);
+        UIManager.I.ShowNextUIActionPrompt(go);
         RefreshUI();
     }
 
@@ -156,7 +156,7 @@ public class DataVarUIHandler : MonoBehaviour {
         int selection = transform.Find("FilePanel").transform.Find("HeadersDropdown").GetComponent<Dropdown>().value;
         if( selection == 0)
         {
-            UIManager.Instance.ShowMessageDialog("Please select header option first.");
+            UIManager.I.ShowMessageDialog("Please select header option first.");
             return false;
         }
         hasRowHeaders = (selection == 2 || selection == 4);
@@ -168,10 +168,10 @@ public class DataVarUIHandler : MonoBehaviour {
     /// then call the method to do the actual loading. </summary>
     IEnumerator LoadCoroutine()
     {
-        int statusID = UIManager.Instance.StatusShow("Loading...");
+        int statusID = UIManager.I.StatusShow("Loading...");
         yield return null;
         LoadHandler();
-        UIManager.Instance.StatusComplete(statusID);
+        UIManager.I.StatusComplete(statusID);
     }
 
     public void OnLoadClick(GameObject go)
@@ -195,7 +195,7 @@ public class DataVarUIHandler : MonoBehaviour {
         bool hasRowHeaders, hasColumnHeaders;
         if (!GetHeaderSelection(out hasRowHeaders, out hasColumnHeaders))
             return;
-        bool success = DataManager.Instance.LoadAddFile(filepathLocal, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
+        bool success = DataManager.I.LoadAddFile(filepathLocal, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
         if (success)
         {
             //dataVar already added to variable list by above method call
@@ -203,13 +203,13 @@ public class DataVarUIHandler : MonoBehaviour {
             Debug.Log("Success: file loaded.");
             dataVar = newDataVar;
             //Switch prompting behavior to the next UI element if this element is currently prompting.
-            UIManager.Instance.ShowNextUIActionPrompt(loadButton.gameObject);
+            UIManager.I.ShowNextUIActionPrompt(loadButton.gameObject);
         }
         else
         {
             string msg = "Error loading file \n\n" + filepathLocal + ". \n\n" + errorMsg;
             Debug.LogError(msg);
-            UIManager.Instance.ShowMessageDialog(msg);
+            UIManager.I.ShowMessageDialog(msg);
         }
         SetFileNeedsLoading(!success);
         RefreshUI();
@@ -225,7 +225,7 @@ public class DataVarUIHandler : MonoBehaviour {
     public void OnFilenameTextExit()
     {
         if (filenameTextTooltipShowing)
-            UIManager.Instance.TooltipHide();
+            UIManager.I.TooltipHide();
         filenameTextTooltipShowing = false;
         filenameTextMouseHovering = false;
     }

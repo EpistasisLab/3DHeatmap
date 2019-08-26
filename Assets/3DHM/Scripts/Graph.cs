@@ -120,8 +120,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
     public float CurrGraphHeightFrac
     {
         //Uses Simple Model View
-        get { return SMV.Instance.GetValueFloat(SMVmapping.GraphHeightFrac); }
-        set { SMV.Instance.SetValue(SMVmapping.GraphHeightFrac, value); }
+        get { return SMV.I.GetValueFloat(SMVmapping.GraphHeightFrac); }
+        set { SMV.I.SetValue(SMVmapping.GraphHeightFrac, value); }
     }
     public float bevelFraction;
 
@@ -142,7 +142,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
     private float MinGraphSceneHeight
     {
         set { _minGraphSceneHeight = value; }
-        get { return DataManager.Instance.Cols > 18 ? 0f : _minGraphSceneHeight; }
+        get { return DataManager.I.Cols > 18 ? 0f : _minGraphSceneHeight; }
     }
 
     /// <summary> Stauffer - scaling factor for row depth/width - gets used as 2^x for some reason </summary>
@@ -196,7 +196,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         this.ridgeMeshMinHeight = 0.1f;
 
         //Quick intro message with instructions
-        UIManager.Instance.ShowIntroMessage();
+        UIManager.I.ShowIntroMessage();
     }
 
     public virtual void Update()
@@ -213,11 +213,11 @@ public class Graph : MonoBehaviorSingleton<Graph>
         StartCoroutine(RedrawCoroutine());
 
         //Refresh the UI
-        UIManager.Instance.RefreshUI();
+        UIManager.I.RefreshUI();
 
         //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
         // which also handles the case when user jumps ahead of the prompts to here.
-        UIManager.Instance.StopAllUIActionPrompts();
+        UIManager.I.StopAllUIActionPrompts();
     }
 
     /// <summary> This coroutine simply lets us put up a message and then start the
@@ -226,14 +226,14 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <returns></returns>
     IEnumerator RedrawCoroutine(bool quiet = false)
     {
-        int statusID = UIManager.Instance.StatusShow("Drawing...");
+        int statusID = UIManager.I.StatusShow("Drawing...");
         yield return null;
         PrepareAndDrawData(quiet);
 
         //For any params that may have changed that need some action
         UpdateSceneDrawingParams();
 
-        UIManager.Instance.StatusComplete(statusID);
+        UIManager.I.StatusComplete(statusID);
     }
 
 
@@ -322,10 +322,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
     {
         bool isSide = mapping == DataManager.Mapping.SideColor;
 
-        int colorTableID = DataManager.Instance.GetColorTableIdByMapping(mapping);
+        int colorTableID = DataManager.I.GetColorTableIdByMapping(mapping);
 
-        float value = DataManager.Instance.GetValueByMapping(mapping, row, column, true);
-        DataVariable var = DataManager.Instance.GetVariableByMapping(mapping);
+        float value = DataManager.I.GetValueByMapping(mapping, row, column, true);
+        DataVariable var = DataManager.I.GetVariableByMapping(mapping);
         float inv = (value - var.MinValue) / var.Range;
 
         Color retColor;
@@ -467,13 +467,13 @@ public class Graph : MonoBehaviorSingleton<Graph>
         // Do some verification of data, so we don't have to check things every time we access dataMgr
         // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
         string errorMsg;
-        if (!DataManager.Instance.PrepareAndVerify(out errorMsg))
+        if (!DataManager.I.PrepareAndVerify(out errorMsg))
         {
             if (!quiet)
             {
                 string msg = "Error with data prep and verification: \n\n" + errorMsg;
                 Debug.LogError(msg);
-                UIManager.Instance.ShowMessageDialog(msg);
+                UIManager.I.ShowMessageDialog(msg);
             }
             return;
         }
@@ -483,12 +483,12 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
         //Setup row headers (row labels)
         //
-        this.numRowLabels = DataManager.Instance.HeightVar.hasRowHeaders ? DataManager.Instance.HeightVar.numDataRows : 0;
+        this.numRowLabels = DataManager.I.HeightVar.hasRowHeaders ? DataManager.I.HeightVar.numDataRows : 0;
         this.rowLabels = new string[this.numRowLabels + 1];
         //Copy
         for (int i = 0; i < this.numRowLabels; i++)
         {
-            this.rowLabels[i] = DataManager.Instance.HeightVar.rowHeaders[i];
+            this.rowLabels[i] = DataManager.I.HeightVar.rowHeaders[i];
         }
 
         //Draw it!
@@ -500,9 +500,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
     public void ResetView()
     {
         //Desktop camera 
-        CameraManager.Instance.ResetView();
+        CameraManager.I.ResetView();
         //VR player hmd
-        VRManager.Instance.ResetPlayerPosition();
+        VRManager.I.ResetPlayerPosition();
     }
 
     /// <summary> Get data axes extents (num rows, columns and height range) </summary>
@@ -510,12 +510,12 @@ public class Graph : MonoBehaviorSingleton<Graph>
     {
         //In DatasetSelected, the ranges get set for the optional subsequent int columns.
         //
-        DataVariable heightVar = DataManager.Instance.HeightVar;
+        DataVariable heightVar = DataManager.I.HeightVar;
         
         this.minRow = 0;
-        this.maxRow = DataManager.Instance.Rows - 1;
+        this.maxRow = DataManager.I.Rows - 1;
         this.minCol = 0;
-        this.maxCol = DataManager.Instance.Cols - 1;
+        this.maxCol = DataManager.I.Cols - 1;
         this.minBin = 0; //Just always have 1 bin for now. Empirically, we want its number to be 0, otherwise a space for a phantom bin appears in render.
         this.maxBin = 0;
         this.minDataHeight = heightVar.MinValue;
@@ -566,7 +566,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         //string extra2 = this.sideColorChoice > 1 ? ", " + this.allVariableDescs[this.sideColorChoice].name : ", 0";
 
         //For each row, setup data and draw a ridge
-        DataVariable hVar = DataManager.Instance.HeightVar;
+        DataVariable hVar = DataManager.I.HeightVar;
 
         //Build the ridges
         for (int row = 0; row < hVar.numDataRows; row++)
@@ -656,13 +656,13 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <returns>Will return minimum height if data not set, is NaN, or if row or col is out of range</returns>
     public float GetBlockSceneHeightByPosition(int row, int col)
     {
-        return GetBlockSceneHeight(DataManager.Instance.GetHeightValue(row, col, false));
+        return GetBlockSceneHeight(DataManager.I.GetHeightValue(row, col, false));
     }
 
     /// <summary> Get the width of each block in scene units </summary>
     public float GetBlockSceneWidth()
     {
-        return Graph.Instance.sceneWidth / Graph.Instance.numCols;
+        return Graph.I.sceneWidth / Graph.I.numCols;
     }
 
     /// <summary> For a given row of data, build a single mesh containing all the blocks in the row </summary>
@@ -745,9 +745,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
             topColor = this.MakeColor(DataManager.Mapping.TopColor, row, colNum);
             sideColor = this.MakeColor(DataManager.Mapping.SideColor, row, colNum);
             //Used to set vertex properties depending on whether data is a valid number or NaN
-            bool topIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.TopColor, row, colNum);
-            bool sideIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.SideColor, row, colNum);
-            bool heightIsANumber = !DataManager.Instance.GetIsNanByMapping(DataManager.Mapping.Height, row, colNum);
+            bool topIsANumber = !DataManager.I.GetIsNanByMapping(DataManager.Mapping.TopColor, row, colNum);
+            bool sideIsANumber = !DataManager.I.GetIsNanByMapping(DataManager.Mapping.SideColor, row, colNum);
+            bool heightIsANumber = !DataManager.I.GetIsNanByMapping(DataManager.Mapping.Height, row, colNum);
             mm.SetIsANumber(heightIsANumber, topIsANumber, sideIsANumber);
 
             //Height & width
@@ -762,7 +762,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
             else
             {   //column 0, get things init'ed
                 thisX = ((0.5f) - this.minCol) * this.blockWidthNorm;
-                thisY = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, 0, false /*return NaN if value is NaN*/));
+                thisY = GetBlockMeshHeight(DataManager.I.GetHeightValue(row, 0, false /*return NaN if value is NaN*/));
                 prevX = thisX - this.blockWidthNorm;
                 prevY = thisY;
             }
@@ -770,7 +770,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
             if (colNum < numCols - 1)
             {
                 nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.blockWidthNorm;
-                nextY = GetBlockMeshHeight(DataManager.Instance.GetHeightValue(row, colNum + 1, false));
+                nextY = GetBlockMeshHeight(DataManager.I.GetHeightValue(row, colNum + 1, false));
             }
             else
             {

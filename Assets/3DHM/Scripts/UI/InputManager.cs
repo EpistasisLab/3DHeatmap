@@ -145,7 +145,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
                     //Debug.Log("avg trans vec: " + avg.ToString("F2"));
                     float lateral = Mathf.Pow(Mathf.Abs(avg.x), translationExpScaleTouch) * translationScaleTouch * Mathf.Sign(avg.x) * -1;
                     float forward = Mathf.Pow(Mathf.Abs(avg.y), translationExpScaleTouch) * translationScaleTouch * Mathf.Sign(avg.y) * -1;
-                    CameraManager.Instance.TranslateView(lateral, forward);
+                    CameraManager.I.TranslateView(lateral, forward);
                     return;
                 }
             }
@@ -171,7 +171,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
                 {
                     float magnitude = mv0 && mv1 ? (d0.magnitude + d1.magnitude) / 2f : Mathf.Max(d0.magnitude,d1.magnitude);
                     float zoom = Mathf.Pow(magnitude, pinchZoomExpScaleTouch) * pinchZoomScaleTouch * Mathf.Sign(dot);
-                    CameraManager.Instance.Zoom(zoom);
+                    CameraManager.I.Zoom(zoom);
                     return;
                 }
             }
@@ -187,7 +187,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
                 //Debug.Log("rot avg: " + avg);
                 float rotRight = Mathf.Pow(Mathf.Abs(avg.y), rotationExpScaleTouch) * -Mathf.Sign(avg.y) * rotationScaleTouch;
                 float rotUp    = Mathf.Pow(Mathf.Abs(avg.x), rotationExpScaleTouch) * Mathf.Sign(avg.x) * rotationScaleTouch;
-                CameraManager.Instance.RotateView(rotRight, rotUp);
+                CameraManager.I.RotateView(rotRight, rotUp);
                 currentTouchAction = TouchAction.Rotate;
                 return;
             }
@@ -211,7 +211,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         {
             if ((vertButton != 0f || horzButton != 0f))
             {
-                Graph.Instance.TranslateRidges(horzButton * translationScaleKeys * 10, 0f, vertButton * translationScaleKeys * 10);
+                Graph.I.TranslateRidges(horzButton * translationScaleKeys * 10, 0f, vertButton * translationScaleKeys * 10);
                 return;
             }
 
@@ -222,18 +222,18 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         //NOT movement along camera-forward
         if ((vertButton != 0f || horzButton != 0f))
         {
-            CameraManager.Instance.TranslateView(horzButton * translationScaleKeys, vertButton * translationScaleKeys);
+            CameraManager.I.TranslateView(horzButton * translationScaleKeys, vertButton * translationScaleKeys);
             //Debug.Log("horzButton " + horzButton);
         }
 
         //Zoom
         if (Input.GetKey(KeyCode.Minus) || Input.GetKey(KeyCode.KeypadMinus))
         {
-            CameraManager.Instance.Zoom(-1f * zoomScaleKeys);
+            CameraManager.I.Zoom(-1f * zoomScaleKeys);
         }
         if (Input.GetKey(KeyCode.Equals) || Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.KeypadPlus))
         {
-            CameraManager.Instance.Zoom(1f * zoomScaleKeys);
+            CameraManager.I.Zoom(1f * zoomScaleKeys);
         }
     }
 
@@ -242,43 +242,43 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 
         if (Input.GetKeyDown(KeyCode.O))
         {/*
-            if (DataManager.Instance.DebugQuickChooseLoadDisplayFile())
+            if (DataManager.I.DebugQuickChooseLoadDisplayFile())
             {
                 //take the new data and draw it
                 Debug.Log("Loaded file with success");
-                Graph.Instance.Redraw();
+                Graph.I.Redraw();
             }
             */
         }
         if (Input.GetKeyDown(KeyCode.D) && Input.GetKey(KeyCode.RightShift))
         {
             //Quick load a test file and view it
-            DataManager.Instance.DebugQuickLoadDefaultAndDraw();
+            DataManager.I.DebugQuickLoadDefaultAndDraw();
         }
         if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
         {
             //this.showHelp = !this.showHelp;
-            UIManager.Instance.ShowIntroMessage();
+            UIManager.I.ShowIntroMessage();
         }
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            Graph.Instance.Redraw();
+            Graph.I.Redraw();
         }
         if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
         {
             //From orig code - show/hide UI windows
-            //Graph.Instance.allHidden = !Graph.Instance.allHidden;
+            //Graph.I.allHidden = !Graph.I.allHidden;
         }
         if (Input.GetKeyDown(KeyCode.F12))
         {
             //Debugging
 
-            DataInspector.Instance.DbgSelectWithDebugRay();
+            DataInspector.I.DbgSelectWithDebugRay();
 
-            //GameObject newRidge = UnityEngine.Object.Instantiate(Graph.Instance.Proto, new Vector3(Graph.Instance.sceneCorner.x, Graph.Instance.sceneCorner.y, Graph.Instance.sceneCorner.z), Quaternion.identity);
+            //GameObject newRidge = UnityEngine.Object.Instantiate(Graph.I.Proto, new Vector3(Graph.I.sceneCorner.x, Graph.I.sceneCorner.y, Graph.I.sceneCorner.z), Quaternion.identity);
             //newRidge.name = "testRidge";
 
-            //UIManager.Instance.StartUIActionPrompts();
+            //UIManager.I.StartUIActionPrompts();
 
             //TriDataPoint data = new TriDataPoint(0, 1);
             //data.DebugDump();
@@ -301,7 +301,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
                 //Process single click
 
                 //Initiate a data inspection
-                TriDataPoint triPoint = DataInspector.Instance.InspectDataAtScreenPosition(Input.mousePosition);
+                TriDataPoint triPoint = DataInspector.I.InspectDataAtScreenPosition(Input.mousePosition);
                 //If we get a valid point, lock the data inspection to this point by setting this flag.
                 contDataInpectionTempDisable = triPoint.isValid;
                 //triPoint.DebugDump();
@@ -315,7 +315,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             // Read the mouse input axis
             float trX = Input.GetAxis("Mouse X"); //delta position, from what I understand
             float trY = Input.GetAxis("Mouse Y");
-            CameraManager.Instance.TranslateView(-trX * translationScaleMouse, -trY * translationScaleMouse);
+            CameraManager.I.TranslateView(-trX * translationScaleMouse, -trY * translationScaleMouse);
             return;
         }
 
@@ -325,7 +325,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             // Read the mouse input axis
             float rotX = Input.GetAxis("Mouse X");
             float rotY = Input.GetAxis("Mouse Y");
-            CameraManager.Instance.RotateView(-rotY * rotationScaleMouse, rotX * rotationScaleMouse);
+            CameraManager.I.RotateView(-rotY * rotationScaleMouse, rotX * rotationScaleMouse);
             return;
         }
 
@@ -334,7 +334,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if( scroll != 0 )
         {
-            CameraManager.Instance.Zoom(scroll * zoomScaleScrollWheel);
+            CameraManager.I.Zoom(scroll * zoomScaleScrollWheel);
             return;
         }
 
@@ -345,7 +345,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             ! contDataInpectionTempDisable &&
             (Time.time - contDataInspectionPrevTime) > contDataInspectionInterval)
         {
-            DataInspector.Instance.InspectDataAtScreenPosition(Input.mousePosition);
+            DataInspector.I.InspectDataAtScreenPosition(Input.mousePosition);
             contDataInspectionPrevTime = Time.time;
         }
 
@@ -354,7 +354,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Reset anything that should be reset when new data loaded, etc. </summary>
     public void Reset()
     {
-        DataInspector.Instance.Hide(); //probably not a great place to do this - DataInspector could get its own Reset() method
+        DataInspector.I.Hide(); //probably not a great place to do this - DataInspector could get its own Reset() method
     }
 
     // Update is called once per frame

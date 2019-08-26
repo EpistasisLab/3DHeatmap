@@ -74,8 +74,8 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <summary> Reset the camera view to the default view. </summary>
     public void ResetView()
     {
-        Vector3 center = Graph.Instance.GetPlotCenter();
-        SetCameraPositionWithBounds( new Vector3(center.x, Graph.Instance.sceneCorner.y + defaultViewOffset.y, Graph.Instance.sceneCorner.z + defaultViewOffset.z) );
+        Vector3 center = Graph.I.GetPlotCenter();
+        SetCameraPositionWithBounds( new Vector3(center.x, Graph.I.sceneCorner.y + defaultViewOffset.y, Graph.I.sceneCorner.z + defaultViewOffset.z) );
         LookAt(center);
     }
 

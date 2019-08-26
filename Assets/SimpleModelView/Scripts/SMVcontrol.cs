@@ -58,8 +58,8 @@ namespace SMView
             this.mapping = mapping;
             SetupMappings();
             //if(mapping != SMVmapping.undefined)
-            //    SetValue(SMV.Instance.GetDefault(DataType));
-            value = SMV.Instance.GetDefault(DataType);
+            //    SetValue(SMV.I.GetDefault(DataType));
+            value = SMV.I.GetDefault(DataType);
             onUpdateEvent = updateEvent;
         }
 
@@ -243,7 +243,7 @@ namespace SMView
                 }
 
             }
-            return (float)SMV.Instance.GetDefault(DataType);
+            return (float)SMV.I.GetDefault(DataType);
         }
 
         public int GetValueInt()
@@ -256,7 +256,7 @@ namespace SMView
                 }
             }
 
-            return (int)SMV.Instance.GetDefault(DataType);
+            return (int)SMV.I.GetDefault(DataType);
         }
 
         public string GetValueString()
@@ -269,7 +269,7 @@ namespace SMView
                 }
             }
 
-            return (string)SMV.Instance.GetDefault(DataType);
+            return (string)SMV.I.GetDefault(DataType);
         }
 
         public bool GetValueBool()
@@ -282,7 +282,7 @@ namespace SMView
                 }
             }
 
-            return (bool)SMV.Instance.GetDefault(DataType);
+            return (bool)SMV.I.GetDefault(DataType);
         }
 
         private bool ValidateDataType(System.Type typeRequested)

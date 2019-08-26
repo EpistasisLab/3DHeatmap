@@ -56,15 +56,15 @@ public class VisualMappingUIHandler : MonoBehaviour {
     {
         //Debug.Log("Value Change. go.GetInstanceID() " + go.GetInstanceID());
         string label = go.GetComponentInChildren<Dropdown>().captionText.text;
-        DataVariable var = DataManager.Instance.GetVariableByLabel( label );
+        DataVariable var = DataManager.I.GetVariableByLabel( label );
         if( var == null)
         {
             Debug.LogWarning("null var returned for label " + label);
             return;
         }
         AssignVarsByCurrentLabelChoices();
-        UIManager.Instance.ShowNextUIActionPrompt(go);
-        //DataManager.Instance.DebugDumpVariables(false);
+        UIManager.I.ShowNextUIActionPrompt(go);
+        //DataManager.I.DebugDumpVariables(false);
     }
 
     /// <summary>
@@ -72,16 +72,16 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// </summary>
     private void AssignVarsByCurrentLabelChoices()
     {
-        DataManager.Instance.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
-        DataManager.Instance.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
-        DataManager.Instance.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
+        DataManager.I.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
+        DataManager.I.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
+        DataManager.I.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
     }
 
     private void SetLabelChoicesByCurrentVars()
     {
-        SetLabelChoiceIndexByVarLabel(heightLabelDropdown, DataManager.Instance.HeightVar);
-        SetLabelChoiceIndexByVarLabel(topColorLabelDropdown, DataManager.Instance.TopColorVar);
-        SetLabelChoiceIndexByVarLabel(sideColorLabelDropdown, DataManager.Instance.SideColorVar);
+        SetLabelChoiceIndexByVarLabel(heightLabelDropdown, DataManager.I.HeightVar);
+        SetLabelChoiceIndexByVarLabel(topColorLabelDropdown, DataManager.I.TopColorVar);
+        SetLabelChoiceIndexByVarLabel(sideColorLabelDropdown, DataManager.I.SideColorVar);
     }
 
     /// <summary>
@@ -127,7 +127,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
     {
         List<Dropdown.OptionData> list = new List<Dropdown.OptionData>();
 
-        foreach (string label in DataManager.Instance.GetLabels())
+        foreach (string label in DataManager.I.GetLabels())
         {
             Dropdown.OptionData od = new Dropdown.OptionData();
             od.text = label;

@@ -82,7 +82,12 @@ public class MonoBehaviorSingleton<T> : MonoBehaviour where T : MonoBehaviorSing
 			instance = null;
 	}
 
-	public static T Instance
+    /// <summary>
+    /// Getter for Instance that's short for less verbose code!
+    /// </summary>
+    public static T I { get { return Instance; } }
+
+    public static T Instance
 	{
 		get 
 		{ 

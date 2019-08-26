@@ -62,11 +62,11 @@ public class TriDataPoint
         isValid = false;
         string dummy;
         //Returns silently if data isn't ready or is out of bounds
-        if (DataManager.Instance.PrepareAndVerify(out dummy) == false)
+        if (DataManager.I.PrepareAndVerify(out dummy) == false)
             return;
-        if (rowIn < 0 || rowIn >= DataManager.Instance.Rows)
+        if (rowIn < 0 || rowIn >= DataManager.I.Rows)
             return;
-        if (colIn < 0 || colIn >= DataManager.Instance.Cols)
+        if (colIn < 0 || colIn >= DataManager.I.Cols)
             return;
 
         row = rowIn;
@@ -74,19 +74,19 @@ public class TriDataPoint
         bin = 0;
 
         DataVariable v;
-        v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.Height);
+        v = DataManager.I.GetVariableByMapping(DataManager.Mapping.Height);
         heightValue = v.Data[row][col]; //should really have a general accessor for this
         heightLabel = v.Label;
         heightRowHeader = v.hasRowHeaders ? v.rowHeaders[row] : "";        
         heightColHeader = v.hasColumnHeaders ? v.columnHeaders[col] : "";
 
-        v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.TopColor);
+        v = DataManager.I.GetVariableByMapping(DataManager.Mapping.TopColor);
         topValue = v.Data[row][col];
         topLabel = v.Label;
         topRowHeader = v.hasRowHeaders ? v.rowHeaders[row] : "";
         topColHeader = v.hasColumnHeaders ? v.columnHeaders[col] : "";
 
-        v = DataManager.Instance.GetVariableByMapping(DataManager.Mapping.SideColor);
+        v = DataManager.I.GetVariableByMapping(DataManager.Mapping.SideColor);
         sideValue = v.Data[row][col];
         sideLabel = v.Label;
         sideRowHeader = v.hasRowHeaders ? v.rowHeaders[row] : "";
@@ -327,8 +327,8 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         if (!DataIsLoaded)
             return 0;
 
-        if ( rowIn < 0 || rowIn >= DataManager.Instance.Rows ||
-             colIn < 0 || colIn >= DataManager.Instance.Cols)
+        if ( rowIn < 0 || rowIn >= DataManager.I.Rows ||
+             colIn < 0 || colIn >= DataManager.I.Cols)
         {
             Debug.LogError("GetValueByMapping: row or col out of range: " + rowIn + ", " + colIn);
             return 0;
@@ -438,7 +438,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         }
 
         //Update UI
-        UIManager.Instance.RefreshUI();
+        UIManager.I.RefreshUI();
     }
 
     /// <summary>
@@ -470,7 +470,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         //pull these from UI instead of pushing from UI so we don't
         // have to handle when there's not an assigned var mapping.
         //awkward
-        variableColorTableIDs = UIManager.Instance.GetColorTableAssignments();
+        variableColorTableIDs = UIManager.I.GetColorTableAssignments();
 
         //Verify the data
         bool result = VerifyData(out errorMsg);
@@ -542,7 +542,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
             //Get filename and set it to label as default
             dataVar.Label = Path.GetFileNameWithoutExtension(dataVar.Filepath);
             //Update UI
-            UIManager.Instance.RefreshUI();
+            UIManager.I.RefreshUI();
         }
         else
         {
@@ -677,7 +677,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
             HeightVar = dataVar;
             TopColorVar = dataVar;
             SideColorVar = dataVar;
-            Graph.Instance.Redraw();
+            Graph.I.Redraw();
         }
         else
             Debug.Log("Other error while reading file: \n" + errorMsg);

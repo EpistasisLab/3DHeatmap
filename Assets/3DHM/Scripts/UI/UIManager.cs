@@ -204,7 +204,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     public void RefreshUI()
     {
         visualMappingUIHandler.RefreshUI();
-        InputManager.Instance.Reset();
+        InputManager.I.Reset();
         
         //Debug
         //dataMgr.DebugDumpVariables(false/*verbose*/);   
@@ -221,13 +221,13 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     public void OnRedrawButtonClick(GameObject button)
     {
-        Graph.Instance.Redraw();
+        Graph.I.Redraw();
     }
 
     public void OnMaxHeightSlider(GameObject go)
     {
         //float frac = go.GetComponent<Slider>().value;
-        //Graph.Instance.SetGraphHeightFrac(frac);
+        //Graph.I.SetGraphHeightFrac(frac);
         //Don't need to redraw to see new height
         //StartCoroutine(RedrawCoroutine(true));
     }
