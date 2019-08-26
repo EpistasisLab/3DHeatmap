@@ -677,7 +677,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
             HeightVar = dataVar;
             TopColorVar = dataVar;
             SideColorVar = dataVar;
-            HeatVRML.Instance.Redraw();
+            Graph.Instance.Redraw();
         }
         else
             Debug.Log("Other error while reading file: \n" + errorMsg);

@@ -6,15 +6,14 @@ using System.Collections;
 using SMView;
 
 /// <summary>
-/// Main class. Has lots of state vars crammed in it. Plan is to break it up over time.
-/// As a MonoBehaviorSingleton, there's a single global instance that is accessible via HeatVRML.Instance
+/// Graph class. Has lots of state vars crammed in it. Needs more refactoring still.
+/// As a MonoBehaviorSingleton, there's a single global instance that is accessible via Graph.Instance
 /// </summary>
 [System.Serializable]
-public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
+public class Graph : MonoBehaviorSingleton<Graph>
 {
     /*
-	Heatmap.js Contains almost all code for interacting with user and drawing 3D heatmaps.  Coded by Douglas P. Hill.
-    Copyright (C) 2010  Dartmouth College
+	Portions of this file originally coded by Douglas P. Hill, Copyright (C) 2010  Dartmouth College
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +27,8 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+    */
+
     // Version
     public string programVersion;
 
@@ -170,7 +170,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     protected override void Initialize()
     {
         //Stauffer - move some things here that use SimpleModelView, because it
-        // cannot be init'ed in HeatVRML ctor
+        // cannot be init'ed in Graph ctor
         //Also adding variables that I've added to keep them separate
 
         this.CurrGraphHeightFrac = 0.5f;
@@ -316,7 +316,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     }
 
     // Stauffer - NOTE this seems to work with the currently-loaded row data,
-    //   by accessing the HeatVRML class properties topVals[] and sideVals[]
+    //   by accessing the Graph class properties topVals[] and sideVals[]
     //Skipping 'bin' stuff for now
     public virtual Color MakeColor(DataManager.Mapping mapping, int row, int column)
     {
@@ -662,7 +662,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
     /// <summary> Get the width of each block in scene units </summary>
     public float GetBlockSceneWidth()
     {
-        return HeatVRML.Instance.sceneWidth / HeatVRML.Instance.numCols;
+        return Graph.Instance.sceneWidth / Graph.Instance.numCols;
     }
 
     /// <summary> For a given row of data, build a single mesh containing all the blocks in the row </summary>
@@ -1009,7 +1009,7 @@ public class HeatVRML : MonoBehaviorSingleton<HeatVRML>
         this.ScaleRidgeHeight(this.currGraphHeightScale);
     }
 
-    public HeatVRML()
+    public Graph()
     {
         //NOTE - stauffer - some inits are made now in Initialize()
         //But if I move everything here into Initialize(), then display/view

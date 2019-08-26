@@ -43,7 +43,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     protected override void Initialize() { 
         //UI Canvas
         canvas = GetAndCheckGameObject("CanvasScreenSpace");
-        //Main panels
+        //Graph panels
         dataTopPanel = GetAndCheckGameObject("DataTopPanel");
         optionsTopPanel = GetAndCheckGameObject("OptionsTopPanel");
 
@@ -221,13 +221,13 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     public void OnRedrawButtonClick(GameObject button)
     {
-        HeatVRML.Instance.Redraw();
+        Graph.Instance.Redraw();
     }
 
     public void OnMaxHeightSlider(GameObject go)
     {
         //float frac = go.GetComponent<Slider>().value;
-        //HeatVRML.Instance.SetGraphHeightFrac(frac);
+        //Graph.Instance.SetGraphHeightFrac(frac);
         //Don't need to redraw to see new height
         //StartCoroutine(RedrawCoroutine(true));
     }

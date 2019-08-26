@@ -87,7 +87,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
             
             //Debug.Log("d: " + d.ToString("F4"));
 
-            HeatVRML.Instance.TranslateGraph(Mathf.Pow(Mathf.Abs(d.x), grabMoveScaleExp) * Mathf.Sign(d.x) * grabMoveScale.x,
+            Graph.Instance.TranslateGraph(Mathf.Pow(Mathf.Abs(d.x), grabMoveScaleExp) * Mathf.Sign(d.x) * grabMoveScale.x,
                                               Mathf.Pow(Mathf.Abs(d.y), grabMoveScaleExp) * Mathf.Sign(d.y) * grabMoveScale.y,
                                               Mathf.Pow(Mathf.Abs(d.z), grabMoveScaleExp) * Mathf.Sign(d.z) * grabMoveScale.z,
                                               HmdRig.transform.position.y * 0.975f /*quick hack to keep data plot from going over head of player*/);
@@ -133,7 +133,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     //Reset the player/hmd to default position
     public void ResetPlayerPosition()
     {
-        Vector3 center = HeatVRML.Instance.GetPlotCenter();
-        HmdRig.transform.position = new Vector3(center.x, HeatVRML.Instance.sceneCorner.y + defaultPlayerOffset.y, HeatVRML.Instance.sceneCorner.z + defaultPlayerOffset.z);
+        Vector3 center = Graph.Instance.GetPlotCenter();
+        HmdRig.transform.position = new Vector3(center.x, Graph.Instance.sceneCorner.y + defaultPlayerOffset.y, Graph.Instance.sceneCorner.z + defaultPlayerOffset.z);
     }
 }

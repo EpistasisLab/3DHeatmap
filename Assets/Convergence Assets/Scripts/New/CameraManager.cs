@@ -12,7 +12,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     private Camera ourCamera;
 
     //The main object for the app
-    private HeatVRML heatVRML;
+    private Graph heatVRML;
 
     /// <summary> The look-at target for the camera </summary>
     private Vector3 lookAtTarget;
@@ -54,7 +54,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         ourCamera = transform.GetComponent<Camera>() as Camera;
         if (ourCamera == null)
             Debug.LogError("camera == null");
-        heatVRML = GameObject.Find("Prefab objectify").GetComponent<HeatVRML>();
+        heatVRML = GameObject.Find("Prefab objectify").GetComponent<Graph>();
         if (heatVRML == null)
             Debug.LogError("heatVRML == null");
 

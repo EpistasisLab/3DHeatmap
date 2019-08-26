@@ -239,8 +239,8 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         }
         else
         {
-            bottomHitIntX = Mathf.FloorToInt((bottomHit.point.x - HeatVRML.Instance.sceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth());
-            bottomHitIntZ = Mathf.FloorToInt((bottomHit.point.z - HeatVRML.Instance.sceneCorner.z) / HeatVRML.Instance.rowDepthFull);
+            bottomHitIntX = Mathf.FloorToInt((bottomHit.point.x - Graph.Instance.sceneCorner.x) / Graph.Instance.GetBlockSceneWidth());
+            bottomHitIntZ = Mathf.FloorToInt((bottomHit.point.z - Graph.Instance.sceneCorner.z) / Graph.Instance.rowDepthFull);
         }
         if (dbgOutput)
             dbgStr += "bottomHit, HitInt X Z: " + bottomHit.point.ToString("F1") + " " + bottomHitIntX + " " + bottomHitIntZ + "\n";
@@ -251,26 +251,26 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         //
         //First calc the slope ratio (z/x, or row-depth/column-width), since our grid cells in scene are not square. 
         // Each ridge (row of blocks) can have separator space between them, AND row depth can be different than column width.
-        float slopeRatio = HeatVRML.Instance.rowDepthFull / HeatVRML.Instance.GetBlockSceneWidth();
+        float slopeRatio = Graph.Instance.rowDepthFull / Graph.Instance.GetBlockSceneWidth();
         //The slope, taking slopeRatio into account. So this should now be in normalized unit for a regularized data grid.
         float m = ray.direction.x != 0 ? ray.direction.z / ray.direction.x / slopeRatio : float.MaxValue;
         //A point on the line in normalized grid space. Using the ray origin
-        float pz = (ray.origin.z - HeatVRML.Instance.sceneCorner.z) / HeatVRML.Instance.rowDepthFull;
-        float px = (ray.origin.x - HeatVRML.Instance.sceneCorner.x) / HeatVRML.Instance.GetBlockSceneWidth();
+        float pz = (ray.origin.z - Graph.Instance.sceneCorner.z) / Graph.Instance.rowDepthFull;
+        float px = (ray.origin.x - Graph.Instance.sceneCorner.x) / Graph.Instance.GetBlockSceneWidth();
         //Intercept, relative to graph front-left corner at 0,0
         float b = pz - m * px;
 
         if (dbgOutput)
-            dbgStr += "m, px, pz, b, sceneCorner: " + m + ", " + px + ", " + pz + ", " + b + ", " + HeatVRML.Instance.sceneCorner + "\n";
+            dbgStr += "m, px, pz, b, sceneCorner: " + m + ", " + px + ", " + pz + ", " + b + ", " + Graph.Instance.sceneCorner + "\n";
 
         //If we're pointing away from the data, skeedaddle
-        if (px >= HeatVRML.Instance.numCols)
+        if (px >= Graph.Instance.numCols)
             if ( ray.direction.x >= 0)
                 return false;
         if (px < 0)
             if (ray.direction.x <= 0)
                 return false;
-        if (pz >= HeatVRML.Instance.numRows)
+        if (pz >= Graph.Instance.numRows)
             if (ray.direction.z >= 0)
                 return false;
         if (pz < 0)
@@ -292,12 +292,12 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         {
             cStart = Mathf.Max(0, Mathf.FloorToInt(px));
             //Only go as far as the intersection of ray with bottom of graph
-            cEnd = Mathf.Min(bottomHitIntX, HeatVRML.Instance.numCols-1);
+            cEnd = Mathf.Min(bottomHitIntX, Graph.Instance.numCols-1);
         }
         else
         {
             cStart = Mathf.Max(0, bottomHitIntX);
-            cEnd = Mathf.Min( Mathf.FloorToInt(px), HeatVRML.Instance.numCols-1);
+            cEnd = Mathf.Min( Mathf.FloorToInt(px), Graph.Instance.numCols-1);
         }
 
         bool foundAnIntersection = false;
@@ -324,17 +324,17 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
                     continue;
                 rLeft = 0;
             }
-            if (rLeft >= HeatVRML.Instance.numRows)
+            if (rLeft >= Graph.Instance.numRows)
             {
-                if (rRight >= HeatVRML.Instance.numRows)
+                if (rRight >= Graph.Instance.numRows)
                     continue;
-                rLeft = HeatVRML.Instance.numRows - 1;
+                rLeft = Graph.Instance.numRows - 1;
             }
 
             //Now that we now rLeft is in bounds, check rRight. Don't just assign rLeft to it,
             // because we have to be able to traverse multiple rows when right side is out of bounds.
-            if (rRight < 0 || rRight >= HeatVRML.Instance.numRows)
-               rRight = Mathf.Max(0, Mathf.Min(rRight, HeatVRML.Instance.numRows-1));
+            if (rRight < 0 || rRight >= Graph.Instance.numRows)
+               rRight = Mathf.Max(0, Mathf.Min(rRight, Graph.Instance.numRows-1));
 
             //If ray origin is within/over the data, only search rows that are under the ray,
             // and if ray intersection with plane is within data area, only search that far.
@@ -420,29 +420,29 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     private void PrepareBlockOverlay(GameObject cube, int dataRow, int dataCol, int dataBin, float extraScale = 1f)
     {
         //Size a cube to the size of the selected column
-        float width = HeatVRML.Instance.GetBlockSceneWidth();
-        float height = HeatVRML.Instance.GetBlockSceneHeightByPosition(dataRow, dataCol);
-        float depth = HeatVRML.Instance.rowDepthDataOnly;
+        float width = Graph.Instance.GetBlockSceneWidth();
+        float height = Graph.Instance.GetBlockSceneHeightByPosition(dataRow, dataCol);
+        float depth = Graph.Instance.rowDepthDataOnly;
         cube.transform.localScale = new Vector3(width, height, depth) * extraScale;
 
         //Debug.Log("heightValue, minDataHeight, dataHeightRangeScale, sceneHeight, currGraphHeightScale, sceneCorner");
-        //Debug.Log(triData.heightValue + ", " + HeatVRML.Instance.minDataHeight + ", " + HeatVRML.Instance.dataHeightRangeScale + ", " + HeatVRML.Instance.sceneHeight + ", " + HeatVRML.Instance.currGraphHeightScale + ", " + HeatVRML.Instance.sceneCorner);
+        //Debug.Log(triData.heightValue + ", " + Graph.Instance.minDataHeight + ", " + Graph.Instance.dataHeightRangeScale + ", " + Graph.Instance.sceneHeight + ", " + Graph.Instance.currGraphHeightScale + ", " + Graph.Instance.sceneCorner);
         Vector3 pos = new Vector3()
         {
-            y = height / 2f + HeatVRML.Instance.sceneCorner.y,
-            x = ((((dataCol + 0.5f) - HeatVRML.Instance.minCol) * HeatVRML.Instance.sceneWidth) / HeatVRML.Instance.numCols) + HeatVRML.Instance.sceneCorner.x
+            y = height / 2f + Graph.Instance.sceneCorner.y,
+            x = ((((dataCol + 0.5f) - Graph.Instance.minCol) * Graph.Instance.sceneWidth) / Graph.Instance.numCols) + Graph.Instance.sceneCorner.x
         };
 
-        float zoff = dataRow * HeatVRML.Instance.rowDepthFull;
-        if (HeatVRML.Instance.binInterleave)
+        float zoff = dataRow * Graph.Instance.rowDepthFull;
+        if (Graph.Instance.binInterleave)
         {
-            zoff = zoff + (dataBin * HeatVRML.Instance.binSeparation);
+            zoff = zoff + (dataBin * Graph.Instance.binSeparation);
         }
         else
         {
-            zoff = zoff + (dataBin * HeatVRML.Instance.sceneDepthByBinWithSep);
+            zoff = zoff + (dataBin * Graph.Instance.sceneDepthByBinWithSep);
         }
-        pos.z = (HeatVRML.Instance.sceneCorner.z + zoff) + (HeatVRML.Instance.rowDepthDataOnly / 2f);
+        pos.z = (Graph.Instance.sceneCorner.z + zoff) + (Graph.Instance.rowDepthDataOnly / 2f);
 
         cube.transform.position = pos;
     }
@@ -547,7 +547,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
                 dist = hit.distance;
             Debug.DrawRay(dbgRay.origin, dbgRay.direction * dist, Color.red);
             Vector3 o = dbgRay.origin;
-            o.y = HeatVRML.Instance.sceneCorner.y;
+            o.y = Graph.Instance.sceneCorner.y;
             Vector3 d = dbgRay.direction;
             d.y = 0;
             Debug.DrawRay(o, d * 10000f, Color.yellow);

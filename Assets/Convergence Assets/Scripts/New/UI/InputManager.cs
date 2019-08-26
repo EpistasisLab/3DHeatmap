@@ -211,7 +211,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         {
             if ((vertButton != 0f || horzButton != 0f))
             {
-                HeatVRML.Instance.TranslateRidges(horzButton * translationScaleKeys * 10, 0f, vertButton * translationScaleKeys * 10);
+                Graph.Instance.TranslateRidges(horzButton * translationScaleKeys * 10, 0f, vertButton * translationScaleKeys * 10);
                 return;
             }
 
@@ -246,7 +246,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             {
                 //take the new data and draw it
                 Debug.Log("Loaded file with success");
-                HeatVRML.Instance.Redraw();
+                Graph.Instance.Redraw();
             }
             */
         }
@@ -262,12 +262,12 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         }
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            HeatVRML.Instance.Redraw();
+            Graph.Instance.Redraw();
         }
         if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
         {
             //From orig code - show/hide UI windows
-            //HeatVRML.Instance.allHidden = !HeatVRML.Instance.allHidden;
+            //Graph.Instance.allHidden = !Graph.Instance.allHidden;
         }
         if (Input.GetKeyDown(KeyCode.F12))
         {
@@ -275,7 +275,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
 
             DataInspector.Instance.DbgSelectWithDebugRay();
 
-            //GameObject newRidge = UnityEngine.Object.Instantiate(HeatVRML.Instance.Proto, new Vector3(HeatVRML.Instance.sceneCorner.x, HeatVRML.Instance.sceneCorner.y, HeatVRML.Instance.sceneCorner.z), Quaternion.identity);
+            //GameObject newRidge = UnityEngine.Object.Instantiate(Graph.Instance.Proto, new Vector3(Graph.Instance.sceneCorner.x, Graph.Instance.sceneCorner.y, Graph.Instance.sceneCorner.z), Quaternion.identity);
             //newRidge.name = "testRidge";
 
             //UIManager.Instance.StartUIActionPrompts();
