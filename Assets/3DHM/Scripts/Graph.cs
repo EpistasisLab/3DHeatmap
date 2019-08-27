@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using SMView;
+using TMPro;
 
 /// <summary>
 /// Graph class. Has lots of state vars crammed in it. Needs more refactoring still.
@@ -37,6 +38,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
     /// <summary> Object to conatain graph elements so they can be manipulated together </summary>
     public GameObject graphContainer;
+
+    /// <summary> Label object to use for instantiating row and column labels </summary>
+    public GameObject protolabel;
 
     // scene related
     /// <summary> Stauffer - plotting area width in scene units. Row width. Seems hardcoded </summary>
@@ -79,9 +83,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
     private bool bExtendZ;
     private bool bHaveLabels = false; //Stauffer - set default val to suppress warning
 
-    private GameObject proto;
-    public GameObject Proto { get { return proto; } }
-    private GameObject protolabel;
+    private GameObject protomesh;
+    public GameObject Proto { get { return protomesh; } }
     private XRidge[] xRidges;
     //private int shaveCount; Stauffer - never used
     private int numRidges;
@@ -185,11 +188,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
     {
         
         // Find the prototype mesh object, if present
-        this.proto = GameObject.Find("protomesh_SceneObj");
-        if (this.proto == null)
-            Debug.LogError("Failed to find object for proto ridge");
-
-        this.protolabel = GameObject.Find("protolabel");
+        this.protomesh = GameObject.Find("protomesh_SceneObj");
+        if (this.protomesh == null)
+            Debug.LogError("Failed to find object for protomesh ridge");
 
         //Stauffer
         //
@@ -535,7 +536,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
     public virtual void ShowData()
     {
-        if (!this.proto) // must be functioning only as user interface
+        if (!this.protomesh) // must be functioning only as user interface
         {
             return;
         }
@@ -576,6 +577,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
             this.BuildRidge(row, this.minBin);//always one bin for now
         }
         //DebugRidge(this.xRidges[0]);
+
     }
 
     private void DebugRidge(XRidge ridge)
@@ -696,31 +698,12 @@ public class Graph : MonoBehaviorSingleton<Graph>
             zoff = zoff + (binindex * this.sceneDepthByBinWithSep);
         }
 
-        //Stauffer - 'proto' is from protomesh scene object, which is a prefab. It's a private global instanced above.
-        GameObject newRidge = UnityEngine.Object.Instantiate(this.proto, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + zoff), Quaternion.identity);
+        //Stauffer - 'protomesh' is from protomesh scene object, which is a prefab. It's a private global instanced above.
+        GameObject newRidge = UnityEngine.Object.Instantiate(this.protomesh, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + zoff), Quaternion.identity);
 
         newRidge.transform.localScale = new Vector3(this.sceneWidth, this.sceneHeight * this.currGraphHeightScale, this.rowDepthDataOnly);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
-
-        //Row labels
-        GameObject newLabel = UnityEngine.Object.Instantiate(this.protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth, this.sceneCorner.y + 1f, (this.sceneCorner.z + zoff) + (this.rowDepthDataOnly * 0.1f)), this.protolabel.transform.rotation);
-        //Add the label to the graph container object for easier manipulation
-        newLabel.transform.SetParent(graphContainer.transform.Find("Labels"));
-
-        if ((row > this.numRowLabels) || (this.rowLabels[row] == null))
-        {
-            ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = row.ToString();
-        }
-        else
-        {
-            ((TextMesh)newLabel.GetComponent(typeof(TextMesh))).text = this.rowLabels[row];
-        }
-
-        Vector3 newScl = newLabel.transform.localScale;
-        newScl.x = this.rowDepthDataOnly * 0.5f;
-        //newScl.y = this.rowDepthDataOnly * 0.5f;
-        newLabel.transform.localScale = newScl;
 
         //Helper class to make the mesh
         MeshMaker mm = new MeshMaker();
@@ -969,9 +952,32 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
         mm.Attach(amesh);
 
-        this.xRidges[this.numRidges].AddRidge(newRidge, amesh, binindex, row);
-        this.xRidges[this.numRidges++].AddLabel(newLabel);
+        xRidges[numRidges].AddRidge(newRidge, amesh, binindex, row);
+        //Generate row labels. Center in data portion of row.
+        LabelGenerateRow(numRidges, zoff, binindex);
+        numRidges++;
+    }
 
+    private void LabelGenerateRow(int row, float zoff, int binindex /*not really using*/)
+    {
+        //Row label
+        GameObject newLabel = UnityEngine.Object.Instantiate(protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth + 0.5f, this.sceneCorner.y + 0.01f, (this.sceneCorner.z + zoff)), this.protolabel.transform.rotation);
+
+        //Add the label to the graph container object for easier manipulation and a cleaner scene hierarchy
+        newLabel.transform.SetParent(graphContainer.transform.Find("RuntimeLabelsContainer")); //shouldn't be using find so often? Should grab a ref to this in Start()
+
+        string labelTxt = row.ToString();
+        if ((row <= this.numRowLabels))
+            if (rowLabels[row] != null)
+                labelTxt = rowLabels[row];
+        ((TextMeshPro)newLabel.GetComponent(typeof(TextMeshPro))).text = labelTxt;
+
+        //Vector3 newScl = newLabel.transform.localScale;
+        //newScl.x = this.rowDepthDataOnly * 0.5f;
+        //newScl.y = this.rowDepthDataOnly * 0.5f;
+        //newLabel.transform.localScale = newScl;
+
+        xRidges[row].AddLabel(newLabel);
     }
 
     /// <summary>
