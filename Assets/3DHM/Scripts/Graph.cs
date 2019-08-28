@@ -39,6 +39,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <summary> Object to conatain graph elements so they can be manipulated together </summary>
     public GameObject graphContainer;
 
+    /// <summary> Holds label generated at runtime. Just to keep things tidy in hierarchy </summary>
+    public GameObject runtimeLabelsContainer;
+
     /// <summary> Label object to use for instantiating row and column labels </summary>
     public GameObject protolabel;
 
@@ -94,10 +97,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
     public float rowDepthDataOnly;
     /// <summary> Normalized scene width of each block (column of data). </summary>
     private float blockWidthNorm;
-    private int minRow;
-    private int maxRow;
-    public int minCol;
-    private int maxCol;
     private int minBin;
     private int maxBin;
     /// <summary> the minimum value of the data assigned to height </summary>
@@ -513,22 +512,18 @@ public class Graph : MonoBehaviorSingleton<Graph>
         //
         DataVariable heightVar = DataManager.I.HeightVar;
         
-        this.minRow = 0;
-        this.maxRow = DataManager.I.Rows - 1;
-        this.minCol = 0;
-        this.maxCol = DataManager.I.Cols - 1;
+        this.numRows = DataManager.I.Rows;
         this.minBin = 0; //Just always have 1 bin for now. Empirically, we want its number to be 0, otherwise a space for a phantom bin appears in render.
         this.maxBin = 0;
         this.minDataHeight = heightVar.MinValue;
         this.maxDataHeight = heightVar.MaxValue;
-        this.numRows = (this.maxRow - this.minRow) + 1;
+        this.numCols = DataManager.I.Cols;
         // debugging
-        if (this.maxCol > this.colLimit)
+        if (numCols > this.colLimit)
         {
-            Debug.LogError("maxCol > colLimit " + maxCol + " > " + colLimit + " Limiting to colLimit");
-            this.maxCol = this.colLimit;
+            Debug.LogError("numCols > colLimit " + numCols + " > " + colLimit + " Limiting to colLimit");
+            this.numCols = this.colLimit;
         }
-        this.numCols = (this.maxCol - this.minCol) + 1;
         this.numBins = (this.maxBin - this.minBin) + 1;
         this.dataHeightRange = this.maxDataHeight - this.minDataHeight;
     }
@@ -688,7 +683,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         float back = 0.0f;
         float edgeY = 0.0f;
 
-        float zoff = (row - this.minRow) * this.rowDepthFull;
+        float zoff = row * this.rowDepthFull;
         if (this.binInterleave)
         {
             zoff = zoff + (binindex * this.binSeparation);
@@ -744,7 +739,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
             }
             else
             {   //column 0, get things init'ed
-                thisX = ((0.5f) - this.minCol) * this.blockWidthNorm;
+                thisX = 0.5f * this.blockWidthNorm;
                 thisY = GetBlockMeshHeight(DataManager.I.GetHeightValue(row, 0, false /*return NaN if value is NaN*/));
                 prevX = thisX - this.blockWidthNorm;
                 prevY = thisY;
@@ -752,7 +747,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
             if (colNum < numCols - 1)
             {
-                nextX = ((colNum + 1 + 0.5f) - this.minCol) * this.blockWidthNorm;
+                nextX = (colNum + 1 + 0.5f) * this.blockWidthNorm;
                 nextY = GetBlockMeshHeight(DataManager.I.GetHeightValue(row, colNum + 1, false));
             }
             else
@@ -964,7 +959,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         GameObject newLabel = UnityEngine.Object.Instantiate(protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth + 0.5f, this.sceneCorner.y + 0.01f, (this.sceneCorner.z + zoff)), this.protolabel.transform.rotation);
 
         //Add the label to the graph container object for easier manipulation and a cleaner scene hierarchy
-        newLabel.transform.SetParent(graphContainer.transform.Find("RuntimeLabelsContainer")); //shouldn't be using find so often? Should grab a ref to this in Start()
+        newLabel.transform.SetParent(runtimeLabelsContainer.transform);
 
         string labelTxt = row.ToString();
         if ((row <= this.numRowLabels))
@@ -972,10 +967,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
                 labelTxt = rowLabels[row];
         ((TextMeshPro)newLabel.GetComponent(typeof(TextMeshPro))).text = labelTxt;
 
-        //Vector3 newScl = newLabel.transform.localScale;
-        //newScl.x = this.rowDepthDataOnly * 0.5f;
-        //newScl.y = this.rowDepthDataOnly * 0.5f;
-        //newLabel.transform.localScale = newScl;
+        RectTransform rt = newLabel.GetComponent<RectTransform>();
+        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rowDepthDataOnly);
+        rt.ForceUpdateRectTransforms();
 
         xRidges[row].AddLabel(newLabel);
     }

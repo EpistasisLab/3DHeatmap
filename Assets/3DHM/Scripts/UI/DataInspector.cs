@@ -430,7 +430,7 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         Vector3 pos = new Vector3()
         {
             y = height / 2f + Graph.I.sceneCorner.y,
-            x = ((((dataCol + 0.5f) - Graph.I.minCol) * Graph.I.sceneWidth) / Graph.I.numCols) + Graph.I.sceneCorner.x
+            x = (((dataCol + 0.5f) * Graph.I.sceneWidth) / Graph.I.numCols) + Graph.I.sceneCorner.x //NOTE - need to make a property to get this value
         };
 
         float zoff = dataRow * Graph.I.rowDepthFull;
