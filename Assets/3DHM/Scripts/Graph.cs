@@ -542,8 +542,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
             int iridge = 0;
             while (iridge < this.numRidges)
             {
-                UnityEngine.Object.Destroy(this.xRidges[iridge].myMeshObject);
-                UnityEngine.Object.Destroy(this.xRidges[iridge].myLabel);
+                UnityEngine.Object.Destroy(xRidges[iridge].myMeshObject);
+                xRidges[iridge].myLabel.Destroy();
                 ++iridge;
             }
         }
@@ -662,6 +662,13 @@ public class Graph : MonoBehaviorSingleton<Graph>
         return Graph.I.sceneWidth / Graph.I.numCols;
     }
 
+    /// <summary> Return the z position of a row (0-based) </summary>
+    /// <returns></returns>
+    public float GetRowSceneZ( int row)
+    {
+        return row * this.rowDepthFull;
+    }
+
     /// <summary> For a given row of data, build a single mesh containing all the blocks in the row </summary>
     /// <param name="row"></param>
     /// <param name="numx"></param>
@@ -683,7 +690,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         float back = 0.0f;
         float edgeY = 0.0f;
 
-        float zoff = row * this.rowDepthFull;
+        float zoff = GetRowSceneZ(row);
         if (this.binInterleave)
         {
             zoff = zoff + (binindex * this.binSeparation);
@@ -949,29 +956,29 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
         xRidges[numRidges].AddRidge(newRidge, amesh, binindex, row);
         //Generate row labels. Center in data portion of row.
-        LabelGenerateRow(numRidges, zoff, binindex);
+        LabelGenerateRow(numRidges);
         numRidges++;
     }
 
-    private void LabelGenerateRow(int row, float zoff, int binindex /*not really using*/)
+    private void LabelGenerateRow(int row)
     {
-        //Row label
-        GameObject newLabel = UnityEngine.Object.Instantiate(protolabel, new Vector3(this.sceneCorner.x + this.sceneWidth + 0.5f, this.sceneCorner.y + 0.01f, (this.sceneCorner.z + zoff)), this.protolabel.transform.rotation);
-
-        //Add the label to the graph container object for easier manipulation and a cleaner scene hierarchy
-        newLabel.transform.SetParent(runtimeLabelsContainer.transform);
+        float z = GetRowSceneZ(row);
+        //Calc an extra amount to increase size of text box, since the characters don't fill the entire height of the text box.
+        float extraZ = (rowDepthFull - rowDepthDataOnly) / 2;
 
         string labelTxt = row.ToString();
-        if ((row <= this.numRowLabels))
+        if ((row <= numRowLabels))
             if (rowLabels[row] != null)
                 labelTxt = rowLabels[row];
-        ((TextMeshPro)newLabel.GetComponent(typeof(TextMeshPro))).text = labelTxt;
 
-        RectTransform rt = newLabel.GetComponent<RectTransform>();
-        rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rowDepthDataOnly);
-        rt.ForceUpdateRectTransforms();
+        //right side label
+        Vector3 pos = new Vector3(this.sceneCorner.x + this.sceneWidth + 0.5f, this.sceneCorner.y + 0.01f, this.sceneCorner.z + z - extraZ/2);
+        xRidges[row].AddLabel( new Label(protolabel, runtimeLabelsContainer, Label.TypeE.row, Label.SideE.rightOrBottom, pos, rowDepthDataOnly + extraZ, labelTxt) );
 
-        xRidges[row].AddLabel(newLabel);
+        //left side label
+        pos.x = 0;
+        xRidges[row].AddLabel(new Label(protolabel, runtimeLabelsContainer, Label.TypeE.row, Label.SideE.leftOrTop, pos, rowDepthDataOnly + extraZ, labelTxt));
+
     }
 
     /// <summary>

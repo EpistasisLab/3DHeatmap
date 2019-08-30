@@ -8,7 +8,7 @@ using System.Collections;
 public class XRidge : object
 {
     public GameObject myMeshObject;
-    public GameObject myLabel;
+    public Label myLabel;
     public Transform trans;
     public Mesh myMesh;
     public float[] vertexColors;
@@ -37,9 +37,9 @@ public class XRidge : object
         this.myRow = row;
     }
 
-    public virtual void AddLabel(GameObject alabel)
+    public virtual void AddLabel(Label alabel)
     {
-        this.myLabel = alabel;
+        myLabel = alabel;
     }
 
     /* Stauffer - unused 
