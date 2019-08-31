@@ -8,7 +8,10 @@ using System.Collections;
 public class XRidge : object
 {
     public GameObject myMeshObject;
-    public Label myLabel;
+    public Label myLabelRowRight;
+    public Label myLabelRowLeft;
+    public Label myLabelColumnBottom;
+    public Label myLabelColumnTop;
     public Transform trans;
     public Mesh myMesh;
     public float[] vertexColors;
@@ -37,9 +40,9 @@ public class XRidge : object
         this.myRow = row;
     }
 
-    public virtual void AddLabel(Label alabel)
+    public virtual void Destroy()
     {
-        myLabel = alabel;
+        UnityEngine.Object.Destroy(myMeshObject);
     }
 
     /* Stauffer - unused 

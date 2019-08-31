@@ -45,6 +45,12 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <summary> Label object to use for instantiating row and column labels </summary>
     public GameObject protolabel;
 
+    /// <summary> List of labels. Clunky to do like this, but keep it for now for simplicity. </summary>
+    private List<Label> labelsRowRight;
+    private List<Label> labelsRowLeft;
+    private List<Label> labelsColumnBottom;
+    private List<Label> labelsColumnTop;
+
     // scene related
     /// <summary> Stauffer - plotting area width in scene units. Row width. Seems hardcoded </summary>
     public float sceneWidth;
@@ -194,6 +200,11 @@ public class Graph : MonoBehaviorSingleton<Graph>
         //Stauffer
         //
         this.ridgeMeshMinHeight = 0.1f;
+
+        labelsRowRight = new List<Label>();
+        labelsRowLeft = new List<Label>();
+        labelsColumnBottom = new List<Label>();
+        labelsColumnTop = new List<Label>();
 
         //Quick intro message with instructions
         UIManager.I.ShowIntroMessage();
@@ -542,10 +553,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
             int iridge = 0;
             while (iridge < this.numRidges)
             {
-                UnityEngine.Object.Destroy(xRidges[iridge].myMeshObject);
-                xRidges[iridge].myLabel.Destroy();
+                xRidges[iridge].Destroy();
                 ++iridge;
             }
+            DestroyLabels();
         }
         this.numRidges = 0;
 
@@ -573,6 +584,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
         }
         //DebugRidge(this.xRidges[0]);
 
+        //Labels
+        GenerateRowLabels();
+        GenerateColumnLabels();
     }
 
     private void DebugRidge(XRidge ridge)
@@ -955,30 +969,88 @@ public class Graph : MonoBehaviorSingleton<Graph>
         mm.Attach(amesh);
 
         xRidges[numRidges].AddRidge(newRidge, amesh, binindex, row);
-        //Generate row labels. Center in data portion of row.
-        LabelGenerateRow(numRidges);
         numRidges++;
     }
 
-    private void LabelGenerateRow(int row)
+    private void AddLabel(Label alabel)
     {
-        float z = GetRowSceneZ(row);
-        //Calc an extra amount to increase size of text box, since the characters don't fill the entire height of the text box.
-        float extraZ = (rowDepthFull - rowDepthDataOnly) / 2;
+        if (alabel.Type == Label.TypeE.row)
+        {
+            if (alabel.Side == Label.SideE.rightOrBottom)
+                labelsRowRight.Add(alabel);
+            else
+                labelsRowLeft.Add(alabel);
+        }
+        else
+        {
+            if (alabel.Side == Label.SideE.rightOrBottom)
+                labelsColumnBottom.Add(alabel);
+            else
+                labelsColumnTop.Add(alabel);
+        }
+    }
 
-        string labelTxt = row.ToString();
-        if ((row <= numRowLabels))
-            if (rowLabels[row] != null)
-                labelTxt = rowLabels[row];
+    private void DestroyLabels()
+    {
+        DestroyLabelList(labelsColumnBottom);
+        DestroyLabelList(labelsColumnTop);
+        DestroyLabelList(labelsRowLeft);
+        DestroyLabelList(labelsRowRight);
+    }
 
-        //right side label
-        Vector3 pos = new Vector3(this.sceneCorner.x + this.sceneWidth + 0.5f, this.sceneCorner.y + 0.01f, this.sceneCorner.z + z - extraZ/2);
-        xRidges[row].AddLabel( new Label(protolabel, runtimeLabelsContainer, Label.TypeE.row, Label.SideE.rightOrBottom, pos, rowDepthDataOnly + extraZ, labelTxt) );
+    private void DestroyLabelList(List<Label> list)
+    {
+        foreach (Label l in list)
+            l.Destroy();
+        list.Clear();
+    }
 
-        //left side label
-        pos.x = 0;
-        xRidges[row].AddLabel(new Label(protolabel, runtimeLabelsContainer, Label.TypeE.row, Label.SideE.leftOrTop, pos, rowDepthDataOnly + extraZ, labelTxt));
+    private void GenerateRowLabels()
+    {
+        for(int row = 0; row < numRows; row++)
+        {
+            float z = GetRowSceneZ(row);
+            //Calc an extra amount to increase size of text box, since the characters don't fill the entire height of the text box.
+            float extraZ = (rowDepthFull - rowDepthDataOnly) / 2;
 
+            string labelTxt = row.ToString();
+            if ((row <= numRowLabels))
+                if (rowLabels[row] != null)
+                    labelTxt = rowLabels[row];
+
+            //An offset so label isn't right up on edge of graph
+            float offset = GetBlockSceneWidth() / 2;
+
+            //right side label
+            Vector3 pos = new Vector3(this.sceneCorner.x + this.sceneWidth + offset, this.sceneCorner.y + 0.01f, this.sceneCorner.z + z - extraZ / 2);
+            AddLabel(new Label(protolabel, runtimeLabelsContainer, Label.TypeE.row, Label.SideE.rightOrBottom, pos, rowDepthDataOnly + extraZ, labelTxt));
+
+            //left side label
+            pos.x = sceneCorner.x - offset;
+            AddLabel(new Label(protolabel, runtimeLabelsContainer, Label.TypeE.row, Label.SideE.leftOrTop, pos, rowDepthDataOnly + extraZ, labelTxt));
+        }
+    }
+
+    private void GenerateColumnLabels()
+    {
+        for(int col = 0; col < numCols; col++)
+        {
+            string labelTxt = col.ToString();
+            if (DataManager.I.HeightVar.hasColumnHeaders) //need a general accessor to headers instead of going through HeightVar
+                labelTxt = DataManager.I.HeightVar.columnHeaders[col];
+
+            //An offset so label isn't right up on edge of graph
+            float offset = rowDepthDataOnly / 2;
+
+            //Bottom/near label
+            Vector3 pos = new Vector3(sceneCorner.x + col * GetBlockSceneWidth(), sceneCorner.y + 0.01f, sceneCorner.z - offset);
+            AddLabel(new Label(protolabel, runtimeLabelsContainer, Label.TypeE.column, Label.SideE.rightOrBottom, pos, GetBlockSceneWidth(), labelTxt));
+
+            //Top/far label
+            pos.z = sceneCorner.z + sceneDepthFull + offset;
+            AddLabel(new Label(protolabel, runtimeLabelsContainer, Label.TypeE.column, Label.SideE.leftOrTop, pos, GetBlockSceneWidth(), labelTxt));
+
+        }
     }
 
     /// <summary>

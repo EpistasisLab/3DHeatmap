@@ -7,6 +7,11 @@ using TMPro;
 public class Label {
 
     public enum TypeE { undefined, row, column};
+    /// <summary>
+    /// The side type is group by right/bottom and left/top, because each pair will have same
+    ///  text alignment setting if we ever implement the change in label orientation based on 
+    ///  user's view direciton.
+    /// </summary>
     public enum SideE { undefined, rightOrBottom, leftOrTop};
 
     private TypeE type;
@@ -69,12 +74,15 @@ public class Label {
         type = newType;
         side = newSide;
 
-        //For left-side labels, the position that gets passed in is left edge of graph, so we have to account for
+        //For left-side and top-side labels, the position that gets passed in is the edge of graph, so we have to account for
         // the width of the text box
-        if (type == TypeE.row && side == SideE.leftOrTop)
+        if (side == SideE.leftOrTop)
         {
             Vector3 newPos = gameObj.transform.position;
-            newPos.x = gameObj.transform.position.x - textMesh.rectTransform.rect.width;
+            if(type == TypeE.row)
+                newPos.x -= textMesh.rectTransform.rect.width; 
+            else
+                newPos.z += textMesh.rectTransform.rect.width;
             gameObj.transform.position = newPos;
         }
 

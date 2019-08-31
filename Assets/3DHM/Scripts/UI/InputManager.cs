@@ -264,10 +264,14 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         {
             Graph.I.Redraw();
         }
-        if (/*Input.GetKeyDown(KeyCode.M) ||*/ Input.GetKeyDown(KeyCode.F5))
+        if (Input.GetKeyDown(KeyCode.F10))
         {
-            //From orig code - show/hide UI windows
-            //Graph.I.allHidden = !Graph.I.allHidden;
+            CameraManager.I.FollowHMDenable(CameraManager.I.followHmdEnabled == false);
+        }
+        if (Input.GetKeyDown(KeyCode.F11))
+        {
+            //Debug VR device loading
+            VRManager.I.DeviceLoadAndEnable();
         }
         if (Input.GetKeyDown(KeyCode.F12))
         {

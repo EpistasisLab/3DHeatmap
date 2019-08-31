@@ -1,7 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.VR;
+using UnityEngine.XR;
 using Valve.VR;
 
 public class VRManager : MonoBehaviorSingleton<VRManager> {
@@ -41,11 +42,39 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     private Vector3[] handPosPrev = new Vector3[2];
     private Quaternion[] handRotPrev = new Quaternion[2];
 
+    /// <summary> For now we'll just use OpenVR </summary>
+    private string vrDeviceName = "OpenVR";
+
+    /// <summary> Flag. Is VR currently available on this computer? \
+    /// NOTE - this returns true if device is connected before running this app,
+    /// but it doesn't start returning true if a device (Oculus via SteamVR, at least)
+    /// is connected only after app starts. </summary>
+    public bool VRdevicePresent { get { return XRDevice.isPresent; } }
+
+    /// <summary> Flag. Is the VR device enabled? </summary>
+    public bool VRdeviceEnabled { get { return XRSettings.enabled; } }
+
+    /// <summary> Check if vr device is loaded and ready to use. May not be enabled, but it's ready to be enabled. </summary>
+    private bool VRisAvailable { get { return VRdevicePresent && (String.Compare(XRSettings.loadedDeviceName, vrDeviceName, true) == 0); } }
+    /// <summary> True if 3DHM is running VR mode </summary>
+    public bool VRmodeIsEnabled { get; private set; }
+
     // Use this for initialization instead of Awake()
-    override protected void Initialize() {
+    override protected void Initialize()
+    {
         grabDown[0] = grabDown[1] = false;
-	}
-	
+
+        StartCoroutine("DeviceCheck");
+
+        //Enter VR mode if available
+        VRmodeEnable(VRisAvailable);
+    }
+
+
+    void Start()
+    {
+    }
+
 	// Update is called once per frame
 	void Update () {
 		
@@ -53,7 +82,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     private void LateUpdate()
     {
-        //Do things in late update so we can grab current action states first via the event handlers
+        //Do things in late update so we can grab current action states first via the event handlers.
 
         //Check for trigger
         LookForTriggerActivity();
@@ -66,6 +95,88 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         handPosPrev[1] = handPos[1];
         handRotPrev[0] = handRot[0];
         handRotPrev[1] = handRot[1];
+    }
+
+    private void VRmodeEnable(bool enable)
+    {
+        //Debug.Log("Entering VRmodeEnable: " + enable);
+        VRmodeIsEnabled = false;
+
+        if( enable == true && !VRisAvailable)
+        {
+            Debug.LogError("VrmodeEnable called, but VR is not available.");
+            return;
+        }
+
+        //VR setup
+        XRSettings.enabled = enable;
+        //Do this before enabling followHMD mode in desktop camera.
+        //When this is enabled, it will take over drawing to the app desktop window.
+        HmdRig.SetActive(enable);
+
+        //Tell desktop camera to go into follow-hmd mode.
+        //Do this after enabling the hmd rig.
+        CameraManager.I.FollowHMDenable(enable);
+
+        VRmodeIsEnabled = enable && VRisAvailable;
+    }
+
+    /// <summary>
+    /// NOTE - Made this to be able to check at runtime if VR is available and give the user option
+    ///  to enable it for use. But if steamVR is not already running, XRDevice.isPresent never returns true.
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator DeviceCheck()
+    {
+        while (true)
+        {
+            Debug.Log("time " + Time.time + " XRDevice.isPresent: " + VRdevicePresent + " XRSettings.isDeviceActive: " + XRSettings.isDeviceActive + " XRSettings.loadedDeviceName: " + XRSettings.loadedDeviceName);
+            yield return new WaitForSeconds(3);
+        }
+    }
+
+    IEnumerator DeviceLoadAndEnableCoroutine()
+    {
+        int id = UIManager.I.StatusShow("Attempting to start VR device...");
+        XRSettings.LoadDeviceByName(vrDeviceName);
+        float startTime = Time.time;
+        while( Time.time < startTime + 6)
+        {
+            yield return null;
+            if (VRisAvailable)
+                break;
+        }
+        UIManager.I.StatusComplete(id);
+        if (String.Compare(XRSettings.loadedDeviceName, vrDeviceName, true) != 0 || !VRisAvailable)
+        {
+            UIManager.I.ShowMessageDialog("VR Device load for " + vrDeviceName + " failed.\nCheck that SteamVR is running properly.");
+            VRmodeEnable(false);
+        }
+        else
+        {
+            VRmodeEnable(true);
+        }
+    }
+
+    /// <summary>
+    /// Try to load the VR device. Needs coroutine, so no immediate return value.
+    /// </summary>
+    public void DeviceLoadAndEnable()
+    {
+        if (VRisAvailable)
+            return;
+        //Using just openvr for now, so it's simple.
+        //make sure it's not loaded already
+        if (String.Compare(XRSettings.loadedDeviceName, vrDeviceName, true) != 0)
+        {
+            StartCoroutine("DeviceLoadAndEnableCoroutine");
+        }
+        else if( XRDevice.isPresent)
+        {
+            //If the load times out because it takes longer than I wait in the coroutine, this 
+            // condition will handle it when this routine is called again.
+            VRmodeEnable(true);
+        }
     }
 
     private void LookForTriggerActivity()

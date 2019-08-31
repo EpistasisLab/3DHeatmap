@@ -42,11 +42,6 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     //void Awake()
     protected override void Initialize()
     {
-
-    }
-
-    // Use this for initialization
-    void Start () {
         //Expect a Camera component in this class' object
         ourCamera = transform.GetComponent<Camera>() as Camera;
         if (ourCamera == null)
@@ -62,6 +57,10 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         rotSmoother = new SmoothQuaternion(Quaternion.identity);
 
         followHmdEnabled = false;
+    }
+
+    // Use this for initialization
+    void Start () {
     }
 
     /// <summary> Directly set the LookAt target for the camera </summary>
@@ -82,6 +81,33 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     public void OnResetViewButtonClick()
     {
         ResetView();
+    }
+
+    IEnumerator FollowHMDenableCoroutine()
+    {
+        ourCamera.enabled = false;
+        //Empirically, wait for a little bit. Waiting for two frames doesn't work, didn't try more.
+        yield return new WaitForSeconds(0.5f);
+        ourCamera.enabled = true;
+        followHmdEnabled = true;
+    }
+
+    /// <summary>
+    /// Enable/disable followHMD mode. This is used with VR mode to change between showing VR headset
+    /// view (when this is disabled), and regullar desktop view/controls (when this is enabled)
+    /// </summary>
+    /// <param name="enable"></param>
+    public void FollowHMDenable(bool enable)
+    {
+        //Workaround - need to disable and reenable the camera after VR rig has been enabled
+        if (enable)
+        {
+            StartCoroutine("FollowHMDenableCoroutine");
+        }
+        else
+        {
+            followHmdEnabled = false;
+        }
     }
 
     public void TranslateView(float lateralStep, float forwardsStep)
