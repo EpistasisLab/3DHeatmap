@@ -206,6 +206,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
         labelsColumnBottom = new List<Label>();
         labelsColumnTop = new List<Label>();
 
+        ResetView();
+
         //Quick intro message with instructions
         UIManager.I.ShowIntroMessage();
     }

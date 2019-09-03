@@ -56,6 +56,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     /// <summary> Check if vr device is loaded and ready to use. May not be enabled, but it's ready to be enabled. </summary>
     private bool VRisAvailable { get { return VRdevicePresent && (String.Compare(XRSettings.loadedDeviceName, vrDeviceName, true) == 0); } }
+
     /// <summary> True if 3DHM is running VR mode </summary>
     public bool VRmodeIsEnabled { get; private set; }
 
@@ -64,7 +65,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     {
         grabDown[0] = grabDown[1] = false;
 
-        StartCoroutine("DeviceCheck");
+        //StartCoroutine("DeviceCheckDebug");
 
         //Enter VR mode if available
         VRmodeEnable(VRisAvailable);
@@ -126,7 +127,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     ///  to enable it for use. But if steamVR is not already running, XRDevice.isPresent never returns true.
     /// </summary>
     /// <returns></returns>
-    IEnumerator DeviceCheck()
+    IEnumerator DeviceCheckDebug()
     {
         while (true)
         {
