@@ -6,6 +6,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Singleton class for managing much of the UI stuff.
 /// See MonoBehaviorSingleton class for usage as a singleton.
+/// This has gotten somewhat outta hand with putting everything UI-related in here.
 /// </summary>
 public class UIManager : MonoBehaviorSingleton<UIManager>
 {
@@ -199,12 +200,13 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     /// <summary>
     /// Call this when something needs refershing, e.g. data has been updated in some way the will need a UI refresh (i.e. DataVariables)
-    /// Awkware, I know.
+    /// Awkward, I know.
     /// </summary>
     public void RefreshUI()
     {
         visualMappingUIHandler.RefreshUI();
         InputManager.I.Reset();
+        VRManager.I.UIupdate();
         
         //Debug
         //dataMgr.DebugDumpVariables(false/*verbose*/);   

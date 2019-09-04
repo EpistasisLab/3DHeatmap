@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 using Valve.VR;
+using UnityEngine.UI;
+using SMView;
 
 public class VRManager : MonoBehaviorSingleton<VRManager> {
 
@@ -13,6 +15,9 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     {
         return sis == SteamVR_Input_Sources.LeftHand ? Hand.left : Hand.right;
     }
+
+    /// <summary> UI element for the enable/disable button </summary>
+    public Text VRenableButtonText;
 
     /// <summary> The default player/hmd offset from the plot's center/front edge </summary>
     public Vector3 defaultPlayerOffset;
@@ -26,7 +31,8 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     public float grabMoveScaleExp = 1;
 
     /// <summary> Angle in degrees around which to rotate the fwd vector of the 
-    ///  controller to get the direciton we want. </summary>
+    ///  controller to get the direciton we want, i.e. a more natural forward direction. 
+    ///  Will need to modify this based on which VR system/controller is in use. </summary>
     public float laserPointerXRot = 0;
 
     /// <summary> Flags for whether a controller grab is currently happening.
@@ -98,6 +104,12 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         handRotPrev[1] = handRot[1];
     }
 
+    /// <summary>
+    /// NOTE - this does not load VR device, it just takes care of everything else needed when
+    ///  VR is enabled or disabled. 
+    ///  To load VR device and enable VR mode, call DeviceLoadAndEnable()
+    /// </summary>
+    /// <param name="enable"></param>
     private void VRmodeEnable(bool enable)
     {
         //Debug.Log("Entering VRmodeEnable: " + enable);
@@ -120,6 +132,8 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         CameraManager.I.FollowHMDenable(enable);
 
         VRmodeIsEnabled = enable && VRisAvailable;
+
+        UIupdate();
     }
 
     /// <summary>
@@ -138,9 +152,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     IEnumerator DeviceLoadAndEnableCoroutine()
     {
-        int id = UIManager.I.StatusShow("Attempting to start VR device...");
+        int id = UIManager.I.StatusShow("Attempting to start VR device " + vrDeviceName + "...");
         XRSettings.LoadDeviceByName(vrDeviceName);
         float startTime = Time.time;
+        //Wait for a few seconds for VR system to load.
         while( Time.time < startTime + 6)
         {
             yield return null;
@@ -150,7 +165,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         UIManager.I.StatusComplete(id);
         if (String.Compare(XRSettings.loadedDeviceName, vrDeviceName, true) != 0 || !VRisAvailable)
         {
-            UIManager.I.ShowMessageDialog("VR Device load for " + vrDeviceName + " failed.\nCheck that SteamVR is running properly.");
+            UIManager.I.ShowMessageDialog("VR Device load for " + vrDeviceName + " failed.\nCheck that headset is attached\nand SteamVR is running properly.");
             VRmodeEnable(false);
         }
         else
@@ -178,6 +193,12 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
             // condition will handle it when this routine is called again.
             VRmodeEnable(true);
         }
+    }
+
+    public void DeviceDisconnect()
+    {
+        VRmodeEnable(false);
+        XRSettings.LoadDeviceByName("");
     }
 
     private void LookForTriggerActivity()
@@ -247,5 +268,29 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     {
         Vector3 center = Graph.I.GetPlotCenter();
         HmdRig.transform.position = new Vector3(center.x, Graph.I.sceneCorner.y + defaultPlayerOffset.y, Graph.I.sceneCorner.z + defaultPlayerOffset.z);
+    }
+
+    //////////
+    // VR UI 
+    //
+    public void OnEnableButtonClick()
+    {
+        if (VRmodeIsEnabled)
+            DeviceDisconnect();
+        else
+            DeviceLoadAndEnable();
+    }
+
+    public void OnDesktopViewDropdown(int choice)
+    {
+        bool followHMD = choice == 1;
+        CameraManager.I.FollowHMDenable(followHMD);
+    }
+
+    /// <summary> Update the VR UI based on VR system's current state </summary>
+    public void UIupdate()
+    {
+        SMV.I.SetValue(SMVmapping.VRdesktopViewMode, CameraManager.I.followHmdEnabled ? 1 : 0);
+        VRenableButtonText.text = VRmodeIsEnabled ? "Disable" : "Enable";
     }
 }

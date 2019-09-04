@@ -83,13 +83,15 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
         ResetView();
     }
 
-    IEnumerator FollowHMDenableCoroutine()
+    IEnumerator FollowHMDenableCoroutine(bool enable)
     {
         ourCamera.enabled = false;
         //Empirically, wait for a little bit. Waiting for two frames doesn't work, didn't try more.
         yield return new WaitForSeconds(0.5f);
         ourCamera.enabled = true;
-        followHmdEnabled = true;
+        followHmdEnabled = enable;
+        //Refresh the UI for VR stuff. Awkward to have to call it here.
+        VRManager.I.UIupdate();
     }
 
     /// <summary>
@@ -100,14 +102,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     public void FollowHMDenable(bool enable)
     {
         //Workaround - need to disable and reenable the camera after VR rig has been enabled
-        if (enable)
-        {
-            StartCoroutine("FollowHMDenableCoroutine");
-        }
-        else
-        {
-            followHmdEnabled = false;
-        }
+        StartCoroutine(FollowHMDenableCoroutine(enable));
     }
 
     public void TranslateView(float lateralStep, float forwardsStep)

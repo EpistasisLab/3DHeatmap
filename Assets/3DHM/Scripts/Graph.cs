@@ -1070,6 +1070,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
             case SMVmapping.GraphHeightFrac:
                 UpdateGraphHeight();
                 break;
+            case SMVmapping.VRdesktopViewMode:
+                VRManager.I.OnDesktopViewDropdown(SMV.I.GetValueInt(SMVmapping.VRdesktopViewMode));
+                break;
             default:
                 Debug.LogError("Unrecognized SMVmapping in event handler: " + mapping.ToString());
                 break;

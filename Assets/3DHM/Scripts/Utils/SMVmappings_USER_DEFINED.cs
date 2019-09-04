@@ -6,6 +6,7 @@ namespace SMView
 {
 
     /// <summary>
+    /// This is a part of SMV (Simple Model View) utility.
     /// List of mappings that determine which UI items are mapped to which model fields.
     /// Add a new one when you have a new model/control field that you want to map to a view.
     /// 
@@ -16,7 +17,7 @@ namespace SMView
     /// install a new version of SimpleModelView, it won't overwrite your changes.
     /// 
     /// </summary>
-    public enum SMVmapping { undefined/*always include this*/, GraphHeightFrac };
+    public enum SMVmapping { undefined/*always include this*/, GraphHeightFrac, VRdesktopViewMode };
 
 
 }
