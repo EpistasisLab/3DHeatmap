@@ -7,7 +7,7 @@ Shader "Custom/UnlitShadedVertexColor" {
 	Properties{
 		_BodyShadeAmount("Body Shade Amount", Range(0.0,0.9)) = 0.2
 		_EdgeShadeAmount("Edge Shade Amount", Range(0.0,0.9)) = 0.2
-		_EdgeShadeWidth("Edge Shade Width", Range(0.0,0.5)) = 0.05
+		//_EdgeShadeWidth("Edge Shade Width", Range(0.0,0.5)) = 0.05 //have hidden this property, and am setting it from code via a heuristic
 		_EdgeShadeHeight("Edge Shade Height", Range(0.0,0.5)) = 0
 		_NanTex("NaN/NoData Texture", 2D) = "white" {}
 		_NanTexHeight("Height NaN/NoData Texture", 2D) = "white" {}

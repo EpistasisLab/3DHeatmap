@@ -455,6 +455,16 @@ public class Graph : MonoBehaviorSingleton<Graph>
         Shader.SetGlobalFloat("_gMinimumHeight", this.MinGraphSceneHeight);
         Shader.SetGlobalFloat("_gSceneCornerY", this.sceneCorner.y);
 
+        //Shader param for drawing edges on sides of blocks.
+        //This is a mess and needs to be changed in shader to use a different method, but for
+        // now set the value based on # of columns. Determined this equation by manually finding decent
+        // setting for datasets at different sizes, for both vr and desktop views (although they could
+        // probably each use their own setting).
+        float m = numCols < 250 ? 0.00067f : 0.00067f - Mathf.Min(0.0004f, ((numCols - 250.0f) / 500.0f) * 0.0006f);
+        float width = numCols * m + 0.01f;
+        Shader.SetGlobalFloat("_EdgeShadeWidth", width );
+        Debug.Log("UpdateSceneDrawingParams: m " + m + "  edge shade width: " + width);
+
         //Scale and move the floor of the graph
         //Need to do this after scene dimensions (sceneWidth and sceneDepthFull) are calc'ed. Would be better to move out of here, though
         Transform floor = graphContainer.transform.Find("GraphFloor");
