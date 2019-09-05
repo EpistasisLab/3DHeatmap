@@ -177,11 +177,14 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             }
         }
 
-        //3-finger touch for rotation
-        if( Input.touchCount == 3)
+        //3-finger touch-and-drag for rotation
+        if( Input.touchCount == 3 && mv0 && mv1 && mv2)
         {
-            float dot3 = (Vector2.Dot(d0, d1) + Vector2.Dot(d0, d2) + Vector2.Dot(d1, d2)) / 3f;
-            if( dot3 > rotationDotThresholdTouch)
+            //float dot3 = (Vector2.Dot(d0, d1) + Vector2.Dot(d0, d2) + Vector2.Dot(d1, d2)) / 3f;
+            //if( dot3 > rotationDotThresholdTouch)
+            if (Vector2.Dot(d0, d1) > rotationDotThresholdTouch &&
+                Vector2.Dot(d0, d2) > rotationDotThresholdTouch &&
+                Vector2.Dot(d1, d2) > rotationDotThresholdTouch)
             {
                 Vector2 avg = (d0 + d1 + d2) / 3f;
                 //Debug.Log("rot avg: " + avg);

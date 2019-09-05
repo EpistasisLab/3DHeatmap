@@ -90,7 +90,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
     public bool binInterleave;
     private bool bConnectX; //Draw ribbon. Flag
     private bool bExtendZ;
-    private bool bHaveLabels = false; //Stauffer - set default val to suppress warning
 
     private GameObject protomesh;
     public GameObject Proto { get { return protomesh; } }
@@ -153,10 +152,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
         get { return DataManager.I.Cols > 18 ? 0f : _minGraphSceneHeight; }
     }
 
-    /// <summary> Stauffer - scaling factor for row depth/width - gets used as 2^x for some reason </summary>
-    private float currDepthToWidthRatioExp;
-    private float lowDepthToWidthRatioRange;
-    private float highDepthToWidthRatioRange;
     /// <summary> Stauffer - fractional amount of data row scene depth to apply to determining bin separation. </summary>
     private float binSeparationFrac;
     /// <summary> Stauffer - fractional value applied to rowDepthDataOnly to calculate gap between rows. Separate from binSeparation </summary>
@@ -165,10 +160,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
 //NOTE - these can probably be replaced by methods in DataManager
     private string[] rowLabels;
     private int numRowLabels;
-
-    // data values for the current row
-//NOTE - should be able to replace these with direct access to loaded data
-    private float[] heightVals;
 
     // Debugging
     private int colLimit;
@@ -255,7 +246,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
     public virtual void CalcSceneDimensions()
     {
         //Stauffer sceneWidth is set to fixed val (400) during init
-        this.rowDepthDataOnly = (this.sceneWidth * Mathf.Pow(2, this.currDepthToWidthRatioExp)) / this.numCols;
+        this.rowDepthDataOnly = this.sceneWidth / this.numCols;
 
         //Update this in case sceneWidth has changed
         this.sceneDepthMaxApprox = 4f * this.sceneWidth;
@@ -463,7 +454,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         float m = numCols < 250 ? 0.00067f : 0.00067f - Mathf.Min(0.0004f, ((numCols - 250.0f) / 500.0f) * 0.0006f);
         float width = numCols * m + 0.01f;
         Shader.SetGlobalFloat("_EdgeShadeWidth", width );
-        Debug.Log("UpdateSceneDrawingParams: m " + m + "  edge shade width: " + width);
+        ///Debug.Log("UpdateSceneDrawingParams: m " + m + "  edge shade width: " + width);
 
         //Scale and move the floor of the graph
         //Need to do this after scene dimensions (sceneWidth and sceneDepthFull) are calc'ed. Would be better to move out of here, though
@@ -590,8 +581,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
         //Build the ridges
         for (int row = 0; row < hVar.numDataRows; row++)
         {
-            //NOTE - these are class properties, that then get used in BuildRidge
-            this.heightVals = hVar.Data[row];
             this.BuildRidge(row, this.minBin);//always one bin for now
         }
         //DebugRidge(this.xRidges[0]);
@@ -707,7 +696,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
         float thisX = 0.0f;
         float thisY = 0.0f;
         float prevX = 0.0f;
+        #if false
         float prevY = 0.0f;
+        #endif
         float nextX = 0.0f;
         float nextY = 0.0f;
         float leftX = 0.0f;
@@ -766,7 +757,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
             if (colNum > 0)
             {
                 prevX = thisX;
+                #if false
                 prevY = thisY;
+                #endif
                 thisX = nextX;
                 thisY = nextY;
             }
@@ -775,7 +768,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
                 thisX = 0.5f * this.blockWidthNorm;
                 thisY = GetBlockMeshHeight(DataManager.I.GetHeightValue(row, 0, false /*return NaN if value is NaN*/));
                 prevX = thisX - this.blockWidthNorm;
+                #if false
                 prevY = thisY;
+                #endif
             }
 
             if (colNum < numCols - 1)
@@ -1121,8 +1116,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
         this.highGraphHeightScaleRange = 1f;
         //this.currGraphHeightScale = 0.5f; see Initialize()
 
-        this.lowDepthToWidthRatioRange = -4f;
-        this.highDepthToWidthRatioRange = 4f;
         this.binSeparationFrac = 1.1f;
         this.rowGapFrac = 1f;
         this.colLimit = 32000;
