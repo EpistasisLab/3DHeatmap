@@ -133,6 +133,9 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
         VRmodeIsEnabled = enable && VRisAvailable;
 
+        if (enable)
+            ShowInstructions();
+
         UIupdate();
     }
 
@@ -292,5 +295,13 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     {
         SMV.I.SetValue(SMVmapping.VRdesktopViewMode, CameraManager.I.followHmdEnabled ? 1 : 0);
         VRenableButtonText.text = VRmodeIsEnabled ? "Disable" : "Enable";
+    }
+
+    /// <summary>
+    /// Simple message disalog with VR instructions
+    /// </summary>
+    public void ShowInstructions()
+    {
+        UIManager.I.ShowMessageDialog("VR Instructions\n\nData Inspection - hold the controller trigger button and point at the data.\n\nMoving the Data - hold the controller grip button and move the controller to move the data in all directions to change your view.");
     }
 }
