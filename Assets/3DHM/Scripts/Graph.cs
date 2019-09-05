@@ -39,6 +39,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <summary> Object to conatain graph elements so they can be manipulated together </summary>
     public GameObject graphContainer;
 
+    /// <summary> Hold all the ridge objects generated at runtime </summary>
+    public GameObject runtimeRidgeContainer;
+
     /// <summary> Holds label generated at runtime. Just to keep things tidy in hierarchy </summary>
     public GameObject runtimeLabelsContainer;
 
@@ -513,8 +516,13 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
     public void ResetView()
     {
+        //Move the graph back to default position in case
+        // user moved it in VR
+        ResetGraphPosition();
+        
         //Desktop camera 
         CameraManager.I.ResetView();
+
         //VR player hmd
         VRManager.I.ResetPlayerPosition();
     }
@@ -603,28 +611,36 @@ public class Graph : MonoBehaviorSingleton<Graph>
     }
 
     /// <summary> Move the whole graph </summary>
-    public virtual void TranslateGraph(float xStep, float yStep, float zStep, float maxy /*constrain how how it can go*/)
+    public virtual void TranslateGraph(float xStep, float yStep, float zStep, float maxy /*constrain how high it can go*/)
+    {
+        Vector3 newPos = sceneCorner + new Vector3(xStep, yStep, zStep);
+        SetGraphPosition(newPos, maxy);
+    }
+
+    public void ResetGraphPosition()
+    {
+        SetGraphPosition(Vector3.zero, 0);
+    }
+
+    /// <summary> Set the position of the graph relative to its front-left corner </summary>
+    /// <param name="newPos"></param>
+    /// <param name="maxy">Height constraint. Used in VR mode to keep graph below user's eye level</param>
+    public virtual void SetGraphPosition( Vector3 newPos, float maxy)
     {
         if (xRidges == null)
             return;
 
         //Constrain yposition
-        float newy = sceneCorner.y + yStep;
-        if (newy < 0 || newy > maxy)
-            yStep = 0;
-
-        //NOTE - should put these in graphContainer and move all together
-        foreach (XRidge xr in this.xRidges)
-        {
-            xr.Translate(xStep, yStep, zStep);
-        }
+        newPos.y = Mathf.Max(newPos.y, 0);
+        newPos.y = Mathf.Min(newPos.y, maxy);
 
         //Update the scene corner state
-        //NOTE - should maybe fold this into graphContainer
-        sceneCorner = sceneCorner + new Vector3(xStep, yStep, zStep);
+        //NOTE - do we need this variable anymore now that we've got the ridges in graphContainer?
+        sceneCorner = newPos;
 
         //Update the graphContainer position
-        graphContainer.transform.position = graphContainer.transform.position + new Vector3(xStep, yStep, zStep);
+        //It contains the ridges and labels so they move with it.
+        graphContainer.transform.position = newPos;
 
         //Needs some updating
         UpdateSceneDrawingParams();
@@ -719,7 +735,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
         //Stauffer - 'protomesh' is from protomesh scene object, which is a prefab. It's a private global instanced above.
         GameObject newRidge = UnityEngine.Object.Instantiate(this.protomesh, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + zoff), Quaternion.identity);
-
+        //Store the new object in container for easily moving it around, and tidyness
+        newRidge.transform.SetParent(runtimeRidgeContainer.transform);
         newRidge.transform.localScale = new Vector3(this.sceneWidth, this.sceneHeight * this.currGraphHeightScale, this.rowDepthDataOnly);
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();

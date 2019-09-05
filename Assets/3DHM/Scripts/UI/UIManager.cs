@@ -226,12 +226,9 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         Graph.I.Redraw();
     }
 
-    public void OnMaxHeightSlider(GameObject go)
+    public void OnResetViewButtonClick()
     {
-        //float frac = go.GetComponent<Slider>().value;
-        //Graph.I.SetGraphHeightFrac(frac);
-        //Don't need to redraw to see new height
-        //StartCoroutine(RedrawCoroutine(true));
+        Graph.I.ResetView();
     }
 
     /// <summary>
