@@ -148,6 +148,14 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         float alpha = enable ? 1f : 0.5f;
         bool interactable = enable;
 
+        CanvasGroup[] cgs = GameObject.FindObjectsOfType<CanvasGroup>();
+        Debug.Log("cgs count " + cgs.Length);
+        foreach( CanvasGroup cg in cgs)
+        {
+            cg.alpha = alpha;
+            cg.interactable = interactable;
+        }
+/*
         //Top data panel
         CanvasGroup cg = dataTopPanel.GetComponent<CanvasGroup>();
         cg.alpha = alpha;
@@ -157,6 +165,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         cg = optionsTopPanel.GetComponent<CanvasGroup>();
         cg.alpha = alpha;
         cg.interactable = interactable;
+        */
     }
 
     /// <summary>
@@ -296,6 +305,11 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         ShowUIActionPrompt(newIndex);
     }
 
+    public void OnHelpButtonClick()
+    {
+        ShowIntroMessage();
+    }
+
     /// <summary>
     /// Hack this in here for now.
     /// Show an intro message dialog with basic usage instructions.
@@ -313,7 +327,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
                 "Move   - right-mouse-click & drag, or arrow keys\n" +
                 "Rotate - left-mouse-click &drag\n" +
                 "Zoom   - -/+ keys\n\n" +
-                "Press F1 to see this message again";
+                "<b>Version</b> " + VersionNumber.I.Version;
         ShowMessageDialog(msg, 600f, true);
     }
 }
