@@ -12,12 +12,56 @@ using UnityEngine.UI;
 /// </summary>
 public class DataVarUIHandler : MonoBehaviour {
 
-    /// <summary> The DataVariable that this UI panel is responsible for.
-    /// null if hasn't been set or has been cleared. </summary>
-    public DataVariable dataVar;
+    /// <summary> The index within of this UI panel is within the list of all panels in scene.
+    /// -1 if hasn't been set. 
+    /// </summary>
+    private int UIindex = -1;
+
+    /// <summary> Get the variable assoc'ed with this UI handler. null if not yet assigned </summary>
+    private DataVariable dataVar;
+    public DataVariable DataVar
+    {
+        get { return dataVar; }
+        set
+        {
+            dataVar = value;
+            if(IsAssigned)
+                filepathLocal = dataVar.Filepath;
+            SetFileNeedsLoading(false);
+            RefreshUI();
+        }
+    }
+
+    /// <summary> List of all handlers of this type in the scene </summary>
+    private static DataVarUIHandler[] allHandlers;
+
+    /// <summary> Find all instances of this class in the scene, make a list, and assign their index values in order.
+    /// This should be run on startup, and if more instances of this class are made at runtime. 
+    /// 1st run happens automatically here in Update() </summary>
+    public static void InitializeListOfAll()
+    {
+        //*NOTE* we might want to make sure these are sorted by height/position, but skip that for now
+        //
+        allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
+        for(int i=0; i < allHandlers.Length; i++)
+        { 
+            allHandlers[i].UIindex = i;
+        }
+    }
+
+    /// <summary> Assign a new dataVar to one of the available handlers, specified by the hander's index.
+    /// This is useful for loading files and settings from script, then updating things here for UI display.</summary>
+    /// <param name="newVar"></param>
+    /// <param name="index">index within the list of all handlers. Is ignored if out of range.</param>
+    public static void SetDataVarAtIndex(DataVariable newVar, int index)
+    {
+        if( index < 0 || index >= allHandlers.Length )
+            return;
+        allHandlers[index].DataVar = newVar;
+    }
 
     /// <summary> Return true if this UI panel is currently assigned to a DataVariable </summary>
-    public bool IsAssigned { get { return dataVar != null; } }
+    public bool IsAssigned { get { return DataVar != null; } }
 
     //Internal convenience ref
     private InputField inputField;
@@ -45,6 +89,8 @@ public class DataVarUIHandler : MonoBehaviour {
             Debug.LogError("loadButton == null");
         loadButtonNormalColor = loadButton.colors.normalColor;
 
+        allHandlers = new DataVarUIHandler[0];
+
         Clear();
 	}
 
@@ -68,10 +114,16 @@ public class DataVarUIHandler : MonoBehaviour {
         //Update according to DataVariable
         string label = "_unassigned_";
         string filename = Path.GetFileName(filepathLocal);
-        if( dataVar != null)
+        int headerSelection = 0;
+        if ( IsAssigned )
         {
             label = dataVar.Label;
+
+            //Header options. Need to set these too for when we assign a new dataVar to this handler (e.g. when loading sample data).
+            headerSelection = dataVar.hasColumnHeaders && dataVar.hasRowHeaders ? 4 : dataVar.hasColumnHeaders ? 3 : dataVar.hasRowHeaders ? 2 : 1;
         }
+        transform.Find("FilePanel").transform.Find("HeadersDropdown").GetComponent<Dropdown>().value = headerSelection;
+
         //There are multiple Text components in the whole panel, so seems I have to do this. Probably there is a better way...
         //And from what I read, transform.Find doesn't recurse, so you have to do this to go down beyond immeditate children.
         //.Find("LabelPanel/InputField").gameObject.GetComponentInChildren<InputField>().text = label;
@@ -90,12 +142,17 @@ public class DataVarUIHandler : MonoBehaviour {
                 UIManager.I.TooltipShow(path, transform);
             }
         }
+
+        if( allHandlers.Length == 0)
+        {
+            InitializeListOfAll();
+        }
 	}
 
     public void OnLabelEdit(GameObject go)
     { 
         Debug.Log("OnLabelEdit");
-        if (dataVar != null)
+        if (IsAssigned)
             dataVar.Label = GetLabel();
         UIManager.I.RefreshUI();
         //Switch prompting behavior to the next UI element if this element is currently prompting.

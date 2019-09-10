@@ -13,6 +13,8 @@ public class VisualMappingUIHandler : MonoBehaviour {
     private Dropdown heightLabelDropdown;
     private Dropdown topColorLabelDropdown;
     private Dropdown sideColorLabelDropdown;
+    private Dropdown topColortableDropdown;
+    private Dropdown sideColortableDropdown;
 
     // Use this for initialization
     void Start()
@@ -28,6 +30,12 @@ public class VisualMappingUIHandler : MonoBehaviour {
         sideColorLabelDropdown = transform.Find("SideColorPanel").transform.Find("LabelDropdown").gameObject.GetComponentInChildren<Dropdown>();
         if (sideColorLabelDropdown == null)
             Debug.LogError("sideColorDropdown == null");
+        topColortableDropdown = transform.Find("TopColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>();
+        if (topColortableDropdown == null)
+            Debug.LogError("topColortableDropdown == null");
+        sideColortableDropdown = transform.Find("SideColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>();
+        if (sideColortableDropdown == null)
+            Debug.LogError("sideColortableDropdown == null");
     }
 
     // Update is called once per frame
@@ -43,9 +51,24 @@ public class VisualMappingUIHandler : MonoBehaviour {
     {
         int[] assigns = new int[3];
         assigns[(int)DataManager.Mapping.Height] = -1; //N/A
-        assigns[(int)DataManager.Mapping.TopColor] = transform.Find("TopColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
-        assigns[(int)DataManager.Mapping.SideColor] = transform.Find("SideColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
+        assigns[(int)DataManager.Mapping.TopColor] = topColortableDropdown.value; // transform.Find("TopColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
+        assigns[(int)DataManager.Mapping.SideColor] = sideColortableDropdown.value; // transform.Find("SideColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
         return assigns;
+    }
+
+    /// <summary>
+    /// Set the color table selection for a given mapping. If we just set it here and then call
+    /// Redraw, the new values will get picked up.
+    /// </summary>
+    /// <param name="index">Index into color table dropdown</param>
+    public void SetColorTableByMappingAndIndex(DataManager.Mapping mapping, int index)
+    {
+        if (mapping == DataManager.Mapping.Height)
+            return;
+        if (mapping == DataManager.Mapping.SideColor)
+            sideColortableDropdown.value = index;
+        else
+            topColortableDropdown.value = index;
     }
 
     /// <summary>

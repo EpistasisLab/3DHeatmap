@@ -475,7 +475,8 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     public void HideDataIndicator()
     {
         indicatorIsShowing = false;
-        dataIndicatorCube.SetActive(false);
+        if(dataIndicatorCube)   
+            dataIndicatorCube.SetActive(false);
     }
 
     IEnumerator DataIndicatorAnimate()
@@ -516,8 +517,10 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
 
     public void HideDataInspector()
     {
-        displayPanelHandler.Hide();
-        displayPanelVRHandler.Hide();
+        if(displayPanelHandler)
+            displayPanelHandler.Hide();
+        if(displayPanelVRHandler)       
+            displayPanelVRHandler.Hide();
     }
 
     private void DrawInspectionRay(Ray ray, float length)

@@ -149,7 +149,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         bool interactable = enable;
 
         CanvasGroup[] cgs = GameObject.FindObjectsOfType<CanvasGroup>();
-        Debug.Log("cgs count " + cgs.Length);
+        //Debug.Log("cgs count " + cgs.Length);
         foreach( CanvasGroup cg in cgs)
         {
             cg.alpha = alpha;
@@ -230,6 +230,16 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         return visualMappingUIHandler.GetColorTableAssignments();
     }
 
+    /// <summary>
+    /// Set the color table selection for a given mapping. If we just set it here and then call
+    /// Redraw, the new values will get picked up.
+    /// </summary>
+    /// <param name="index">Index into color table dropdown</param>
+    public void SetColorTableByMappingAndIndex(DataManager.Mapping mapping, int index)
+    {
+        visualMappingUIHandler.SetColorTableByMappingAndIndex(mapping, index);
+    }
+
     public void OnRedrawButtonClick(GameObject button)
     {
         Graph.I.Redraw();
@@ -303,6 +313,11 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         int newIndex = currentUIActionPromptee < UIActionPromptees.Length - 1 ? currentUIActionPromptee+1 : -1; //-1 will tell the system to stop, kinda awkward
         //This will first stop anything that's currently prompting.
         ShowUIActionPrompt(newIndex);
+    }
+
+    public void OnDemoDataClick()
+    {
+        DataManager.I.LoadAndMapSampleData();
     }
 
     public void OnHelpButtonClick()

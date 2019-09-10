@@ -202,6 +202,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
         ResetView();
 
+        //Debug.Log("Application.persistentDataPath: " + Application.persistentDataPath);
+
         //Quick intro message with instructions
         UIManager.I.ShowIntroMessage();
     }

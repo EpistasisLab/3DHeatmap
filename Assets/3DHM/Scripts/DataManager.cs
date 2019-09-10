@@ -271,6 +271,15 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
     public int TopColorColorTableID { get { return variableColorTableIDs[(int)Mapping.TopColor]; } }
     public int SideColorColorTableID { get { return variableColorTableIDs[(int)Mapping.SideColor]; } }
 
+    /// <summary> Return a variable by its index into the list of assigned/loaded variables.  </summary>
+    /// <returns>null if index is out of range</returns>
+    public DataVariable GetVariableByIndex(int index)
+    {
+        if (index >= variables.Count)
+            return null;
+        return variables[index];
+    }
+
     public DataVariable GetVariableByMapping(Mapping mapping)
     {
         return variableMappings[(int)mapping];
@@ -414,6 +423,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
             variableMappings.Add(null);
         }
         variableColorTableIDs = new int[Enum.GetValues(typeof(Mapping)).Length];
+        UIManager.I.RefreshUI();
     }
 
     public void Remove(DataVariable var)
@@ -606,6 +616,68 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
             Debug.Log(errorMsg);
         }
         return success;
+    }
+
+    /// <summary> Hacked-in routine to quickly load some sample data and assign visual mappings.
+    /// We eventually want a proper project capability to handle this and user-saved projects. </summary>
+    /// <returns></returns>
+    public void LoadAndMapSampleData()
+    {
+        StartCoroutine(LoadAndMapSampleDataCoroutine());
+    }
+
+    IEnumerator LoadAndMapSampleDataCoroutine()
+    {
+        int id = UIManager.I.StatusShow("Loading Demo Data...");
+        yield return null;
+        LoadAndMapSampleDataHandler();
+        UIManager.I.StatusComplete(id);
+    }
+
+    private bool LoadAndMapSampleDataHandler()
+    {
+        Clear();
+
+        //Sample files are in Assets/StreamingAssets
+        DataVariable dataVar;
+        int count = 0;
+
+        if ( ! LoadSingleSampleDataFile("200x200-R80C110.csv", out dataVar, Mapping.Height, count))
+        {
+            return false;
+        }
+
+        if (!LoadSingleSampleDataFile("200x200-R100C200.csv", out dataVar, Mapping.SideColor, ++count))
+        {
+            return false;
+        }
+        UIManager.I.SetColorTableByMappingAndIndex(Mapping.SideColor, 2);
+
+        if (!LoadSingleSampleDataFile("200x200-R150C12.csv", out dataVar, Mapping.TopColor, ++count))
+        {
+            return false;
+        }
+        UIManager.I.SetColorTableByMappingAndIndex(Mapping.TopColor, 0);
+
+        UIManager.I.RefreshUI();
+
+        Graph.I.Redraw();
+
+        return true;
+    }
+
+    private bool LoadSingleSampleDataFile(string filename, out DataVariable dataVar, Mapping mapping, int count)
+    {
+        string path = Application.streamingAssetsPath + "/sampleData/" + filename;
+        string errorMsg;
+        if( ! LoadAddFile(path, true, true, out dataVar, out errorMsg))
+        {
+            UIManager.I.ShowMessageDialog("Loading sample data failed.\n" + filename + "\n" + errorMsg);
+            return false;
+        }
+        AssignVariableMapping(mapping, dataVar);
+        DataVarUIHandler.SetDataVarAtIndex(dataVar, count);
+        return true;
     }
 
     public void DebugDumpVariables(bool verbose)
