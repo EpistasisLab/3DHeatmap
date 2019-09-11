@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Handler for the DataVariablePanel UI element.
+/// Handler for the DataVariablePanel UI element, which contains several UI controls
+/// for managing file loading for a single variable.
 /// Handles events for all children.
 /// Tracks DataVariable that it's assigned to.
 /// NOTE - this is a separate handler for each DataVariablePanel
@@ -25,8 +26,8 @@ public class DataVarUIHandler : MonoBehaviour {
         set
         {
             dataVar = value;
-            if(IsAssigned)
-                filepathLocal = dataVar.Filepath;
+            if(IsLoaded)
+                filepathSelected = dataVar.Filepath;
             SetFileNeedsLoading(false);
             RefreshUI();
         }
@@ -60,14 +61,14 @@ public class DataVarUIHandler : MonoBehaviour {
         allHandlers[index].DataVar = newVar;
     }
 
-    /// <summary> Return true if this UI panel is currently assigned to a DataVariable </summary>
-    public bool IsAssigned { get { return DataVar != null; } }
+    /// <summary> Return true if this UI panel is currently assigned to a loaded DataVariable </summary>
+    public bool IsLoaded { get { return DataVar != null; } }
 
     //Internal convenience ref
     private InputField inputField;
 
     /// <summary> Filename/path that's been selected but not necessarily loaded </summary>
-    private string filepathLocal;
+    private string filepathSelected;
 
     private bool filenameTextMouseHovering;
     private float filenameTextMouseEnterTime;
@@ -103,7 +104,7 @@ public class DataVarUIHandler : MonoBehaviour {
         filenameTextMouseEnterTime = float.MaxValue;
         filenameTextTooltipShowing = false;
         //Empty string indicates not yet specified
-        filepathLocal = "";
+        filepathSelected = "";
         SetFileNeedsLoading(false);
         RefreshUI();
     }
@@ -113,9 +114,9 @@ public class DataVarUIHandler : MonoBehaviour {
     {
         //Update according to DataVariable
         string label = "_unassigned_";
-        string filename = Path.GetFileName(filepathLocal);
+        string filename = Path.GetFileName(filepathSelected);
         int headerSelection = 0;
-        if ( IsAssigned )
+        if ( IsLoaded )
         {
             label = dataVar.Label;
 
@@ -138,7 +139,7 @@ public class DataVarUIHandler : MonoBehaviour {
             if( (Time.time - filenameTextMouseEnterTime) > 0.3f)
             {
                 filenameTextTooltipShowing = true;
-                string path = filepathLocal;
+                string path = filepathSelected;
                 UIManager.I.TooltipShow(path, transform);
             }
         }
@@ -152,7 +153,7 @@ public class DataVarUIHandler : MonoBehaviour {
     public void OnLabelEdit(GameObject go)
     { 
         Debug.Log("OnLabelEdit");
-        if (IsAssigned)
+        if (IsLoaded)
             dataVar.Label = GetLabel();
         UIManager.I.RefreshUI();
         //Switch prompting behavior to the next UI element if this element is currently prompting.
@@ -166,7 +167,7 @@ public class DataVarUIHandler : MonoBehaviour {
 
     public void OnHeaderChoice(GameObject go)
     {
-        if( filepathLocal != "")
+        if( filepathSelected != "")
             SetFileNeedsLoading(true);
         //Switch prompting behavior to the next UI element if this element is currently prompting.
         UIManager.I.ShowNextUIActionPrompt(go);
@@ -189,12 +190,12 @@ public class DataVarUIHandler : MonoBehaviour {
         string result = DataManager.I.ChooseFile();
         if (result == "") //Cancelled
             return;
-        if( dataVar != null)
+        if( IsLoaded )
         {
-            //TODO - also should clear label to make it clear we've removed the data var
-            DataManager.I.Remove(dataVar); //NOTE - why is this done here and not in DataManager ???
+            DataManager.I.Remove(dataVar);
         }
-        filepathLocal = result;
+        Clear();
+        filepathSelected = result;
         SetFileNeedsLoading(true);
         //Switch prompting behavior to the next UI element if this element is currently prompting.
         UIManager.I.ShowNextUIActionPrompt(go);
@@ -225,7 +226,30 @@ public class DataVarUIHandler : MonoBehaviour {
     /// then call the method to do the actual loading. </summary>
     IEnumerator LoadCoroutine()
     {
-        int statusID = UIManager.I.StatusShow("Loading...");
+        string loadingMsg = "Loading...";
+        //Check if we already have something loaded in here.
+        //Normally a loaded dataVar will be cleared from this panel when
+        // a new file is chosen. But user might click load button and get to
+        // this method more than once, or may have changed the file on the filesystem
+        // and wants to reload it.
+        if (IsLoaded)
+        {
+            if (dataVar.Filepath == filepathSelected)
+            {
+                //We've already loaded this file, but we'll reload
+                loadingMsg = "Reloading...";
+                Debug.Log("LoadCoroutine: Reloading...");
+            }
+            else
+            {
+                //Something weird happened, and the loaded data var didn't get cleared
+                // when a new filepath was selected.
+                UIManager.I.ShowMessageDialog("Data is already loaded for a different file.\nThis is unexpected.\nClearing previous file's data and\nloading new one.\n\nPlease tell the app developers.");
+            }
+            DataManager.I.Remove(dataVar);
+        }
+
+        int statusID = UIManager.I.StatusShow(loadingMsg);
         yield return null;
         LoadHandler();
         UIManager.I.StatusComplete(statusID);
@@ -242,7 +266,7 @@ public class DataVarUIHandler : MonoBehaviour {
         //Debug.Log("OnFileChooseClick. this.GetInstanceID(): " + this.GetInstanceID());
 
         //Make sure we've chosen a filepath already
-        if (filepathLocal == "")
+        if (filepathSelected == "")
             return;
 
         //Try reading into a new DataVariable
@@ -252,19 +276,19 @@ public class DataVarUIHandler : MonoBehaviour {
         bool hasRowHeaders, hasColumnHeaders;
         if (!GetHeaderSelection(out hasRowHeaders, out hasColumnHeaders))
             return;
-        bool success = DataManager.I.LoadAddFile(filepathLocal, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
+        bool success = DataManager.I.LoadAddFile(filepathSelected, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
         if (success)
         {
-            //dataVar already added to variable list by above method call
-            //Error handling and reporting handled by ChooseLoadAddFile()
-            Debug.Log("Success: file loaded.");
+            //dataVar has already added to DataManager's variable list by above method call
+            //Error handling and reporting handled by LoadAddFile()
+            //Debug.Log("Success: file loaded.");
             dataVar = newDataVar;
             //Switch prompting behavior to the next UI element if this element is currently prompting.
             UIManager.I.ShowNextUIActionPrompt(loadButton.gameObject);
         }
         else
         {
-            string msg = "Error loading file \n\n" + filepathLocal + ". \n\n" + errorMsg;
+            string msg = "Error loading file \n\n" + filepathSelected + ". \n\n" + errorMsg;
             Debug.LogError(msg);
             UIManager.I.ShowMessageDialog(msg);
         }
