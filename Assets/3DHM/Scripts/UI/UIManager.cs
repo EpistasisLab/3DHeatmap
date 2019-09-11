@@ -26,8 +26,10 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     //private GameObject dataVarsTopPanel; not using here currently
     public GameObject messageDialogPrefab;
 
-    /// <summary> The UI object that's currently being highlighted in some way </summary>
-    private int currentUIActionPromptee;
+    /// <summary> Index within the auto-prompt list of the UI object that's currently being highlighted in some way </summary>
+    private int currentAutoUIActionPrompteeIndex;
+    /// <summary> Obj pointer to UI element that's currently being flashed. </summary>
+    GameObject mostRecentUIActionPrompteeObj;
     /// <summary> List of UI elements to use for prompting user action, in order of
     /// which they should be activated </summary>
     public GameObject[] UIActionPromptees;
@@ -63,13 +65,14 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
         TooltipHide();
 
-        currentUIActionPromptee = -1;
+        currentAutoUIActionPrompteeIndex = -1;
+        mostRecentUIActionPrompteeObj = null;
     }
 
     private void Start()
     {
         //Start the sequence of UI prompts to help user know what to do.
-        StartUIActionPrompts();    
+        StartAutoUIActionPrompts();    
     }
 
     // Update is called once per frame
@@ -250,6 +253,8 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         Graph.I.ResetView();
     }
 
+    public bool UIActionPromptIsFinished { get { return currentAutoUIActionPrompteeIndex == -1; } }
+
     /// <summary>
     /// Start prompting the user for which UI item should be
     /// (typically) used next. Currently it flashes the item.
@@ -257,10 +262,9 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// <param name="newIndex">Index of UI object to start showing prompt for. Pass -1 to just stop anything currently showing a prompt.</param>
     private void ShowUIActionPrompt(int newIndex)
     {
-        //Stop whatever currently is prompting
-        if (currentUIActionPromptee >= 0 && currentUIActionPromptee < UIActionPromptees.Length)
-            UIActionPromptees[currentUIActionPromptee].GetComponent<UIElementFlasher>().StopFlashing();
-        currentUIActionPromptee = -1;
+        //Stop whatever currently is prompting.
+        //Sets currentAutoUIActionPrompteeIndex to -1
+        StopCurrentUIActionPrompt();
         if (newIndex < 0)
             return;
         if (newIndex >= UIActionPromptees.Length)
@@ -270,25 +274,55 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         }
 
         GameObject uiObj = UIActionPromptees[newIndex];
-        if( uiObj == null || uiObj.GetComponent<UIElementFlasher>() == null)
+        //Debug.Log("calling StartFlashing. index: " + index);
+        StartStopUIActionPrompt(uiObj, true);
+        currentAutoUIActionPrompteeIndex = newIndex;
+    }
+
+    /// <summary> Start/stop falshing an individual ui object. It must have the UIElementFlasher component.
+    /// Can be called separately from the semi-automatic method of using a list of which element to prompt next.</summary>
+    /// <param name="uiObj"></param>
+    /// <param name="enable"></param>
+    public void StartStopUIActionPrompt(GameObject uiObj, bool enable)
+    {
+        if (uiObj == null || uiObj.GetComponent<UIElementFlasher>() == null)
         {
             Debug.LogWarning("ShowUIActionPrompt: passed UI is null or doesn't have UIElementFlasher");
             return;
         }
 
-        //Debug.Log("calling StartFlashing. index: " + index);
-        uiObj.GetComponent<UIElementFlasher>().StartFlashing();
-        currentUIActionPromptee = newIndex;
+        if (enable)
+        {
+            if (mostRecentUIActionPrompteeObj != null)
+                StartStopUIActionPrompt(mostRecentUIActionPrompteeObj, false);
+            uiObj.GetComponent<UIElementFlasher>().StartFlashing();
+            mostRecentUIActionPrompteeObj = uiObj;
+        }
+        else
+        {
+            uiObj.GetComponent<UIElementFlasher>().StopFlashing();
+            //don't set this, in case we get mulitple calls here while setting up - don't want to lose track of what's actually flashing
+            //mostRecentUIActionPrompteeObj = null;
+        }
     }
 
-    /// <summary> Start the sequence of UI action prompts </summary>
-    public void StartUIActionPrompts()
+    public void StopCurrentUIActionPrompt()
+    {
+        if(mostRecentUIActionPrompteeObj != null)
+        {
+            StartStopUIActionPrompt(mostRecentUIActionPrompteeObj, false);
+            currentAutoUIActionPrompteeIndex = -1;
+        }
+    }
+
+    /// <summary> Start the semi-automatic sequence of UI action prompts </summary>
+    public void StartAutoUIActionPrompts()
     {
         ShowUIActionPrompt(0);
     }
 
     /// <summary> Stop the sequence of UI action prompting </summary>
-    public void StopAllUIActionPrompts()
+    public void StopAutoUIActionPrompts()
     {
         ShowUIActionPrompt(-1);
     }
@@ -296,21 +330,21 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// <summary> If the passed Gameobject is currently prompting, then stop it and start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
     public void ShowNextUIActionPrompt(GameObject go)
     {
-        if (currentUIActionPromptee < 0 || currentUIActionPromptee >= UIActionPromptees.Length)
+        if (currentAutoUIActionPrompteeIndex < 0 || currentAutoUIActionPrompteeIndex >= UIActionPromptees.Length)
             return;
         if ( go == null)
         {
             Debug.LogError("Passed go is null. Returning.");
             return;
         }
-        if (go == UIActionPromptees[currentUIActionPromptee])
+        if (go == UIActionPromptees[currentAutoUIActionPrompteeIndex])
             ShowNextUIActionPrompt();
     }
 
     /// <summary> Start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
     public void ShowNextUIActionPrompt()
     {
-        int newIndex = currentUIActionPromptee < UIActionPromptees.Length - 1 ? currentUIActionPromptee+1 : -1; //-1 will tell the system to stop, kinda awkward
+        int newIndex = currentAutoUIActionPrompteeIndex < UIActionPromptees.Length - 1 ? currentAutoUIActionPrompteeIndex+1 : -1; //-1 will tell the system to stop, kinda awkward
         //This will first stop anything that's currently prompting.
         ShowUIActionPrompt(newIndex);
     }

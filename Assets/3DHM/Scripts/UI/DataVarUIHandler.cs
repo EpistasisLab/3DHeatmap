@@ -33,34 +33,6 @@ public class DataVarUIHandler : MonoBehaviour {
         }
     }
 
-    /// <summary> List of all handlers of this type in the scene </summary>
-    private static DataVarUIHandler[] allHandlers;
-
-    /// <summary> Find all instances of this class in the scene, make a list, and assign their index values in order.
-    /// This should be run on startup, and if more instances of this class are made at runtime. 
-    /// 1st run happens automatically here in Update() </summary>
-    public static void InitializeListOfAll()
-    {
-        //*NOTE* we might want to make sure these are sorted by height/position, but skip that for now
-        //
-        allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
-        for(int i=0; i < allHandlers.Length; i++)
-        { 
-            allHandlers[i].UIindex = i;
-        }
-    }
-
-    /// <summary> Assign a new dataVar to one of the available handlers, specified by the hander's index.
-    /// This is useful for loading files and settings from script, then updating things here for UI display.</summary>
-    /// <param name="newVar"></param>
-    /// <param name="index">index within the list of all handlers. Is ignored if out of range.</param>
-    public static void SetDataVarAtIndex(DataVariable newVar, int index)
-    {
-        if( index < 0 || index >= allHandlers.Length )
-            return;
-        allHandlers[index].DataVar = newVar;
-    }
-
     /// <summary> Return true if this UI panel is currently assigned to a loaded DataVariable </summary>
     public bool IsLoaded { get { return DataVar != null; } }
 
@@ -74,9 +46,35 @@ public class DataVarUIHandler : MonoBehaviour {
     private float filenameTextMouseEnterTime;
     private bool filenameTextTooltipShowing;
 
-    private Button loadButton;
-    private Color loadButtonNormalColor;
-    private Color loadButtonNeedsLoadingColor;
+    private GameObject loadButton;
+    
+    /// <summary> Static list of all handlers of this type in the scene </summary>
+    private static DataVarUIHandler[] allHandlers;
+
+    /// <summary> Find all instances of this class in the scene, make a list, and assign their index values in order.
+    /// This should be run on startup, and if more instances of this class are made at runtime. 
+    /// 1st run happens automatically here in Update() </summary>
+    public static void InitializeListOfAll()
+    {
+        //*NOTE* we might want to make sure these are sorted by height/position, but skip that for now
+        //
+        allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
+        for (int i = 0; i < allHandlers.Length; i++)
+        {
+            allHandlers[i].UIindex = i;
+        }
+    }
+
+    /// <summary> Assign a new dataVar to one of the available handlers, specified by the hander's index.
+    /// This is useful for loading files and settings from script, then updating things here for UI display.</summary>
+    /// <param name="newVar"></param>
+    /// <param name="index">index within the list of all handlers. Is ignored if out of range.</param>
+    public static void SetDataVarAtIndex(DataVariable newVar, int index)
+    {
+        if (index < 0 || index >= allHandlers.Length)
+            return;
+        allHandlers[index].DataVar = newVar;
+    }
 
     // Use this for initialization
     void Start () {
@@ -85,10 +83,9 @@ public class DataVarUIHandler : MonoBehaviour {
         if (inputField == null)
             Debug.LogError("inputField == null");
 
-        loadButton = transform.Find("FilePanel").transform.Find("LoadButton").GetComponent<Button>();
+        loadButton = transform.Find("FilePanel").transform.Find("LoadButton").gameObject;
         if (loadButton == null)
             Debug.LogError("loadButton == null");
-        loadButtonNormalColor = loadButton.colors.normalColor;
 
         allHandlers = new DataVarUIHandler[0];
 
@@ -152,7 +149,7 @@ public class DataVarUIHandler : MonoBehaviour {
 
     public void OnLabelEdit(GameObject go)
     { 
-        Debug.Log("OnLabelEdit");
+        //Debug.Log("OnLabelEdit");
         if (IsLoaded)
             dataVar.Label = GetLabel();
         UIManager.I.RefreshUI();
@@ -179,9 +176,12 @@ public class DataVarUIHandler : MonoBehaviour {
     /// <param name="needsIt"></param>
     public void SetFileNeedsLoading(bool needsIt)
     {
-        ColorBlock cb = loadButton.colors;
-        cb.normalColor = needsIt ? new Color(0.5f,0.8f,0.4f) : loadButtonNormalColor;
-        loadButton.colors = cb;
+        Debug.Log("obj id: " + this.GetInstanceID() + " SetFileNeedsLoading: " + needsIt);
+        if (!needsIt)
+            UIManager.I.StartStopUIActionPrompt(loadButton, false);
+        else
+            if (UIManager.I.UIActionPromptIsFinished)
+                UIManager.I.StartStopUIActionPrompt(loadButton, true);
     }
 
     /// <summary> Handle button to choose (but not load/read) a file</summary>

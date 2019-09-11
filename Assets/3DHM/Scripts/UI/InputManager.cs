@@ -286,7 +286,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             //GameObject newRidge = UnityEngine.Object.Instantiate(Graph.I.Proto, new Vector3(Graph.I.sceneCorner.x, Graph.I.sceneCorner.y, Graph.I.sceneCorner.z), Quaternion.identity);
             //newRidge.name = "testRidge";
 
-            //UIManager.I.StartUIActionPrompts();
+            //UIManager.I.StartAutoUIActionPrompts();
 
             //TriDataPoint data = new TriDataPoint(0, 1);
             //data.DebugDump();

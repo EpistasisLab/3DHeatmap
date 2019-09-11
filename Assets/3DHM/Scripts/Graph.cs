@@ -226,7 +226,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
         //When doing UI prompts, this is the last one we do, so stop the whole process if we get here,
         // which also handles the case when user jumps ahead of the prompts to here.
-        UIManager.I.StopAllUIActionPrompts();
+        UIManager.I.StopAutoUIActionPrompts();
     }
 
     /// <summary> This coroutine simply lets us put up a message and then start the
