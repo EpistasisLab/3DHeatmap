@@ -621,7 +621,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
     /// <summary> Hacked-in routine to quickly load some sample data and assign visual mappings.
     /// We eventually want a proper project capability to handle this and user-saved projects. </summary>
     /// <returns></returns>
-    public void LoadAndMapSampleData()
+    public void LoadAndDrawSampleData()
     {
         StartCoroutine(LoadAndMapSampleDataCoroutine());
     }

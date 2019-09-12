@@ -257,7 +257,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         {
             //Quick load a test file and view it
             //DataManager.I.DebugQuickLoadDefaultAndDraw();
-            DataManager.I.LoadAndMapSampleData();
+            DataManager.I.LoadAndDrawSampleData();
         }
         if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
         {

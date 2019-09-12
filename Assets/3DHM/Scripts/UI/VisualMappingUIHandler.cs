@@ -87,6 +87,8 @@ public class VisualMappingUIHandler : MonoBehaviour {
         }
         AssignVarsByCurrentLabelChoices();
         UIManager.I.ShowNextUIActionPrompt(go);
+        //This method will only do anything if auto-prompting has already finished.
+        UIManager.I.StartRedrawPrompt();
         //DataManager.I.DebugDumpVariables(false);
     }
 

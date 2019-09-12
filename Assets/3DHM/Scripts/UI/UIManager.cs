@@ -25,6 +25,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     private VisualMappingUIHandler visualMappingUIHandler;
     //private GameObject dataVarsTopPanel; not using here currently
     public GameObject messageDialogPrefab;
+    public GameObject redrawButton;
 
     /// <summary> Index within the auto-prompt list of the UI object that's currently being highlighted in some way </summary>
     private int currentAutoUIActionPrompteeIndex;
@@ -69,10 +70,16 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         mostRecentUIActionPrompteeObj = null;
     }
 
+    IEnumerator StartAutoUIActionPromptsCoroutine()
+    {
+        yield return null;
+        StartAutoUIActionPrompts();
+    }
+
     private void Start()
     {
         //Start the sequence of UI prompts to help user know what to do.
-        StartAutoUIActionPrompts();    
+        StartCoroutine(StartAutoUIActionPromptsCoroutine());
     }
 
     // Update is called once per frame
@@ -253,7 +260,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         Graph.I.ResetView();
     }
 
-    public bool UIActionPromptIsFinished { get { return currentAutoUIActionPrompteeIndex == -1; } }
+    private bool UIActionPromptIsFinished { get { return currentAutoUIActionPrompteeIndex == -1; } }
 
     /// <summary>
     /// Start prompting the user for which UI item should be
@@ -280,10 +287,20 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     }
 
     /// <summary> Start/stop falshing an individual ui object. It must have the UIElementFlasher component.
-    /// Can be called separately from the semi-automatic method of using a list of which element to prompt next.</summary>
+    /// Can be called separately from the 'automatic' method of using a list of which element to prompt next.
+    /// If the automatic method is not yet complete, this call will be silently ignored.
+    /// </summary>
+    public void StartStopManualUIActionPrompt(GameObject uiObj, bool enable)
+    {
+        if (UIActionPromptIsFinished)
+            StartStopUIActionPrompt(uiObj, enable);
+    }
+
+    /// <summary> Start/stop falshing an individual ui object. It must have the UIElementFlasher component.
+    /// If another object is already flashing, it will stop flashing. </summary>
     /// <param name="uiObj"></param>
     /// <param name="enable"></param>
-    public void StartStopUIActionPrompt(GameObject uiObj, bool enable)
+    private void StartStopUIActionPrompt(GameObject uiObj, bool enable)
     {
         if (uiObj == null || uiObj.GetComponent<UIElementFlasher>() == null)
         {
@@ -304,6 +321,11 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
             //don't set this, in case we get mulitple calls here while setting up - don't want to lose track of what's actually flashing
             //mostRecentUIActionPrompteeObj = null;
         }
+    }
+
+    public void StartRedrawPrompt()
+    {
+        StartStopManualUIActionPrompt(redrawButton, true);
     }
 
     public void StopCurrentUIActionPrompt()
@@ -351,7 +373,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     public void OnDemoDataClick()
     {
-        DataManager.I.LoadAndMapSampleData();
+        DataManager.I.LoadAndDrawSampleData();
     }
 
     public void OnHelpButtonClick()

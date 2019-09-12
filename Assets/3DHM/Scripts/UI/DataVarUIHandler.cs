@@ -176,12 +176,9 @@ public class DataVarUIHandler : MonoBehaviour {
     /// <param name="needsIt"></param>
     public void SetFileNeedsLoading(bool needsIt)
     {
-        Debug.Log("obj id: " + this.GetInstanceID() + " SetFileNeedsLoading: " + needsIt);
-        if (!needsIt)
-            UIManager.I.StartStopUIActionPrompt(loadButton, false);
-        else
-            if (UIManager.I.UIActionPromptIsFinished)
-                UIManager.I.StartStopUIActionPrompt(loadButton, true);
+        //Debug.Log("obj id: " + this.GetInstanceID() + " SetFileNeedsLoading: " + needsIt);
+        //This call will make sure the auto-prompting is done before following through with this request.
+        UIManager.I.StartStopManualUIActionPrompt(loadButton, false);
     }
 
     /// <summary> Handle button to choose (but not load/read) a file</summary>
@@ -222,6 +219,12 @@ public class DataVarUIHandler : MonoBehaviour {
         return true;
     }
 
+    public void OnLoadClick(GameObject go)
+    {
+        //Start a coroutine to do the loading
+        StartCoroutine("LoadCoroutine");
+    }
+
     /// <summary> Coroutine allows us to show the status window by yielding a frame so it gets drawn,
     /// then call the method to do the actual loading. </summary>
     IEnumerator LoadCoroutine()
@@ -255,12 +258,6 @@ public class DataVarUIHandler : MonoBehaviour {
         UIManager.I.StatusComplete(statusID);
     }
 
-    public void OnLoadClick(GameObject go)
-    {
-        //Start a coroutine to do the loading
-        StartCoroutine("LoadCoroutine");
-    }
-
     /// <summary> Do the actual loading, based on class fields. </summary>
     private void LoadHandler() { 
         //Debug.Log("OnFileChooseClick. this.GetInstanceID(): " + this.GetInstanceID());
@@ -285,6 +282,7 @@ public class DataVarUIHandler : MonoBehaviour {
             dataVar = newDataVar;
             //Switch prompting behavior to the next UI element if this element is currently prompting.
             UIManager.I.ShowNextUIActionPrompt(loadButton.gameObject);
+            UIManager.I.StartRedrawPrompt();
         }
         else
         {
