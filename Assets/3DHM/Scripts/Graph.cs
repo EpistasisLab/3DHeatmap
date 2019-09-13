@@ -30,9 +30,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-    // Version
-    public string programVersion;
-
     //Stauffer - Data
     //See DataManager singleton - new model of self-contained data objects
 
@@ -92,7 +89,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <summary> Stauffer - as best I can tell, this flag controls interleaving of bins within the plot. i.e. if each bin is shown as separate group of rows, or interleaved by row </summary>
     public bool binInterleave;
     private bool bConnectX; //Draw ribbon. Flag
-    private bool bExtendZ;
 
     private GameObject protomesh;
     public GameObject Proto { get { return protomesh; } }
@@ -137,22 +133,15 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
 
     /// <summary> 
-    /// Stauffer added - Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors.
+    /// Absolute minimum of graph height so bars/ridges don't get so short we can't see side colors.
     ///
-    /// NOTE - BUG WORKAROUND - the property returns 0 when the # of columns is > 18, because there's an odd bug when
-    ///   # of columns > 18 that makes the minGraphSceneHeight not get added to the vertices in the shader.
-    ///   I checked the mesh creation, and the vert heights (used in shader to determine which verts get min height added) look
-    ///   the same for # of columns > 18 or not. Very weird.
-    ///   This results in two symptoms:
-    ///     - when currGraphHeightScale gets down close to 0, all buildings go flat and there's no min height to view the sides.
-    ///     - when DataInspector draws the highlight box around the selected bar, it's far too high, espeically at lower height scales.
-    ///   So this workaround is in here to avoid the second symptom, but can't address the first.
+    /// This is buggy, so don't use for now. See developer notes. For now, the height slider has a non-zero min value for its range.
     /// </summary>
     private float _minGraphSceneHeight;
     private float MinGraphSceneHeight
     {
         set { _minGraphSceneHeight = value; }
-        get { return DataManager.I.Cols > 18 ? 0f : _minGraphSceneHeight; }
+        get { return 0; }// _minGraphSceneHeight;  } //DataManager.I.Cols > 18 ? 0f : _minGraphSceneHeight; }
     }
 
     /// <summary> Stauffer - fractional amount of data row scene depth to apply to determining bin separation. </summary>
@@ -816,31 +805,29 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
             // draw top
             mm.SetColor(topColor);
-            mm.Verts(false, leftX, edgeY, front, 0, 0); //Stauffer changed these uvs to what seems correct
-            mm.Verts(false, leftX, edgeY, back, 0, 1);
-            mm.Verts(false, rightX, edgeY, front, 1, 0);
-            mm.Verts(false, rightX, edgeY, back, 1, 1);
+            mm.Verts(false, false, leftX, edgeY, front, 0, 0); //Stauffer changed these uvs to what seems correct
+            mm.Verts(false, false, leftX, edgeY, back, 0, 1);
+            mm.Verts(false, false, rightX, edgeY, front, 1, 0);
+            mm.Verts(false, false, rightX, edgeY, back, 1, 1);
             mm.Tris(0, 1, 2, 2, 1, 3);
 
             // draw bottom
-            //I don't understand this value of y - it's from the orig code.
-            float y = this.bExtendZ ? 0f : thisY - slabY;
-            mm.Verts(false, leftX, y, front, 1, 1);
-            mm.Verts(false, leftX, y, back, 0, 1);
-            mm.Verts(false, rightX, y, front, 1, 1);
-            mm.Verts(false, rightX, y, back, 0, 1);
+            mm.Verts(false, true, leftX, 0, front, 1, 1);
+            mm.Verts(false, true, leftX, 0, back, 0, 1);
+            mm.Verts(false, true, rightX, 0, front, 1, 1);
+            mm.Verts(false, true, rightX, 0, back, 0, 1);
             mm.Tris(0, 1, 2, 2, 1, 3);
 
             // draw sides
             mm.SetColor(sideColor);
-            mm.Verts(true, leftX, y, front, 0, 0);
-            mm.Verts(true, rightX, y, front, 1, 0);
-            mm.Verts(true, leftX, edgeY, front, 0, 1);
-            mm.Verts(true, rightX, edgeY, front, 1, 1);
-            mm.Verts(true, leftX, y, back, 1, 0);
-            mm.Verts(true, rightX, y, back, 0, 0);
-            mm.Verts(true, leftX, edgeY, back, 1, 1);
-            mm.Verts(true, rightX, edgeY, back, 0, 1);
+            mm.Verts(true, true, leftX, 0, front, 0, 0);
+            mm.Verts(true, true, rightX, 0, front, 1, 0);
+            mm.Verts(true, false, leftX, edgeY, front, 0, 1);
+            mm.Verts(true, false, rightX, edgeY, front, 1, 1);
+            mm.Verts(true, true, leftX, 0, back, 1, 0);
+            mm.Verts(true, true, rightX, 0, back, 0, 0);
+            mm.Verts(true, false, leftX, edgeY, back, 1, 1);
+            mm.Verts(true, false, rightX, edgeY, back, 0, 1);
             mm.Tris(0, 2, 1, 1, 2, 3);
             mm.Tris(4, 5, 6, 5, 7, 6, 0, 4, 2, 2, 4, 6);
             mm.Tris(1, 3, 5, 3, 7, 5);
@@ -1123,12 +1110,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
         //But if I move everything here into Initialize(), then display/view
         // gets messed up
 
-        this.programVersion = "0.1.0";
         this.sceneWidth = 20f; // 400f;
         this.sceneDepthByBin = sceneWidth; // 400f;
         this.sceneDepthMaxApprox = 2f * this.sceneWidth;
         this.sceneHeight = 5f; // 200f;
-        this.bExtendZ = true;
 
         //Keep this tiny, but > 0
         this.lowGraphHeightScaleRange = 0.001f;

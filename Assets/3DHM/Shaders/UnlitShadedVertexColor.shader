@@ -46,15 +46,17 @@ Shader "Custom/UnlitShadedVertexColor" {
 			float4 vertex : POSITION;
 			fixed4 color : COLOR;
 			float2 uvs : TEXCOORD0;
-			float2 uvIsANumber : TEXCOORD1;
+			float2 custom1 : TEXCOORD1;
+			float2 custom2 : TEXCOORD2;
 		};
 
 		struct v2f {
 			float4 pos : SV_POSITION;
 			fixed4 color : COLOR;
 			float2 uvs : TEXCOORD0;
-			float2 uvIsANumber : TEXCOORD1;
-			float distToCamera : TEXCOORD2;
+			float2 custom1 : TEXCOORD1;
+			float2 custom2 : TEXCOORD2;
+			float distToCamera : TEXCOORD3;
 		};
 
 		v2f vert(appdata v) {
@@ -63,22 +65,38 @@ Shader "Custom/UnlitShadedVertexColor" {
 			//2nd uv pair is used to store whether values are number of NaN (1 for true, 0 for false)
 			// x = height is a number
 			// y = at least one of the three values (height, side, top) is a number 
-			float atLeastOneNumber = v.uvIsANumber.y;
+			float atLeastOneNumber = v.custom1.y;
 
-			//Force minimum height for vertices above the bottom of graph.
-			//_gSceneCornerY is the bottom y pos of the graph.
+			float4 test = float4(0, 1, 0, 1);
+			test = UnityObjectToClipPos(test);
+
+			//Tried this, which in my mind should be the right way to add minimum height (see below), i.e.
+			// to change the verts in model coords before mapping to clip position.
+			//It works mostly, and the extra height matches the value in model coords, which 
+			// means that when we add it to mesh height for purposes of making the overlay block
+			// in inspector, it works.
+			//*BUT* get a bug where at certain view angles, a ridge or two will pop up with extra
+			// height - can't understand.
+			//v.vertex.y += v.custom2.x * (_gMinimumHeight * atLeastOneNumber);
+
+			o.pos = UnityObjectToClipPos(v.vertex);
+
+			//Force minimum height for vertices above the bottom of block.
 			//We add a fixed offset to get a minimium height, while still being
 			// able to use simple txf scaling in code to adjust max height.
 			//However if none of the values at this data position is a valid number,
 			// then do 0 height.
-			if (v.vertex.y > _gSceneCornerY)
-				v.vertex.y += ( _gMinimumHeight * atLeastOneNumber);
+			//fudgeFactor - need this to get the height change in clip space to closely equal the _gMinimumHeight
+			//
+			//*NOTE* This method of modifying o.pos.y doesn't work - things get skewed at high view angles.
+			//float fudgeFactor = 2.3;
+			//o.pos.y += v.custom2.x * (_gMinimumHeight * fudgeFactor * atLeastOneNumber);
 
-			o.pos = UnityObjectToClipPos(v.vertex);
 			o.color = v.color;
 			o.uvs = v.uvs;
-			o.uvIsANumber = v.uvIsANumber;
-			o.distToCamera = length(WorldSpaceViewDir(v.vertex));
+			o.custom1 = v.custom1;
+			o.custom2 = v.custom2;
+			o.distToCamera = length(WorldSpaceViewDir(v.vertex)); 
 
 			//simple body shading based on uv's - yields corner-based shading diffs which can yield perceptual difference in adjacent same-colored quads
 			float shadeScale = 1.0 - ( (v.uvs.x + v.uvs.y) / 2.0  * _BodyShadeAmount );
@@ -109,22 +127,21 @@ Shader "Custom/UnlitShadedVertexColor" {
 			float LODscale = 1 - clamp( (i.distToCamera - _LODnearCutoff) / (_LODfarCutoff - _LODnearCutoff), 0, 1);
 
 			//If all values are NaN, use this texture
-			if (i.uvIsANumber.y == 0) 
+			if (i.custom1.y == 0) 
 			{
 				color = tex2D(_NanTexAll, i.uvs) * LODscale + _NanColor * (1 - LODscale);
 				return color;
 			}
 
 			//If side/top is NaN/NoData, use special texture
-			//We're using color alpha to code for NaN for top and side colors
-			if (color.a == 0) 
+			if (i.custom2.y == 0) 
 			{
 				color = tex2D(_NanTex, i.uvs) * LODscale + _NanColor * (1 - LODscale);
 			}
 
 			//If height value is NaN, overlay a texture for that.
 			//Using 2nd set of uvs to track this.
-			if (i.uvIsANumber.x == 0) 
+			if (i.custom1.x == 0) 
 			{
 				//Overlay the opaque parts from the texture
 				float4 tex = tex2D(_NanTexHeight, i.uvs) ;
