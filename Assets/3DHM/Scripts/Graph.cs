@@ -30,22 +30,18 @@ public class Graph : MonoBehaviorSingleton<Graph>
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-    //Stauffer - Data
-    //See DataManager singleton - new model of self-contained data objects
-
-    /// <summary> Object to conatain graph elements so they can be manipulated together </summary>
+    /// <summary> Scene Object to conatain graph elements so they can be manipulated together </summary>
     public GameObject graphContainer;
-
-    /// <summary> Hold all the ridge objects generated at runtime </summary>
+    /// <summary> Scene object to hold all the ridge objects generated at runtime </summary>
     public GameObject runtimeRidgeContainer;
-
-    /// <summary> Holds label generated at runtime. Just to keep things tidy in hierarchy </summary>
+    /// <summary> Scene object to hold labels generated at runtime. Just to keep things tidy in hierarchy </summary>
     public GameObject runtimeLabelsContainer;
-
     /// <summary> Label object to use for instantiating row and column labels </summary>
     public GameObject protolabel;
+    /// <summary> Scene object for the back wall in the scene. Need to hide it sometimes. </summary>
+    public GameObject backWall;
 
-    /// <summary> List of labels. Clunky to do like this, but keep it for now for simplicity. </summary>
+    /// <summary> Lists of labels. Clunky to do like this, but keep it for now for simplicity. </summary>
     private List<Label> labelsRowRight;
     private List<Label> labelsRowLeft;
     private List<Label> labelsColumnBottom;
@@ -78,7 +74,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
     }
     private Vector3 _sceneCorner;
     /// <summary> Stauffer - separtion in scene units between bins, whether bins are interleaved or not. So if not interleaved,
-    /// it's separation between groups of rows of each bin. If interleaved, this is separation between each row (different than rowGap, however). </summary>
+    /// it's separation between groups of rows of each bin. If interleaved, this is separation between each row (different than rowGap, however).
+    /// NOT USING</summary>
     public float binSeparation;
     /// <summary> Stauffer - full scene depth of each row, including gap beetween rows (and bin separation when interleaved) </summary>
     public float rowDepthFull;
@@ -88,7 +85,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
     // chart related
     /// <summary> Stauffer - as best I can tell, this flag controls interleaving of bins within the plot. i.e. if each bin is shown as separate group of rows, or interleaved by row </summary>
     public bool binInterleave;
-    private bool bConnectX; //Draw ribbon. Flag
+    private bool bConnectX; //Draw ribbon. Flag.
 
     private GameObject protomesh;
     public GameObject Proto { get { return protomesh; } }
@@ -234,6 +231,46 @@ public class Graph : MonoBehaviorSingleton<Graph>
         UIManager.I.StatusComplete(statusID);
     }
 
+    /// <summary>
+    /// Stauffer. New routine. Prep and draw data loaded in DataManager.
+    /// Replacing functionality of DatasetSelected().
+    /// Should generally not be called directly. See Redraw().
+    /// </summary>
+    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
+    private void PrepareAndDrawData(bool quiet = false)
+    {
+        // Do some verification of data, so we don't have to check things every time we access dataMgr
+        // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
+        string errorMsg;
+        if (!DataManager.I.PrepareAndVerify(out errorMsg))
+        {
+            if (!quiet)
+            {
+                string msg = "Error with data prep and verification: \n\n" + errorMsg;
+                Debug.LogError(msg);
+                UIManager.I.ShowMessageDialog(msg);
+            }
+            return;
+        }
+
+        //Axis extents
+        GetAxisExtents();
+
+        //Setup row headers (row labels)
+        //
+        this.numRowLabels = DataManager.I.HeightVar.hasRowHeaders ? DataManager.I.HeightVar.numDataRows : 0;
+        this.rowLabels = new string[this.numRowLabels + 1];
+        //Copy
+        for (int i = 0; i < this.numRowLabels; i++)
+        {
+            this.rowLabels[i] = DataManager.I.HeightVar.rowHeaders[i];
+        }
+
+        //Draw it!
+        ShowData();
+
+        ResetView();
+    }
 
 
 
@@ -287,30 +324,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
     {
         get;
         set;
-    }
-
-    //Stauffer - currently unused (8/2019) but keep it in case
-    // we change mesh creating and rendering to use an instanced cube.
-    public virtual void MakeUnitCube(GameObject ac)
-    {
-        Mesh amesh = ((MeshFilter)ac.GetComponent(typeof(MeshFilter))).mesh;
-        Vector3[] vertices = new Vector3[8];
-        int[] triangles = new int[] { 0, 2, 1, 2, 0, 3, 1, 6, 5, 6, 1, 2, 4, 6, 7, 6, 4, 5, 4, 3, 0, 3, 4, 7, 4, 1, 5, 1, 4, 0, 3, 6, 2, 6, 3, 7 };
-        Vector2[] uv = new Vector2[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1) };
-        vertices[0] = new Vector3(0, 0, 0);
-        vertices[1] = new Vector3(1, 0, 0);
-        vertices[2] = new Vector3(1, 1, 0);
-        vertices[3] = new Vector3(0, 1, 0);
-        vertices[4] = new Vector3(0, 0, 1);
-        vertices[5] = new Vector3(1, 0, 1);
-        vertices[6] = new Vector3(1, 1, 1);
-        vertices[7] = new Vector3(0, 1, 1);
-        amesh.Clear();
-        amesh.vertices = vertices;
-        amesh.uv = uv;
-        amesh.triangles = triangles;
-        amesh.RecalculateNormals();
-        amesh.RecalculateBounds();
     }
 
     // Stauffer - NOTE this seems to work with the currently-loaded row data,
@@ -461,49 +474,11 @@ public class Graph : MonoBehaviorSingleton<Graph>
             floor.localScale = new Vector3(sceneWidth - 0.01f, 0.0001f, sceneDepthFull - 0.01f);
             floor.localPosition = new Vector3(sceneWidth / 2 + 0.01f, 0, sceneDepthFull / 2 + 0.01f);
         }
+
+        //Hide the rear wall in the scene if the data is extending past it
+        backWall.SetActive(sceneDepthFull < (backWall.transform.position.z - 1));
     }
 
-
-    /// <summary>
-    /// Stauffer. New routine. Prep and draw data loaded in DataManager.
-    /// Replacing functionality of DatasetSelected().
-    /// Should generally not be called directly. See Redraw().
-    /// </summary>
-    /// <param name="quiet">Set to true for silent return when data not ready or error. Default is false.</param>
-    private void PrepareAndDrawData(bool quiet = false)
-    {
-        // Do some verification of data, so we don't have to check things every time we access dataMgr
-        // e.g. minimum variables are set (e.g. always expect a height var (or, actually maybe not??))
-        string errorMsg;
-        if (!DataManager.I.PrepareAndVerify(out errorMsg))
-        {
-            if (!quiet)
-            {
-                string msg = "Error with data prep and verification: \n\n" + errorMsg;
-                Debug.LogError(msg);
-                UIManager.I.ShowMessageDialog(msg);
-            }
-            return;
-        }
-
-        //Axis extents
-        GetAxisExtents();
-
-        //Setup row headers (row labels)
-        //
-        this.numRowLabels = DataManager.I.HeightVar.hasRowHeaders ? DataManager.I.HeightVar.numDataRows : 0;
-        this.rowLabels = new string[this.numRowLabels + 1];
-        //Copy
-        for (int i = 0; i < this.numRowLabels; i++)
-        {
-            this.rowLabels[i] = DataManager.I.HeightVar.rowHeaders[i];
-        }
-
-        //Draw it!
-        ShowData();
-
-        ResetView();
-    }
 
     public void ResetView()
     {

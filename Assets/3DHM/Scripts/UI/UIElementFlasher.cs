@@ -13,7 +13,7 @@ public class UIElementFlasher : MonoBehaviour {
     private bool isFlashing;
     private float flashStartTime;
     private Color origColor;
-    private static Color flashColor = new Color(0.2f,0.7f,0.2f);
+    private static Color flashColor = new Color(0.2f,0.8f,0.2f);
 
 	// Use this for initialization
 	void Start () {
@@ -21,8 +21,9 @@ public class UIElementFlasher : MonoBehaviour {
         if (imageComp == null)
             Debug.LogError("imageComp == null");
         isFlashing = false;
-	}
-	
+        origColor = imageComp.color;
+    }
+
     //co-routine
     IEnumerator Flash()
     {
@@ -47,7 +48,6 @@ public class UIElementFlasher : MonoBehaviour {
             return;
         }
         flashStartTime = Time.time;
-        origColor = imageComp.color;
         isFlashing = true;
         StartCoroutine(Flash());
     }
