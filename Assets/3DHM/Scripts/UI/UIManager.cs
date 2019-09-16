@@ -387,18 +387,21 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// </summary>
     public void ShowIntroMessage()
     {
-        string msg = "<b>3D Heatmap</b> allows you to visualize up to three dependent variables (Data Variables) simultaneously. The variables must be derived from the same independent variables. Each variable can be assigned to any of three visual parameters used to make the 3D heatmap: height, top color and side color.\n\n" +
-                "<b>Data Format</b>\n\nThe program expects each variable from a separate text data file of 2D array data, in either csv or tab-delimited formats. Each data file must have the same dimensions.\n\n" +
+        string msg = "<b>3D Heatmap</b> allows you to visualize two independent variables, and up to three dependent variables (DV) simultaneously. Each DV must be derived from the same two independent variables. Each DV can be assigned to any of three visual parameters used to make the 3D heatmap: height, top color and side color.\n\n" +
+                "<b>Data Format</b>\n\nThe program expects each DV from a separate text data file of 2D array data, in either csv or tab-delimited formats. Each data file must have the same dimensions and can contain NaN values.\n\n" +
                 "<b>Instructions</b>\n\n" +
-                "1) Select and Load Data Variables in the GUI to the left. Note that you must indicate what type of headers your data file might have before you click Load.\n" +
-                "2) Assign which variables should be mapped to Height, Top Color, and Side Color.\n" +
+                "0) Click Demo Data button to view some demo data. Otherwise..."+
+                "1) Under <i>Data Variables</i> in the GUI to the left, select and load your data files.\n" +
+                "2) Under <i>Visual Mappings</i>, assign the variables to each of Height, Top Color, and Side Color.\n" +
                 "3) Choose color tables for Top and Side colors.\n" +
                 "4) Click the Redraw button, or press F2.\n\n" +
                 "<b>View Controls</b>\n\n" +
-                "Move   - right-mouse-click & drag, or arrow keys\n" +
-                "Rotate - left-mouse-click &drag\n" +
-                "Zoom   - -/+ keys\n\n" +
+                "Move   - <i>Mouse:</i> left-click & drag  <i>Touch:</i> Two-finger drag   <i>Keyboard:</i> arrow keys\n" +
+                "Rotate - <i>Mouse:</i> right-click & drag <i>Touch:</i> Three-finger drag <i>Keyboard:</i> Ctrl + arrows\n" +
+                "Zoom   - <i>Mouse:</i> scroll wheel       <i>Touch:</i> Two-finger pinch  <i>Keyboard:</i> Shift + arrows, or +/- keys\n\n" +
+                "<b>VR</b>\n\n" +
+                "SteamVR/OpenVR devices are supported for viewing in VR.\nHold the controller's grip button to move the data, and the trigger to inspect it.\n\n"+
                 "<b>Version</b> " + VersionNumber.I.Version;
-        ShowMessageDialog(msg, 600f, true);
+        ShowMessageDialog(msg, 650f, true);
     }
 }

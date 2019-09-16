@@ -12,6 +12,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
     /// <summary> Scaling for translational input </summary>
     public float translationScaleKeys = 1.5f;
     public float zoomScaleKeys = 2f;
+    public float rotationScaleKeys = 1f;
 
     //// MOUSE Input ////
     public float translationScaleMouse = 25f;
@@ -197,46 +198,69 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         }
     }
 
+    private bool GetEitherShiftHeldDown()
+    {
+        return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+    }
+
+    private bool GetEitherControlHeldDown()
+    {
+        return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+    }
+
     /// <summary> Check for keyboard input that's ok only if the UI does NOT have input focus. </summary>
     private void CheckForNonUIKeyboard()
     {
+        if (!Input.anyKey && !Input.anyKeyDown)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.D) && Input.GetKey(KeyCode.RightShift))
+        {
+            //Quick load a test file and view it
+            //DataManager.I.DebugQuickLoadDefaultAndDraw();
+            DataManager.I.LoadAndDrawSampleData();
+        }
+
         //// VIEW-CONTROL INPUTS
 
         float vertButton = Input.GetAxisRaw("Vertical");
         float horzButton = Input.GetAxisRaw("Horizontal");
-        //These two were used in orig code, but I'm not using, at least not at this point.
-        //float turnButton = Input.GetAxisRaw("Turn");
-        //float spaceButton = Input.GetAxisRaw("Jump");
 
-        //test translation via moving the graph instead of camera
-        /*
-        if( Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-        {
-            if ((vertButton != 0f || horzButton != 0f))
-            {
-                Graph.I.TranslateRidges(horzButton * translationScaleKeys * 10, 0f, vertButton * translationScaleKeys * 10);
-                return;
-            }
-
-        }
-        */
-
-        //Forward / backward translation parallel to ground plane.
-        //NOT movement along camera-forward
+        //Arrow keys
         if ((vertButton != 0f || horzButton != 0f))
         {
-            CameraManager.I.TranslateView(horzButton * translationScaleKeys, vertButton * translationScaleKeys);
-            //Debug.Log("horzButton " + horzButton);
+            if( vertButton != 0 && GetEitherShiftHeldDown())
+            {
+                //Zoom
+                CameraManager.I.Zoom(zoomScaleKeys * (vertButton > 0 ? 1f : -1f));
+                return;
+            }
+            else if( GetEitherControlHeldDown() )
+            {
+                //Rotate
+                CameraManager.I.RotateView(vertButton * rotationScaleKeys, -horzButton * rotationScaleKeys);
+                return;
+            }
+            else
+            {
+                //Forward / backward translation parallel to ground plane.
+                //NOT movement along camera-forward
+                CameraManager.I.TranslateView(horzButton * translationScaleKeys, vertButton * translationScaleKeys);
+                //Debug.Log("horzButton " + horzButton);
+                return;
+            }
         }
 
         //Zoom
         if (Input.GetKey(KeyCode.Minus) || Input.GetKey(KeyCode.KeypadMinus))
         {
             CameraManager.I.Zoom(-1f * zoomScaleKeys);
+            return;
         }
         if (Input.GetKey(KeyCode.Equals) || Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.KeypadPlus))
         {
             CameraManager.I.Zoom(1f * zoomScaleKeys);
+            return;
         }
     }
 
@@ -252,12 +276,6 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
                 Graph.I.Redraw();
             }
             */
-        }
-        if (Input.GetKeyDown(KeyCode.D) && Input.GetKey(KeyCode.RightShift))
-        {
-            //Quick load a test file and view it
-            //DataManager.I.DebugQuickLoadDefaultAndDraw();
-            DataManager.I.LoadAndDrawSampleData();
         }
         if (/*Input.GetKeyDown(KeyCode.H) ||*/ Input.GetKeyDown(KeyCode.F1))
         {
@@ -317,8 +335,8 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             return;
         }
 
-        //Translate
-        if (Input.GetMouseButton(1/*right mouse button held down*/))
+        //Translate 
+        if (Input.GetMouseButton(0/*left button*/))
         {
             // Read the mouse input axis
             float trX = Input.GetAxis("Mouse X"); //delta position, from what I understand
@@ -328,7 +346,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         }
 
         //Rotation - mouse
-        if (Input.GetMouseButton(0/*left button*/))
+        if (Input.GetMouseButton(1/*right mouse button held down*/))
         {
             // Read the mouse input axis
             float rotX = Input.GetAxis("Mouse X");
