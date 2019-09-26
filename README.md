@@ -1,3 +1,5 @@
+![logo](readme_images/3dhm_logo_IBI_PSOM_96dpi.png)
+
 # 3D Heatmap (with VR support)
 
 3D Heatmap is a project of
