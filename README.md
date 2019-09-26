@@ -1,14 +1,14 @@
-# 3D Heatmap
+# 3D Heatmap (with VR support)
 
 3D Heatmap is a project of
 
-    Idea Factory
-    Institute for Biomedical Informatics (IBI)
-    Perelman School of Medicine
-    University of Pennsylvania
+[Idea Factory](http://upibi.org/idea-factory/)\
+Institute for Biomedical Informatics (IBI)\
+Perelman School of Medicine\
+University of Pennsylvania
 
-    Director: Dr. Jason Moore
-    Lead Developer: Michael Stauffer (stauffer@upenn.edu)
+Director: [Dr. Jason Moore](https://www.med.upenn.edu/apps/faculty/index.php/g275/p8803452)\
+Lead Developer: Michael Stauffer (stauffer@upenn.edu)
 
 # Overview
 
@@ -43,6 +43,12 @@ If you'd like to contribute to the project, or have suggestions, [let us know!](
 
 ### License
 MIT License. See LICENSE doc in repo.
+
+# Installation
+
+Executables are provided for Windows and MacOS in the [Release](https://github.com/EpistasisLab/3DHeatmap/releases) section of the github project.
+
+Otherwise you can clone/download the repo and run it with Unity.
 
 # Motivation for Developing 3D Heatmap
 
@@ -115,7 +121,7 @@ In VR mode, the desktop window can display can operate in two modes, controlled 
 - display the headset's view, or 
 - display an independent view that's controlled by the desktop user
 
-# <a name="DevStuff"></a>Developer Stuff
+# <a name="DevStuff"></a>Developer Stuff (high level notes)
 
 ### Unity
 As of Sept. 2019, the 3D Heatmap project has been developed in Unity 2018.2.1f1. Why not Unity 2019? Inertia. And maybe some things will break, we don't know yet.
