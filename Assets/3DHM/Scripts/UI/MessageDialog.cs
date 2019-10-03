@@ -27,6 +27,7 @@ public class MessageDialog : MonoBehaviour {
         // of these calls do anything. See hack in Update().
         //transform.GetComponent<RectTransform>().ForceUpdateRectTransforms();
         //messageObj.transform.GetComponent<RectTransform>().ForceUpdateRectTransforms();
+        //TODO - try SetAllDirty() https://answers.unity.com/questions/1483292/force-unity-ui-element-to-refreshupdate.html?childToView=1664223#answer-1664223
 
         //Put the UI input focus onto the OK button so we can just hit enter to dismiss
         EventSystem.current.SetSelectedGameObject(transform.Find("Button").gameObject);
@@ -89,7 +90,7 @@ public class MessageDialog : MonoBehaviour {
         // instantiate the dialog above, so we can't get the text element dimensions.
         //So the second time in here, we act.
         //Could do via coroutine?
-        if (updateCount == 1)
+        if (updateCount == 1) //NOTE - could use a coroutine instead
         {
             ResizeBasedOnText();
         }
