@@ -1,45 +1,45 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Assembly-CSharp.csproj", "{83CD788E-5091-CC89-9FFD-DC7BC8A343B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{83CD788E-5091-CC89-9FFD-DC7BC8A343B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Zinnia.Runtime.csproj", "{9C0B33AD-BCD0-2466-ED71-3FDC3AF3095A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zinnia.Runtime", "Zinnia.Runtime.csproj", "{9C0B33AD-BCD0-2466-ED71-3FDC3AF3095A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "VRTK.Prefabs.Runtime.csproj", "{9BF887BA-78B2-7B1B-E6CE-4FABD4AEAE08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VRTK.Prefabs.Runtime", "VRTK.Prefabs.Runtime.csproj", "{9BF887BA-78B2-7B1B-E6CE-4FABD4AEAE08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "SteamVR.csproj", "{393C2E20-5A7A-B807-BE1D-5696AEAA4568}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamVR", "SteamVR.csproj", "{393C2E20-5A7A-B807-BE1D-5696AEAA4568}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Zinnia.Tests.Editor.csproj", "{F83EC509-1891-7CD4-678F-A7CC658385F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zinnia.Tests.Editor", "Zinnia.Tests.Editor.csproj", "{F83EC509-1891-7CD4-678F-A7CC658385F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Oculus.VR.csproj", "{872C53F9-72F4-F50A-195D-7C78FC1EFBE9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Oculus.VR", "Oculus.VR.csproj", "{872C53F9-72F4-F50A-195D-7C78FC1EFBE9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "SteamVR_Actions.csproj", "{7A527A95-3A99-45FF-B9B2-11CA02A8500A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamVR_Actions", "SteamVR_Actions.csproj", "{7A527A95-3A99-45FF-B9B2-11CA02A8500A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "VRTK.Samples.Farm.Runtime.csproj", "{4A522E52-FD95-671D-79D2-34CF0F423282}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VRTK.Samples.Farm.Runtime", "VRTK.Samples.Farm.Runtime.csproj", "{4A522E52-FD95-671D-79D2-34CF0F423282}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Assembly-CSharp-firstpass.csproj", "{E5E9E13A-EAA3-5B9E-79B7-042050EE411C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-firstpass", "Assembly-CSharp-firstpass.csproj", "{E5E9E13A-EAA3-5B9E-79B7-042050EE411C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Zinnia.Tests.Utility.csproj", "{EDFF12A8-E4F0-E6AE-216A-F41695ACFCE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zinnia.Tests.Utility", "Zinnia.Tests.Utility.csproj", "{EDFF12A8-E4F0-E6AE-216A-F41695ACFCE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Assembly-CSharp-Editor-firstpass.csproj", "{7E7831B0-5A65-56DF-0F07-A80D343227EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor-firstpass", "Assembly-CSharp-Editor-firstpass.csproj", "{7E7831B0-5A65-56DF-0F07-A80D343227EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "SteamVR_Editor.csproj", "{CE1926EB-FE68-8F98-CC46-A5BD7590D544}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamVR_Editor", "SteamVR_Editor.csproj", "{CE1926EB-FE68-8F98-CC46-A5BD7590D544}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Assembly-CSharp-Editor.csproj", "{451FD682-9FA1-95AC-8D0E-BE6F05C2440E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{451FD682-9FA1-95AC-8D0E-BE6F05C2440E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Oculus.VR.Scripts.Editor.csproj", "{BCD022A6-BAA6-9CAD-E081-57FA72F52250}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Oculus.VR.Scripts.Editor", "Oculus.VR.Scripts.Editor.csproj", "{BCD022A6-BAA6-9CAD-E081-57FA72F52250}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Oculus.VR.Editor.csproj", "{3A0F436A-8D9D-AA9D-E86E-99DAB40C509E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Oculus.VR.Editor", "Oculus.VR.Editor.csproj", "{3A0F436A-8D9D-AA9D-E86E-99DAB40C509E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "SteamVR_Input_Editor.csproj", "{3A3E4BC9-908B-0948-DADA-37E93B97E4F5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamVR_Input_Editor", "SteamVR_Input_Editor.csproj", "{3A3E4BC9-908B-0948-DADA-37E93B97E4F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Zinnia.Editor.csproj", "{9EDD9831-C6A6-7986-AFD2-949E76B33D42}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zinnia.Editor", "Zinnia.Editor.csproj", "{9EDD9831-C6A6-7986-AFD2-949E76B33D42}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "VRTK.Samples.Farm.Editor.csproj", "{AE09F04E-25DE-881D-3608-9CF76EADC20A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VRTK.Samples.Farm.Editor", "VRTK.Samples.Farm.Editor.csproj", "{AE09F04E-25DE-881D-3608-9CF76EADC20A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "Supyrb.Editor.csproj", "{165A4667-6AD6-DB3E-896A-27197D9373E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Supyrb.Editor", "Supyrb.Editor.csproj", "{165A4667-6AD6-DB3E-896A-27197D9373E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DHM-proj-Csharp", "SteamVR_Windows_EditorHelper.csproj", "{BCB66E04-3EB3-5355-EB97-DA7716077C4D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamVR_Windows_EditorHelper", "SteamVR_Windows_EditorHelper.csproj", "{BCB66E04-3EB3-5355-EB97-DA7716077C4D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
