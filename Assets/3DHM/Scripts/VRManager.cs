@@ -123,6 +123,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
         //VR setup
         XRSettings.enabled = enable;
+        
+        //Hack this setting to prevent errors with steamvr behaviors when we disable vr mode
+        SteamVR_Input.initialized = enable;
+
         //Do this before enabling followHMD mode in desktop camera.
         //When this is enabled, it will take over drawing to the app desktop window.
         HmdRig.SetActive(enable);
