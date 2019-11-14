@@ -13,6 +13,9 @@ using UnityEngine.UI;
 /// </summary>
 public class DataVarUIHandler : MonoBehaviour {
 
+    /// <summary> The label object for Name and instance number </summary>
+    public GameObject labelLabel;
+
     /// <summary> The index within of this UI panel is within the list of all panels in scene.
     /// -1 if hasn't been set. 
     /// </summary>
@@ -20,6 +23,7 @@ public class DataVarUIHandler : MonoBehaviour {
 
     /// <summary> Get the variable assoc'ed with this UI handler. null if not yet assigned </summary>
     private DataVariable dataVar;
+    /// <summary> Assign the dataVar that this panel is handling, and refresh UI </summary>
     public DataVariable DataVar
     {
         get { return dataVar; }
@@ -61,19 +65,32 @@ public class DataVarUIHandler : MonoBehaviour {
         allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
         for (int i = 0; i < allHandlers.Length; i++)
         {
-            allHandlers[i].UIindex = i;
+            allHandlers[i].UIindex = allHandlers.Length - i; //they get returned in bottom-to-top order
+            allHandlers[i].ShowIndexNumber();
         }
+    }
+
+    /// <summary>
+    /// Return the total # of these handlers instantiated in the app. Only valid
+    /// after InitializeListOfAll has been called.
+    /// </summary>
+    /// <returns></returns>
+    public static int GetNumberOfHandlers()
+    {
+        return allHandlers.Length;
     }
 
     /// <summary> Assign a new dataVar to one of the available handlers, specified by the hander's index.
     /// This is useful for loading files and settings from script, then updating things here for UI display.</summary>
     /// <param name="newVar"></param>
     /// <param name="index">index within the list of all handlers. Is ignored if out of range.</param>
-    public static void SetDataVarAtIndex(DataVariable newVar, int index)
+    /// <returns>True on success, false if index out of range </returns>
+    public static bool SetDataVarAtIndex(DataVariable newVar, int index)
     {
         if (index < 0 || index >= allHandlers.Length)
-            return;
+            return false;
         allHandlers[index].DataVar = newVar;
+        return true;
     }
 
     // Use this for initialization
@@ -91,6 +108,12 @@ public class DataVarUIHandler : MonoBehaviour {
 
         Clear();
 	}
+
+    /// <summary> Update the display within this panel of its index number within all panels </summary>
+    private void ShowIndexNumber()
+    {
+        labelLabel.GetComponent<Text>().text = UIindex.ToString() + ". Name";
+    }
 
     /// <summary>
     /// Remove any association with a DataVariable. </summary>
@@ -110,7 +133,7 @@ public class DataVarUIHandler : MonoBehaviour {
     public void RefreshUI()
     {
         //Update according to DataVariable
-        string label = "_unassigned_";
+        string label = "_name unassigned_";
         string filename = Path.GetFileName(filepathSelected);
         int headerSelection = 0;
         if ( IsLoaded )
