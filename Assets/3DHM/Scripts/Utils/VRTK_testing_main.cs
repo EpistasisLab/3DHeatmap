@@ -4,7 +4,7 @@ using UnityEngine;
 
 //VRTK testing
 
-public class main : MonoBehaviour
+public class VRTK_testing_main : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()
