@@ -1130,14 +1130,6 @@ MonoBehaviour:
     m_Options:
     - m_Text: Headers...
       m_Image: {fileID: 0}
-    - m_Text: No Headers
-      m_Image: {fileID: 0}
-    - m_Text: Row Only
-      m_Image: {fileID: 0}
-    - m_Text: Column Only
-      m_Image: {fileID: 0}
-    - m_Text: 'Both '
-      m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -1716,7 +1708,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd90e8f2d2cdcf74fb3df7317c3d2531, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ChooseFileButton: {fileID: 1543085505590010}
+  HeadersDropdown: {fileID: 1525638171229030}
+  LoadButton: {fileID: 1376888363292746}
   labelLabel: {fileID: 1000221045366616}
+  InputField: {fileID: 1932526110773046}
 --- !u!1 &1763958051873528
 GameObject:
   m_ObjectHideFlags: 0

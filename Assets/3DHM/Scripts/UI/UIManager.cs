@@ -26,6 +26,9 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     //private GameObject dataVarsTopPanel; not using here currently
     public GameObject messageDialogPrefab;
     public GameObject redrawButton;
+    public GameObject mappingHeightDropdown;
+    public GameObject mappingTopColorDropdown;
+    public GameObject mappingSideColorDropdown;
 
     /// <summary> Index within the auto-prompt list of the UI object that's currently being highlighted in some way </summary>
     private int currentAutoUIActionPrompteeIndex;
@@ -33,7 +36,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     GameObject mostRecentUIActionPrompteeObj;
     /// <summary> List of UI elements to use for prompting user action, in order of
     /// which they should be activated </summary>
-    public GameObject[] UIActionPromptees;
+    private List<GameObject> UIActionPromptees;
 
     private GameObject GetAndCheckGameObject(string name)
     {
@@ -66,8 +69,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
         TooltipHide();
 
-        currentAutoUIActionPrompteeIndex = -1;
-        mostRecentUIActionPrompteeObj = null;
+        UIActionPromptInit();
     }
 
     IEnumerator StartAutoUIActionPromptsCoroutine()
@@ -260,6 +262,33 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         Graph.I.ResetView();
     }
 
+    /// <summary> Set up the list of game objects for action prompting </summary>
+    private void UIActionPromptInit()
+    {
+        //Make sure this is called to init the list of dataVar handlers
+        DataVarUIHandler.InitializeListOfAll();
+        UIActionPromptees = new List<GameObject>();
+        //Add relevant UI elemetns for first two data vars
+        for(int index = 0; index < 2; index++)
+        {
+            DataVarUIHandler obj = DataVarUIHandler.GetHandlerAtIndex(index);
+            UIActionPromptees.Add(obj.ChooseFileButton);
+            UIActionPromptees.Add(obj.HeadersDropdown);
+            UIActionPromptees.Add(obj.LoadButton);
+            UIActionPromptees.Add(obj.InputField);
+        }
+
+        //Now add the mapping UI elements
+        UIActionPromptees.Add(mappingHeightDropdown);
+        UIActionPromptees.Add(mappingTopColorDropdown);
+        UIActionPromptees.Add(mappingSideColorDropdown);
+
+        UIActionPromptees.Add(redrawButton);
+
+        currentAutoUIActionPrompteeIndex = -1;
+        mostRecentUIActionPrompteeObj = null;
+    }
+
     private bool UIActionPromptIsFinished { get { return currentAutoUIActionPrompteeIndex == -1; } }
 
     /// <summary>
@@ -274,7 +303,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         StopCurrentUIActionPrompt();
         if (newIndex < 0)
             return;
-        if (newIndex >= UIActionPromptees.Length)
+        if (newIndex >= UIActionPromptees.Count)
         {
             Debug.LogWarning("ShowUIActionPrompt: newIndex out of range: " + newIndex);
             return;
@@ -323,8 +352,11 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         }
     }
 
+    /// <summary> Prompt the user to redraw by flashing UI element </summary>
     public void StartRedrawPrompt()
     {
+        //First make sure we've stopped auto-prompts
+        StopAutoUIActionPrompts();
         StartStopManualUIActionPrompt(redrawButton, true);
     }
 
@@ -352,7 +384,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// <summary> If the passed Gameobject is currently prompting, then stop it and start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
     public void ShowNextUIActionPrompt(GameObject go)
     {
-        if (currentAutoUIActionPrompteeIndex < 0 || currentAutoUIActionPrompteeIndex >= UIActionPromptees.Length)
+        if (currentAutoUIActionPrompteeIndex < 0 || currentAutoUIActionPrompteeIndex >= UIActionPromptees.Count)
             return;
         if ( go == null)
         {
@@ -366,14 +398,14 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// <summary> Start prompting behavior on the next UI elements. If we reach the end, stop. </summary>
     public void ShowNextUIActionPrompt()
     {
-        int newIndex = currentAutoUIActionPrompteeIndex < UIActionPromptees.Length - 1 ? currentAutoUIActionPrompteeIndex+1 : -1; //-1 will tell the system to stop, kinda awkward
+        int newIndex = currentAutoUIActionPrompteeIndex < UIActionPromptees.Count - 1 ? currentAutoUIActionPrompteeIndex+1 : -1; //-1 will tell the system to stop, kinda awkward
         //This will first stop anything that's currently prompting.
         ShowUIActionPrompt(newIndex);
     }
 
     public void OnDemoDataClick()
     {
-        DataManager.I.LoadAndDrawSampleData();
+        ProjectManager.I.DemoDataLoadAndDraw();
     }
 
     public void OnHelpButtonClick()

@@ -218,7 +218,7 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         {
             //Quick load a test file and view it
             //DataManager.I.DebugQuickLoadDefaultAndDraw();
-            DataManager.I.LoadAndDrawSampleData();
+            ProjectManager.I.DemoDataLoadAndDraw();
         }
 
         //// VIEW-CONTROL INPUTS

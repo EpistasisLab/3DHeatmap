@@ -6,6 +6,36 @@ using System.Collections;
 using SMView;
 using TMPro;
 
+
+/// <summary> Class for holding graph settings to get saved with project </summary>
+[System.Serializable]
+public class GraphStorage
+{
+    public float graphHeightFrac;
+
+    GraphStorage()
+    {
+        graphHeightFrac = 1.0f;
+    }
+
+    /// <summary> Get a new instance of this class with current settings. Ready for storage. </summary>
+    /// <returns></returns>
+    public static GraphStorage Create()
+    {
+        GraphStorage result = new GraphStorage
+        {
+            graphHeightFrac = Graph.I.CurrGraphHeightFrac
+        };
+        return result;
+    }
+
+    public void Restore()
+    {
+        Graph.I.CurrGraphHeightFrac = graphHeightFrac;
+    }
+}
+
+
 /// <summary>
 /// Graph class. Has lots of state vars crammed in it. Needs more refactoring still.
 /// As a MonoBehaviorSingleton, there's a single global instance that is accessible via Graph.Instance

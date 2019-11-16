@@ -13,8 +13,15 @@ using UnityEngine.UI;
 /// </summary>
 public class DataVarUIHandler : MonoBehaviour {
 
+    /// <summary> This is used to populate the header dropdown </summary>
+    private enum HeaderDropdownValues { Headers, No_Headers, Row_Only, Column_Only, Both }
+
+    public GameObject ChooseFileButton;
+    public GameObject HeadersDropdown;
+    public GameObject LoadButton;
     /// <summary> The label object for Name and instance number </summary>
     public GameObject labelLabel;
+    public GameObject InputField;
 
     /// <summary> The index within of this UI panel is within the list of all panels in scene.
     /// -1 if hasn't been set. 
@@ -57,7 +64,7 @@ public class DataVarUIHandler : MonoBehaviour {
 
     /// <summary> Find all instances of this class in the scene, make a list, and assign their index values in order.
     /// This should be run on startup, and if more instances of this class are made at runtime. 
-    /// 1st run happens automatically here in Update() </summary>
+    /// 1st run during startup happens automatically from UIManager </summary>
     public static void InitializeListOfAll()
     {
         //*NOTE* we might want to make sure these are sorted by height/position, but skip that for now
@@ -65,7 +72,9 @@ public class DataVarUIHandler : MonoBehaviour {
         allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
         for (int i = 0; i < allHandlers.Length; i++)
         {
-            allHandlers[i].UIindex = allHandlers.Length - i; //they get returned in bottom-to-top order
+            allHandlers[i].UIindex = i;
+            //The children get returned out-of-order, so set them straight here
+            allHandlers[i].transform.SetSiblingIndex(i);
             allHandlers[i].ShowIndexNumber();
         }
     }
@@ -80,15 +89,45 @@ public class DataVarUIHandler : MonoBehaviour {
         return allHandlers.Length;
     }
 
+    public static DataVarUIHandler GetHandlerAtIndex(int index)
+    {
+        if (index < GetNumberOfHandlers())
+            return allHandlers[index];
+        else
+        {
+            Debug.LogError("Out of range handler index");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Return the handler assigned to the passed dataVariable .
+    /// </summary>
+    /// <param name="dataVar"></param>
+    /// <returns>Null if not found</returns>
+    public static DataVarUIHandler GetHandlerForDataVar(DataVariable dataVar)
+    {
+        foreach(DataVarUIHandler dvh in allHandlers)
+        {
+            if (dvh.DataVar == dataVar)
+                return dvh;
+        }
+        return null;
+    }
+
     /// <summary> Assign a new dataVar to one of the available handlers, specified by the hander's index.
     /// This is useful for loading files and settings from script, then updating things here for UI display.</summary>
     /// <param name="newVar"></param>
     /// <param name="index">index within the list of all handlers. Is ignored if out of range.</param>
     /// <returns>True on success, false if index out of range </returns>
-    public static bool SetDataVarAtIndex(DataVariable newVar, int index)
+    public static bool SetDataVarAtIndex(DataVariable newVar, int index, bool hasRowHeaders, bool hasColumnHeaders)
     {
         if (index < 0 || index >= allHandlers.Length)
+        {
+            Debug.LogError("SetDataVarAtIndex: out-of-range index passed: " + index);
             return false;
+        }
+        allHandlers[index].SetHeaderSelection(hasRowHeaders, hasColumnHeaders);
         allHandlers[index].DataVar = newVar;
         return true;
     }
@@ -104,7 +143,10 @@ public class DataVarUIHandler : MonoBehaviour {
         if (loadButton == null)
             Debug.LogError("loadButton == null");
 
-        allHandlers = new DataVarUIHandler[0];
+        //Set headers dropdown
+        List<string> options = new List<string>(typeof(HeaderDropdownValues).GetEnumNames());
+        HeadersDropdown.GetComponent<Dropdown>().ClearOptions();
+        HeadersDropdown.GetComponent<Dropdown>().AddOptions(options);
 
         Clear();
 	}
@@ -129,21 +171,28 @@ public class DataVarUIHandler : MonoBehaviour {
         RefreshUI();
     }
 
+    public static void Clear(DataVariable dataVar)
+    {
+        DataVarUIHandler h = GetHandlerForDataVar(dataVar);
+        if (h != null)
+            h.Clear();
+    }
+
     /// <summary> Update the UI for this panel, given the current state of the assoc'ed DataVariable </summary>
     public void RefreshUI()
     {
         //Update according to DataVariable
         string label = "_name unassigned_";
         string filename = Path.GetFileName(filepathSelected);
-        int headerSelection = 0;
         if ( IsLoaded )
         {
             label = dataVar.Label;
 
             //Header options. Need to set these too for when we assign a new dataVar to this handler (e.g. when loading sample data).
-            headerSelection = dataVar.hasColumnHeaders && dataVar.hasRowHeaders ? 4 : dataVar.hasColumnHeaders ? 3 : dataVar.hasRowHeaders ? 2 : 1;
+            SetHeaderSelection(dataVar.hasRowHeaders, dataVar.hasColumnHeaders);
         }
-        transform.Find("FilePanel").transform.Find("HeadersDropdown").GetComponent<Dropdown>().value = headerSelection;
+        else
+            HeadersDropdown.GetComponent<Dropdown>().value = 0;
 
         //There are multiple Text components in the whole panel, so seems I have to do this. Probably there is a better way...
         //And from what I read, transform.Find doesn't recurse, so you have to do this to go down beyond immeditate children.
@@ -162,11 +211,6 @@ public class DataVarUIHandler : MonoBehaviour {
                 string path = filepathSelected;
                 UIManager.I.TooltipShow(path, transform);
             }
-        }
-
-        if( allHandlers.Length == 0)
-        {
-            InitializeListOfAll();
         }
 	}
 
@@ -222,24 +266,53 @@ public class DataVarUIHandler : MonoBehaviour {
         RefreshUI();
     }
 
-    /// <summary> Get the current selection of header options based on the drop-down box </summary>
+    /// <summary> Get the current selection of header options based on the drop-down box.
+    /// Awkward for storage purposes. </summary>
     /// <param name="hasRowHeaders"></param>
     /// <param name="hasColumnHeaders"></param>
     /// <returns>true if header option is valid, false if nothing selected</returns>
     private bool GetHeaderSelection(out bool hasRowHeaders, out bool hasColumnHeaders)
     {
         hasRowHeaders = hasColumnHeaders = false;
-        //Dropdown selction options:
-        //{Headers..., No Headers, Row Only, Column Only, Both}
-        int selection = transform.Find("FilePanel").transform.Find("HeadersDropdown").GetComponent<Dropdown>().value;
+        int selection = HeadersDropdown.GetComponent<Dropdown>().value;
         if( selection == 0)
         {
-            UIManager.I.ShowMessageDialog("Please select header option first.");
             return false;
         }
-        hasRowHeaders = (selection == 2 || selection == 4);
-        hasColumnHeaders = (selection == 3 || selection == 4);
+        hasRowHeaders = (selection == (int)HeaderDropdownValues.Row_Only || selection == (int)HeaderDropdownValues.Both);
+        hasColumnHeaders = (selection == (int)HeaderDropdownValues.Column_Only || selection == (int)HeaderDropdownValues.Both);
         return true;
+    }
+
+    /// <summary> Get the current header settings from the handler assoc'ed with the passed dataVariable </summary>
+    /// <param name="dataVar"></param>
+    /// <returns>False is failed, and false for both headers </returns>
+    public static bool GetHeaderSelection(DataVariable dataVar, out bool hasRowHeaders, out bool hasColumnHeaders)
+    {
+        hasRowHeaders = false;
+        hasColumnHeaders = false;
+        DataVarUIHandler dvh = GetHandlerForDataVar(dataVar);
+        if (dvh == null)
+        {
+            Debug.LogError("GetHeaderSelection: handler for dataVar not found");
+            return false;
+        }
+        return dvh.GetHeaderSelection(out hasRowHeaders, out hasColumnHeaders);
+    }
+
+    public void SetHeaderSelection(bool hasRowHeaders, bool hasColumnHeaders)
+    {
+        int value;
+        if (hasRowHeaders && hasColumnHeaders)
+            value = (int)HeaderDropdownValues.Both;
+        else if (hasRowHeaders)
+            value = (int)HeaderDropdownValues.Row_Only;
+        else if (hasColumnHeaders)
+            value = (int)HeaderDropdownValues.Column_Only;
+        else
+            value = (int)HeaderDropdownValues.No_Headers;
+
+        HeadersDropdown.GetComponent<Dropdown>().value = value;
     }
 
     public void OnLoadClick(GameObject go)
@@ -295,7 +368,10 @@ public class DataVarUIHandler : MonoBehaviour {
         //Read the currently selected option for headers
         bool hasRowHeaders, hasColumnHeaders;
         if (!GetHeaderSelection(out hasRowHeaders, out hasColumnHeaders))
+        {
+            UIManager.I.ShowMessageDialog("Please select header option first.");
             return;
+        }
         bool success = DataManager.I.LoadAddFile(filepathSelected, hasRowHeaders, hasColumnHeaders, out newDataVar, out errorMsg);
         if (success)
         {

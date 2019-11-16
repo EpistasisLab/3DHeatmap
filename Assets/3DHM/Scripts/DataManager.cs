@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+//Standalone file browser
 using SFB;
 
 /// <summary> Data values and data labels for a point on the data grid.
@@ -145,6 +146,7 @@ public class DataVariable : CSVReaderData
     {
         //Debug.Log("DataVariable:Clear()");
         base.Clear();
+        DataVarUIHandler.Clear(this);
         MinValue = float.MinValue;
         MaxValue = float.MaxValue;
         range = 0f;
@@ -225,6 +227,142 @@ public class DataVariable : CSVReaderData
     }
 }
 
+
+/// <summary> Class holding required fields from single data var for project save/load </summary>
+[System.Serializable]
+public class DataVarStorage
+{
+    //Store path and filename separately so we can mod path easily if need be
+    public string pathOnly;
+    public string filename;
+    public string label;
+    public bool hasRowHeaders;
+    public bool hasColumnHeaders;
+
+    /// <summary> Store which mappings this variable is used in.
+    /// Do it this way since variable may be mapped to more than mapping. </summary>
+    public List<DataManager.Mapping> mappings;
+
+    public DataVarStorage()
+    {
+        pathOnly = "";
+        filename = "";
+        label = "";
+        hasRowHeaders = false;
+        hasColumnHeaders = false;
+        mappings = new List<DataManager.Mapping>();
+    }
+
+    public DataVarStorage(DataVariable dv)
+    {
+        Init(dv);
+    }
+
+    private void Init(DataVariable dv)
+    {
+        pathOnly = Path.GetDirectoryName(dv.Filepath);
+        filename = Path.GetFileName(dv.Filepath);
+        label = dv.Label;
+        mappings = new List<DataManager.Mapping>();
+
+        //Header settings are stored in the UI handler, via dropdown selection. Kinda goofy.
+        DataVarUIHandler.GetHeaderSelection(dv, out hasRowHeaders, out hasColumnHeaders);
+
+        //Find which mappings this is assigned to
+        if (DataManager.I.GetVariableByMapping(DataManager.Mapping.Height) == dv)
+            mappings.Add(DataManager.Mapping.Height);
+        if (DataManager.I.GetVariableByMapping(DataManager.Mapping.TopColor) == dv)
+            mappings.Add(DataManager.Mapping.TopColor);
+        if (DataManager.I.GetVariableByMapping(DataManager.Mapping.SideColor) == dv)
+            mappings.Add(DataManager.Mapping.SideColor);
+    }
+}
+
+[System.Serializable]
+/// <summary> Class that holds settings required for save/load of full data state as part of a project </summary>
+public class DataStorage
+{
+    /// <summary> Each loaded data variable will have its own storage object, that includes the variable's mappings </summary>
+    public List<DataVarStorage> dataVars;
+
+    /// <summary> Index of the color table. 
+    /// NOTE - It's bad to be using an index since it's tied to UI layout, but go with it for now. </summary>
+    public int colorTableIndexSide;
+    public int colorTableIndexTop;
+
+    DataStorage()
+    {
+        dataVars = new List<DataVarStorage>();
+        colorTableIndexSide = 0;
+        colorTableIndexTop = 0;
+    }
+
+    /// <summary> Retrieve a DataStorage object filled with current data state, suitable for saving. </summary>
+    /// <returns></returns>
+    public static DataStorage Create()
+    {
+        DataStorage result = new DataStorage
+        {
+            dataVars = new List<DataVarStorage>(),
+            colorTableIndexSide = DataManager.I.GetColorTableIdByMapping(DataManager.Mapping.SideColor),
+            colorTableIndexTop = DataManager.I.GetColorTableIdByMapping(DataManager.Mapping.TopColor)
+        };
+
+        //Get all the data vars
+        foreach (DataVariable dv in DataManager.I.Variables)
+        {
+            result.dataVars.Add(new DataVarStorage(dv));
+        }
+
+        return result;
+    }
+
+    /// <summary> Restore from a DataStorage object - load data files, applying mappings, set color tables </summary>
+    /// <param name="data"></param>
+    /// <returns>True on success </returns>
+    public bool Restore()
+    {
+        int count = 0;
+        bool success = true;
+        string failedPath = "";
+
+        //Clear whatever's currently loaded
+        DataManager.I.Clear();
+
+        foreach ( DataVarStorage dvs in dataVars)
+        {
+            DataVariable newDataVar = null;
+            //Load the dataVar's file, and add it to the UI
+            if (DataManager.I.LoadDataVarFromStorage(dvs, count, out newDataVar))
+            {
+                count++;
+                //We have a list cuz variable might be mapped to more than one visual param
+                foreach (DataManager.Mapping mapping in dvs.mappings)
+                {
+                    DataManager.I.AssignVariableMapping(mapping, newDataVar);
+                }
+            }
+            else
+            {
+                failedPath = dvs.pathOnly + dvs.filename;
+                success = false;
+            }
+        }
+
+        //color tables
+        UIManager.I.SetColorTableByMappingAndIndex(DataManager.Mapping.SideColor, colorTableIndexSide);
+        UIManager.I.SetColorTableByMappingAndIndex(DataManager.Mapping.TopColor, colorTableIndexTop);
+
+        if (!success)
+        {
+            string msg = "One or more variables failed to load. The last one that failed: \n" + failedPath;
+            UIManager.I.ShowMessageDialog(msg);
+        }
+
+        return success;
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /// <summary>
@@ -241,6 +379,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
     /// This list is separate from variableMappings to allow for > 3 variables to be loaded at once.
     /// </summary>
     private List<DataVariable> variables;
+    public List<DataVariable> Variables { get { return variables; } }
 
     /// <summary>
     /// List that holds mappings of variable to visual params. Indexed via enum DataManagerMapping.
@@ -248,8 +387,9 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
     private List<DataVariable> variableMappings;
 
     /// <summary>
-    /// Color table IDs for the various mapping (initially just top and side colors).
+    /// Color table IDs in use for the various mappings (initially just top and side colors).
     /// Use the Mapping enums to index this for simplicity, and just ignore the value at Mapping.Height index.
+    /// NOTE this is filled as needed from UI before a redraw is done. See comments elsewhere.
     /// </summary>
     private int[] variableColorTableIDs;
 
@@ -413,8 +553,13 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         Clear();
     }
 
-    private void Clear()
+    public void Clear()
     {
+        if(variables != null)
+            foreach(DataVariable var in variables)
+            {
+                var.Clear();
+            }
         variables = new List<DataVariable>();
         variableMappings = new List<DataVariable>();
         foreach (Mapping map in Enum.GetValues(typeof(Mapping)))
@@ -426,6 +571,8 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         UIManager.I.RefreshUI();
     }
 
+    /// <summary> Remove and clear/empty/delete a data var </summary>
+    /// <param name="var"></param>
     public void Remove(DataVariable var)
     {
         if (var == null)
@@ -441,6 +588,8 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
                 if (variableMappings[(int)mapping] == var)
                     variableMappings[(int)mapping] = null;
             }
+
+            var.Clear();
         }
         else
         {
@@ -618,65 +767,24 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
         return success;
     }
 
-    /// <summary> Hacked-in routine to quickly load some sample data and assign visual mappings.
-    /// We eventually want a proper project capability to handle this and user-saved projects. </summary>
+    /// <summary> Load a data var as its restored as part of a project </summary>
+    /// <param name="dv"></param>
+    /// <param name="count"></param>
+    /// <param name="newDataVar"></param>
     /// <returns></returns>
-    public void LoadAndDrawSampleData()
+    public bool LoadDataVarFromStorage(DataVarStorage dv, int count, out DataVariable newDataVar)
     {
-        StartCoroutine(LoadAndMapSampleDataCoroutine());
-    }
-
-    IEnumerator LoadAndMapSampleDataCoroutine()
-    {
-        int id = UIManager.I.StatusShow("Loading Demo Data...");
-        yield return null;
-        LoadAndMapSampleDataHandler();
-        UIManager.I.StatusComplete(id);
-    }
-
-    private bool LoadAndMapSampleDataHandler()
-    {
-        Clear();
-
-        //Sample files are in Assets/StreamingAssets
-        DataVariable dataVar;
-        int count = 0;
-
-        if ( ! LoadSingleSampleDataFile("200x200-R80C110.csv", out dataVar, Mapping.Height, count))
-        {
-            return false;
-        }
-
-        if (!LoadSingleSampleDataFile("200x200-R100C200.csv", out dataVar, Mapping.SideColor, ++count))
-        {
-            return false;
-        }
-        UIManager.I.SetColorTableByMappingAndIndex(Mapping.SideColor, 2);
-
-        if (!LoadSingleSampleDataFile("200x200-R150C12.csv", out dataVar, Mapping.TopColor, ++count))
-        {
-            return false;
-        }
-        UIManager.I.SetColorTableByMappingAndIndex(Mapping.TopColor, 0);
-
-        UIManager.I.RefreshUI();
-
-        Graph.I.Redraw();
-
-        return true;
-    }
-
-    private bool LoadSingleSampleDataFile(string filename, out DataVariable dataVar, Mapping mapping, int count)
-    {
-        string path = Application.streamingAssetsPath + "/sampleData/" + filename;
+        //NOTE - probably will need to improve this for x-plat needs, although maybe not
+        // since path is stored from local path anyway
+        string path = dv.pathOnly + "\\" + dv.filename;
         string errorMsg;
-        if( ! LoadAddFile(path, true, true, out dataVar, out errorMsg))
+        newDataVar = null;
+        if (!DataManager.I.LoadAddFile(path, true, true, out newDataVar, out errorMsg))
         {
-            UIManager.I.ShowMessageDialog("Loading sample data failed.\n" + filename + "\n" + errorMsg);
+            UIManager.I.ShowMessageDialog("Loading data failed.\n" + path + "\n" + errorMsg);
             return false;
         }
-        AssignVariableMapping(mapping, dataVar);
-        DataVarUIHandler.SetDataVarAtIndex(dataVar, count);
+        DataVarUIHandler.SetDataVarAtIndex(newDataVar, count, dv.hasRowHeaders, dv.hasColumnHeaders);
         return true;
     }
 
