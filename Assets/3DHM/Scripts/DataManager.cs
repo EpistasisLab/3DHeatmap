@@ -265,8 +265,8 @@ public class DataVarStorage
         label = dv.Label;
         mappings = new List<DataManager.Mapping>();
 
-        //Header settings are stored in the UI handler, via dropdown selection. Kinda goofy.
-        DataVarUIHandler.GetHeaderSelection(dv, out hasRowHeaders, out hasColumnHeaders);
+        hasRowHeaders = dv.hasRowHeaders;
+        hasColumnHeaders = dv.hasColumnHeaders;
 
         //Find which mappings this is assigned to
         if (DataManager.I.GetVariableByMapping(DataManager.Mapping.Height) == dv)
@@ -769,22 +769,22 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
 
     /// <summary> Load a data var as its restored as part of a project </summary>
     /// <param name="dv"></param>
-    /// <param name="count"></param>
+    /// <param name="index">index within the collection of dataVarUIHandlers at which to place the data var</param>
     /// <param name="newDataVar"></param>
     /// <returns></returns>
-    public bool LoadDataVarFromStorage(DataVarStorage dv, int count, out DataVariable newDataVar)
+    public bool LoadDataVarFromStorage(DataVarStorage dv, int index, out DataVariable newDataVar)
     {
         //NOTE - probably will need to improve this for x-plat needs, although maybe not
         // since path is stored from local path anyway
         string path = dv.pathOnly + "\\" + dv.filename;
         string errorMsg;
         newDataVar = null;
-        if (!DataManager.I.LoadAddFile(path, true, true, out newDataVar, out errorMsg))
+        if (!DataManager.I.LoadAddFile(path, dv.hasRowHeaders, dv.hasColumnHeaders, out newDataVar, out errorMsg))
         {
             UIManager.I.ShowMessageDialog("Loading data failed.\n" + path + "\n" + errorMsg);
             return false;
         }
-        DataVarUIHandler.SetDataVarAtIndex(newDataVar, count, dv.hasRowHeaders, dv.hasColumnHeaders);
+        DataVarUIHandler.SetDataVarAtIndex(newDataVar, index);
         return true;
     }
 

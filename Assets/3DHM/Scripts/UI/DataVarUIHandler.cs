@@ -120,14 +120,14 @@ public class DataVarUIHandler : MonoBehaviour {
     /// <param name="newVar"></param>
     /// <param name="index">index within the list of all handlers. Is ignored if out of range.</param>
     /// <returns>True on success, false if index out of range </returns>
-    public static bool SetDataVarAtIndex(DataVariable newVar, int index, bool hasRowHeaders, bool hasColumnHeaders)
+    public static bool SetDataVarAtIndex(DataVariable newVar, int index)
     {
         if (index < 0 || index >= allHandlers.Length)
         {
             Debug.LogError("SetDataVarAtIndex: out-of-range index passed: " + index);
             return false;
         }
-        allHandlers[index].SetHeaderSelection(hasRowHeaders, hasColumnHeaders);
+        allHandlers[index].SetHeaderSelection(newVar.hasRowHeaders, newVar.hasColumnHeaders);
         allHandlers[index].DataVar = newVar;
         return true;
     }
@@ -266,8 +266,7 @@ public class DataVarUIHandler : MonoBehaviour {
         RefreshUI();
     }
 
-    /// <summary> Get the current selection of header options based on the drop-down box.
-    /// Awkward for storage purposes. </summary>
+    /// <summary> Get the current selection of header options based on the drop-down box. </summary>
     /// <param name="hasRowHeaders"></param>
     /// <param name="hasColumnHeaders"></param>
     /// <returns>true if header option is valid, false if nothing selected</returns>
@@ -284,22 +283,6 @@ public class DataVarUIHandler : MonoBehaviour {
         return true;
     }
 
-    /// <summary> Get the current header settings from the handler assoc'ed with the passed dataVariable </summary>
-    /// <param name="dataVar"></param>
-    /// <returns>False is failed, and false for both headers </returns>
-    public static bool GetHeaderSelection(DataVariable dataVar, out bool hasRowHeaders, out bool hasColumnHeaders)
-    {
-        hasRowHeaders = false;
-        hasColumnHeaders = false;
-        DataVarUIHandler dvh = GetHandlerForDataVar(dataVar);
-        if (dvh == null)
-        {
-            Debug.LogError("GetHeaderSelection: handler for dataVar not found");
-            return false;
-        }
-        return dvh.GetHeaderSelection(out hasRowHeaders, out hasColumnHeaders);
-    }
-
     public void SetHeaderSelection(bool hasRowHeaders, bool hasColumnHeaders)
     {
         int value;
@@ -313,6 +296,7 @@ public class DataVarUIHandler : MonoBehaviour {
             value = (int)HeaderDropdownValues.No_Headers;
 
         HeadersDropdown.GetComponent<Dropdown>().value = value;
+        HeadersDropdown.GetComponent<Dropdown>().RefreshShownValue();
     }
 
     public void OnLoadClick(GameObject go)

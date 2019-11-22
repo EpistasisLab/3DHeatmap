@@ -13,7 +13,7 @@ public class Project
     public GraphStorage graphSettings;
     public string name;
 
-    private static string Extension { get { return "3DHMprj"; } }
+    private static string FileExtension { get { return "3DHMprj"; } }
 
     Project()
     {
@@ -29,7 +29,7 @@ public class Project
         prj.data = DataStorage.Create();
         prj.graphSettings = GraphStorage.Create();
 
-        string path = StandaloneFileBrowser.SaveFilePanel("Save your project", "", "", Extension);
+        string path = StandaloneFileBrowser.SaveFilePanel("Save your project", "", "", FileExtension);
         if (path == "")
             return;
 
@@ -50,7 +50,7 @@ public class Project
     /// <summary> Prompt user to choose a project file and load it </summary>
     public static bool Load()
     {
-        string[] path = StandaloneFileBrowser.OpenFilePanel("Choose a project file", "", Extension, false);
+        string[] path = StandaloneFileBrowser.OpenFilePanel("Choose a project file", "", FileExtension, false);
         if (path.Length == 0 || path[0] == "")
             return false;
 
@@ -186,7 +186,7 @@ public class ProjectManager : MonoBehaviorSingleton<ProjectManager>
             return false;
         }
         DataManager.I.AssignVariableMapping(mapping, dataVar);
-        DataVarUIHandler.SetDataVarAtIndex(dataVar, count, false, false);
+        DataVarUIHandler.SetDataVarAtIndex(dataVar, count);
         return true;
     }
 }
