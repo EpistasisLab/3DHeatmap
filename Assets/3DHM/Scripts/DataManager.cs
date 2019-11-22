@@ -137,6 +137,9 @@ public class DataVariable : CSVReaderData
     /// <summary> A user-friendly label/name for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
     public string Label { get { return label; } set { label = value; } }
 
+    /// <summary> The UI handler that this dataVar has been assignd to. Null if not yet set. </summary>
+    public DataVarUIHandler UIhandler;
+
     public DataVariable()
     {
         //(parameter-less) Base ctor is called implicitly
@@ -153,6 +156,7 @@ public class DataVariable : CSVReaderData
         minMaxReady = false;
         label = "DefaultLabel";
         filename = "None";
+        UIhandler = null;
     }
 
     /// <summary>
@@ -238,6 +242,9 @@ public class DataVarStorage
     public string label;
     public bool hasRowHeaders;
     public bool hasColumnHeaders;
+    /// <summary> The index into the list of DataVarUIHandlers that this variable had,
+    /// so we can repopulate in the same order.</summary>
+    public int UIindex;
 
     /// <summary> Store which mappings this variable is used in.
     /// Do it this way since variable may be mapped to more than mapping. </summary>
@@ -251,6 +258,7 @@ public class DataVarStorage
         hasRowHeaders = false;
         hasColumnHeaders = false;
         mappings = new List<DataManager.Mapping>();
+        UIindex = -1;
     }
 
     public DataVarStorage(DataVariable dv)
@@ -267,6 +275,11 @@ public class DataVarStorage
 
         hasRowHeaders = dv.hasRowHeaders;
         hasColumnHeaders = dv.hasColumnHeaders;
+
+        if(dv.UIhandler != null)
+        {
+            UIindex = dv.UIhandler.UIindex;
+        }
 
         //Find which mappings this is assigned to
         if (DataManager.I.GetVariableByMapping(DataManager.Mapping.Height) == dv)
@@ -322,7 +335,6 @@ public class DataStorage
     /// <returns>True on success </returns>
     public bool Restore()
     {
-        int count = 0;
         bool success = true;
         string failedPath = "";
 
@@ -333,9 +345,8 @@ public class DataStorage
         {
             DataVariable newDataVar = null;
             //Load the dataVar's file, and add it to the UI
-            if (DataManager.I.LoadDataVarFromStorage(dvs, count, out newDataVar))
+            if (DataManager.I.LoadDataVarFromStorage(dvs, out newDataVar))
             {
-                count++;
                 //We have a list cuz variable might be mapped to more than one visual param
                 foreach (DataManager.Mapping mapping in dvs.mappings)
                 {
@@ -768,23 +779,33 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
     }
 
     /// <summary> Load a data var as its restored as part of a project </summary>
-    /// <param name="dv"></param>
+    /// <param name="dvs"></param>
     /// <param name="index">index within the collection of dataVarUIHandlers at which to place the data var</param>
     /// <param name="newDataVar"></param>
     /// <returns></returns>
-    public bool LoadDataVarFromStorage(DataVarStorage dv, int index, out DataVariable newDataVar)
+    public bool LoadDataVarFromStorage(DataVarStorage dvs, out DataVariable newDataVar)
     {
         //NOTE - probably will need to improve this for x-plat needs, although maybe not
         // since path is stored from local path anyway
-        string path = dv.pathOnly + "\\" + dv.filename;
+        string path = dvs.pathOnly + "\\" + dvs.filename;
         string errorMsg;
         newDataVar = null;
-        if (!DataManager.I.LoadAddFile(path, dv.hasRowHeaders, dv.hasColumnHeaders, out newDataVar, out errorMsg))
+
+        //make sure the file exists, so we can give a simpler error than we'd get otherwise when calling LoadAddFile
+        if(! File.Exists(path))
+        {
+            UIManager.I.ShowMessageDialog("File not found: " + path);
+            return false;
+        }
+
+        //Actually load it now
+        if (!DataManager.I.LoadAddFile(path, dvs.hasRowHeaders, dvs.hasColumnHeaders, out newDataVar, out errorMsg))
         {
             UIManager.I.ShowMessageDialog("Loading data failed.\n" + path + "\n" + errorMsg);
             return false;
         }
-        DataVarUIHandler.SetDataVarAtIndex(newDataVar, index);
+        newDataVar.Label = dvs.label;
+        DataVarUIHandler.SetDataVarAtIndex(newDataVar, dvs.UIindex);
         return true;
     }
 

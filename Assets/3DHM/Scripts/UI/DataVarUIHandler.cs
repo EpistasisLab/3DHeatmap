@@ -14,7 +14,7 @@ using UnityEngine.UI;
 public class DataVarUIHandler : MonoBehaviour {
 
     /// <summary> This is used to populate the header dropdown </summary>
-    private enum HeaderDropdownValues { Headers, No_Headers, Row_Only, Column_Only, Both }
+    private enum HeaderDropdownValues { Headers, None, Row_Only, Col_Only, Both }
 
     public GameObject ChooseFileButton;
     public GameObject HeadersDropdown;
@@ -26,20 +26,22 @@ public class DataVarUIHandler : MonoBehaviour {
     /// <summary> The index within of this UI panel is within the list of all panels in scene.
     /// -1 if hasn't been set. 
     /// </summary>
-    private int UIindex = -1;
+    private int _UIindex = -1;
+    public int UIindex { get { return _UIindex; } }
 
     /// <summary> Get the variable assoc'ed with this UI handler. null if not yet assigned </summary>
-    private DataVariable dataVar;
+    private DataVariable _dataVar;
     /// <summary> Assign the dataVar that this panel is handling, and refresh UI </summary>
     public DataVariable DataVar
     {
-        get { return dataVar; }
+        get { return _dataVar; }
         set
         {
-            dataVar = value;
+            _dataVar = value;
             if(IsLoaded)
-                filepathSelected = dataVar.Filepath;
+                filepathSelected = _dataVar.Filepath;
             SetFileNeedsLoading(false);
+            _dataVar.UIhandler = this;
             RefreshUI();
         }
     }
@@ -72,7 +74,7 @@ public class DataVarUIHandler : MonoBehaviour {
         allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
         for (int i = 0; i < allHandlers.Length; i++)
         {
-            allHandlers[i].UIindex = i;
+            allHandlers[i]._UIindex = i;
             //The children get returned out-of-order, so set them straight here
             allHandlers[i].transform.SetSiblingIndex(i);
             allHandlers[i].ShowIndexNumber();
@@ -124,10 +126,10 @@ public class DataVarUIHandler : MonoBehaviour {
     {
         if (index < 0 || index >= allHandlers.Length)
         {
-            Debug.LogError("SetDataVarAtIndex: out-of-range index passed: " + index);
+            UIManager.I.ShowMessageDialog("SetDataVarAtIndex: out-of-range index passed: " + index + ". Skipping this data variabled.");
             return false;
         }
-        allHandlers[index].SetHeaderSelection(newVar.hasRowHeaders, newVar.hasColumnHeaders);
+        //This will call refreshUI which will take care of headers and label and get it all showing 
         allHandlers[index].DataVar = newVar;
         return true;
     }
@@ -151,17 +153,20 @@ public class DataVarUIHandler : MonoBehaviour {
         Clear();
 	}
 
-    /// <summary> Update the display within this panel of its index number within all panels </summary>
+    /// <summary> Update the display within this panel of its index number within all panels 
+    /// This is the label for the text input UI that holds var's friendly name/label</summary>
     private void ShowIndexNumber()
     {
-        labelLabel.GetComponent<Text>().text = UIindex.ToString() + ". Name";
+        labelLabel.GetComponent<Text>().text = _UIindex.ToString() + ". Name";
     }
 
     /// <summary>
     /// Remove any association with a DataVariable. </summary>
     public void Clear()
     {
-        dataVar = null;
+        if(_dataVar != null)
+            _dataVar.UIhandler = null;
+        _dataVar = null;
         filenameTextMouseHovering = false;
         filenameTextMouseEnterTime = float.MaxValue;
         filenameTextTooltipShowing = false;
@@ -186,10 +191,10 @@ public class DataVarUIHandler : MonoBehaviour {
         string filename = Path.GetFileName(filepathSelected);
         if ( IsLoaded )
         {
-            label = dataVar.Label;
+            label = _dataVar.Label;
 
             //Header options. Need to set these too for when we assign a new dataVar to this handler (e.g. when loading sample data).
-            SetHeaderSelection(dataVar.hasRowHeaders, dataVar.hasColumnHeaders);
+            SetHeaderSelection(_dataVar.hasRowHeaders, _dataVar.hasColumnHeaders);
         }
         else
             HeadersDropdown.GetComponent<Dropdown>().value = 0;
@@ -218,7 +223,7 @@ public class DataVarUIHandler : MonoBehaviour {
     { 
         //Debug.Log("OnLabelEdit");
         if (IsLoaded)
-            dataVar.Label = GetLabel();
+            _dataVar.Label = GetLabel();
         UIManager.I.RefreshUI();
         //Switch prompting behavior to the next UI element if this element is currently prompting.
         UIManager.I.ShowNextUIActionPrompt(go);
@@ -256,7 +261,7 @@ public class DataVarUIHandler : MonoBehaviour {
             return;
         if( IsLoaded )
         {
-            DataManager.I.Remove(dataVar);
+            DataManager.I.Remove(_dataVar);
         }
         Clear();
         filepathSelected = result;
@@ -279,7 +284,7 @@ public class DataVarUIHandler : MonoBehaviour {
             return false;
         }
         hasRowHeaders = (selection == (int)HeaderDropdownValues.Row_Only || selection == (int)HeaderDropdownValues.Both);
-        hasColumnHeaders = (selection == (int)HeaderDropdownValues.Column_Only || selection == (int)HeaderDropdownValues.Both);
+        hasColumnHeaders = (selection == (int)HeaderDropdownValues.Col_Only || selection == (int)HeaderDropdownValues.Both);
         return true;
     }
 
@@ -291,9 +296,9 @@ public class DataVarUIHandler : MonoBehaviour {
         else if (hasRowHeaders)
             value = (int)HeaderDropdownValues.Row_Only;
         else if (hasColumnHeaders)
-            value = (int)HeaderDropdownValues.Column_Only;
+            value = (int)HeaderDropdownValues.Col_Only;
         else
-            value = (int)HeaderDropdownValues.No_Headers;
+            value = (int)HeaderDropdownValues.None;
 
         HeadersDropdown.GetComponent<Dropdown>().value = value;
         HeadersDropdown.GetComponent<Dropdown>().RefreshShownValue();
@@ -317,7 +322,7 @@ public class DataVarUIHandler : MonoBehaviour {
         // and wants to reload it.
         if (IsLoaded)
         {
-            if (dataVar.Filepath == filepathSelected)
+            if (_dataVar.Filepath == filepathSelected)
             {
                 //We've already loaded this file, but we'll reload
                 loadingMsg = "Reloading...";
@@ -329,7 +334,7 @@ public class DataVarUIHandler : MonoBehaviour {
                 // when a new filepath was selected.
                 UIManager.I.ShowMessageDialog("Data is already loaded for a different file.\nThis is unexpected.\nClearing previous file's data and\nloading new one.\n\nPlease tell the app developers.");
             }
-            DataManager.I.Remove(dataVar);
+            DataManager.I.Remove(_dataVar);
         }
 
         int statusID = UIManager.I.StatusShow(loadingMsg);
@@ -362,7 +367,7 @@ public class DataVarUIHandler : MonoBehaviour {
             //dataVar has already added to DataManager's variable list by above method call
             //Error handling and reporting handled by LoadAddFile()
             //Debug.Log("Success: file loaded.");
-            dataVar = newDataVar;
+            DataVar = newDataVar;
             //Switch prompting behavior to the next UI element if this element is currently prompting.
             UIManager.I.ShowNextUIActionPrompt(loadButton.gameObject);
             UIManager.I.StartRedrawPrompt();
