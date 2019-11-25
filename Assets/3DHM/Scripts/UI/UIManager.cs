@@ -5,8 +5,10 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Singleton class for managing much of the UI stuff.
+/// Some UI handling is done in classes tied to particular complex UI elements,
+/// e.g. DataVarUIHandler and VisualMappingUIHandler
+/// This has gotten somewhat outta hand with putting many things UI-related in here.
 /// See MonoBehaviorSingleton class for usage as a singleton.
-/// This has gotten somewhat outta hand with putting everything UI-related in here.
 /// </summary>
 public class UIManager : MonoBehaviorSingleton<UIManager>
 {
@@ -411,6 +413,12 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     public void OnHelpButtonClick()
     {
         ShowIntroMessage();
+    }
+
+    public void OnClearData()
+    {
+        Graph.I.ClearCurrentGraph();
+        DataManager.I.Clear();
     }
 
     /// <summary>

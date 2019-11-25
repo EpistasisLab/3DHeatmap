@@ -118,9 +118,11 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     /// <param name="pointerPosition">Screen position, expected from mouse or touch</param>
     /// <param name="showDataIndicator">True to highlight the data column that's being inspected</param>
     /// <param name="showDataInspector">True to show data point info in UI</param>
-    /// <returns></returns>
+    /// <returns>TriDataPoint. If not valid or graph not showing, returns empty TryDataPoint</returns>
     public TriDataPoint InspectDataAtScreenPosition(Vector3 pointerPosition)
     {
+        if (!Graph.I.GraphIsShowing)
+            return new TriDataPoint();
         TriDataPoint triData = GetDataAtScreenPosition(pointerPosition);
 
         UpdateVisualFeedback(triData);
@@ -130,6 +132,9 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
 
     public TriDataPoint InspectDataWithRay(Ray ray, bool showRay)
     {
+        if (!Graph.I.GraphIsShowing)
+            return new TriDataPoint(); ;
+
         TriDataPoint triData = GetDataWithRay(ray, showRay);
 
         UpdateVisualFeedback(triData);

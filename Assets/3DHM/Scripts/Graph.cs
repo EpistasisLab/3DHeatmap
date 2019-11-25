@@ -63,6 +63,11 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <summary> Scene object for the back wall in the scene. Need to hide it sometimes. </summary>
     public GameObject backWall;
 
+    //NOTE - these can probably be replaced by methods in DataManager,
+    // and use newer labelsRow[Right|Left] below. See GenerateRowLabels()
+    private string[] rowLabels;
+    private int numRowLabels;
+
     /// <summary> Lists of labels. Clunky to do like this, but keep it for now for simplicity. </summary>
     private List<Label> labelsRowRight;
     private List<Label> labelsRowLeft;
@@ -167,10 +172,6 @@ public class Graph : MonoBehaviorSingleton<Graph>
     private float binSeparationFrac;
     /// <summary> Stauffer - fractional value applied to rowDepthDataOnly to calculate gap between rows. Separate from binSeparation </summary>
     private float rowGapFrac;
-
-//NOTE - these can probably be replaced by methods in DataManager
-    private string[] rowLabels;
-    private int numRowLabels;
 
     // Debugging
     private int colLimit;
@@ -486,7 +487,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
         ///Debug.Log("UpdateSceneDrawingParams: m " + m + "  edge shade width: " + width);
 
         //Scale and move the floor of the graph
-        //Need to do this after scene dimensions (sceneWidth and sceneDepthFull) are calc'ed. Would be better to move out of here, though
+        //Need to do this after scene dimensions (sceneWidth and sceneDepthFull) are calc'ed. Would be better to move out of here, though.
+        //NOTE - floor is used by DataInspector, so don't mess with it w/out understanding this.
         Transform floor = graphContainer.transform.Find("GraphFloor");
         if (floor == null)
             Debug.LogError("GraphFloor == null");
@@ -501,6 +503,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
         backWall.SetActive(sceneDepthFull < (backWall.transform.position.z - 1));
     }
 
+    private void ShowHideGraphFloor(bool show)
+    {
+        graphContainer.SetActive(show);
+    }
 
     public void ResetView()
     {
@@ -538,6 +544,27 @@ public class Graph : MonoBehaviorSingleton<Graph>
         this.dataHeightRange = this.maxDataHeight - this.minDataHeight;
     }
 
+    public bool GraphIsShowing { get { return this.numRidges > 0; } }
+
+    public void ClearCurrentGraph()
+    {
+        //Looks to be deleting old mesh/visualization
+        if (this.numRidges > 0)
+        {
+            foreach(XRidge ridge in xRidges)
+            {
+                ridge.Destroy();
+            }
+            xRidges = new XRidge[0];
+            DestroyLabels();
+        }
+        DataInspector.I.HideDataIndicator();
+        DataInspector.I.HideDataInspector();
+        //Hide the floor
+        ShowHideGraphFloor(false);
+        //This tells us there's no graph showing. Goofy.
+        this.numRidges = 0;
+    }
 
     public virtual void ShowData()
     {
@@ -546,18 +573,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
             return;
         }
 
-        //Looks to be deleting old mesh/visualization
-        if (this.numRidges > 0)
-        {
-            int iridge = 0;
-            while (iridge < this.numRidges)
-            {
-                xRidges[iridge].Destroy();
-                ++iridge;
-            }
-            DestroyLabels();
-        }
-        this.numRidges = 0;
+        ClearCurrentGraph();
+        ShowHideGraphFloor(true);
 
         //Stauffer - this call should be fine for now with member vars we setup previously.
         //Calculates dimensions of full plot in unity scene units, among other things.
@@ -1024,6 +1041,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
             float extraZ = (rowDepthFull - rowDepthDataOnly) / 2;
 
             string labelTxt = row.ToString();
+            //NOTE - should switch this to just use same method as below in GenerateColumnLabels
             if ((row <= numRowLabels))
                 if (rowLabels[row] != null)
                     labelTxt = rowLabels[row];
