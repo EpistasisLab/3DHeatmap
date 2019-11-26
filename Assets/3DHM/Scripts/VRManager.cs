@@ -35,6 +35,8 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     ///  Will need to modify this based on which VR system/controller is in use. </summary>
     public float laserPointerXRot = 0;
 
+    public Vector3 UserHeadPosition { get { return HmdRig.transform.position; } }
+
     /// <summary> Flags for whether a controller grab is currently happening.
     /// Array with element for each hand. </summary>
     private bool[] grabDown = new bool[2];
@@ -224,13 +226,12 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         if (grabDown[0] || grabDown[1])
         {
             Vector3 d = grabDown[0] ? handPos[0] - handPosPrev[0] : handPos[1] - handPosPrev[1];
-            
+
             //Debug.Log("d: " + d.ToString("F4"));
 
             Graph.I.TranslateGraph(Mathf.Pow(Mathf.Abs(d.x), grabMoveScaleExp) * Mathf.Sign(d.x) * grabMoveScale.x,
                                               Mathf.Pow(Mathf.Abs(d.y), grabMoveScaleExp) * Mathf.Sign(d.y) * grabMoveScale.y,
-                                              Mathf.Pow(Mathf.Abs(d.z), grabMoveScaleExp) * Mathf.Sign(d.z) * grabMoveScale.z,
-                                              HmdRig.transform.position.y * 0.975f /*quick hack to keep data plot from going over head of player*/);
+                                              Mathf.Pow(Mathf.Abs(d.z), grabMoveScaleExp) * Mathf.Sign(d.z) * grabMoveScale.z);
         }
     }
 

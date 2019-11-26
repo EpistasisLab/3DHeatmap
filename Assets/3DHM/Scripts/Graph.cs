@@ -61,7 +61,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <summary> Label object to use for instantiating row and column labels </summary>
     public GameObject protolabel;
     /// <summary> Scene object for the back wall in the scene. Need to hide it sometimes. </summary>
-    public GameObject backWall;
+    public GameObject frontBackWall;
+    public GameObject rearBackWall;
+    public GameObject leftWall;
+    public GameObject rightWall;
 
     //NOTE - these can probably be replaced by methods in DataManager,
     // and use newer labelsRow[Right|Left] below. See GenerateRowLabels()
@@ -500,7 +503,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         }
 
         //Hide the rear wall in the scene if the data is extending past it
-        backWall.SetActive(sceneDepthFull < (backWall.transform.position.z - 1));
+        frontBackWall.SetActive(sceneDepthFull < (frontBackWall.transform.position.z - 1));
     }
 
     private void ShowHideGraphFloor(bool show)
@@ -616,28 +619,54 @@ public class Graph : MonoBehaviorSingleton<Graph>
     }
 
     /// <summary> Move the whole graph </summary>
-    public virtual void TranslateGraph(float xStep, float yStep, float zStep, float maxy /*constrain how high it can go*/)
+    public virtual void TranslateGraph(float xStep, float yStep, float zStep)
     {
+        //Debug.Log("x y z Step: " + xStep + " " + yStep + " " + zStep);
+        float max = 5;
+        //Try to avoid spasmatic movement when controllers have tracking issues     
+        //Not working well, but at least position is restrained in SetGraphPosition
+        if (xStep > max || yStep > max || zStep > max)
+            return;
         Vector3 newPos = sceneCorner + new Vector3(xStep, yStep, zStep);
-        SetGraphPosition(newPos, maxy);
+        SetGraphPosition(newPos);
     }
 
     public void ResetGraphPosition()
     {
-        SetGraphPosition(Vector3.zero, 0);
+        SetGraphPosition(Vector3.zero);
     }
 
     /// <summary> Set the position of the graph relative to its front-left corner </summary>
     /// <param name="newPos"></param>
     /// <param name="maxy">Height constraint. Used in VR mode to keep graph below user's eye level</param>
-    public virtual void SetGraphPosition( Vector3 newPos, float maxy)
+    public virtual void SetGraphPosition( Vector3 newPos)
     {
         if (xRidges == null)
             return;
 
-        //Constrain yposition
-        newPos.y = Mathf.Max(newPos.y, 0);
-        newPos.y = Mathf.Min(newPos.y, maxy);
+        //Note - we could use a cleaner way to get dimensions of visible area
+
+        //Constraints
+        //When in VR mode, we move the whole graph around to navigate over/around it,
+        // so put constaints on its position to get it from flying away out of view
+        // when tracking glitches
+        Vector3 maxes = new Vector3()
+        {
+            x = rightWall.transform.position.x / 2,
+            y = VRManager.I.VRmodeIsEnabled ? VRManager.I.UserHeadPosition.y : 0,
+            z = frontBackWall.transform.position.z / 2
+        };
+
+        Vector3 mins = new Vector3()
+        {
+            x = leftWall.transform.position.x / 2 - sceneWidth,
+            y = 0,
+            //z = rearBackWall.transform.position.z / 2 - sceneDepthFull
+            z = -22 - sceneDepthFull //don't let it get far behind the user
+        };
+
+        newPos = Vector3.Max(newPos, mins);
+        newPos = Vector3.Min(newPos, maxes);
 
         //Update the scene corner state
         //NOTE - do we need this variable anymore now that we've got the ridges in graphContainer?
