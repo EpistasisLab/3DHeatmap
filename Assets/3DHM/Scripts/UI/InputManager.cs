@@ -367,9 +367,14 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
         //No mouse button or scroll-wheel activity and no button held
         //
         //Do continuous data inspector
+        //But only if
+        // - not temporarily disabled
+        // - time interval has passed
+        // - we're not in VR and following the headset (which triggers inspection if mouse is over data while headset moves)
         if ( contDataInspectionEnabled &&
             ! contDataInpectionTempDisable &&
-            (Time.time - contDataInspectionPrevTime) > contDataInspectionInterval)
+            (Time.time - contDataInspectionPrevTime) > contDataInspectionInterval &&
+            ! CameraManager.I.followHmdEnabled)
         {
             DataInspector.I.InspectDataAtScreenPosition(Input.mousePosition);
             contDataInspectionPrevTime = Time.time;
