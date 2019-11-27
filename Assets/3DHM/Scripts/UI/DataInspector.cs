@@ -11,8 +11,12 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
     /// <summary> Unity layer assigned to data objects. For ray-casting. </summary>
     public int DataObjectLayer = 8;
 
+    /// <summary> The camera we use for reading mouse position </summary>
+    public Camera desktopCamera;
+
     /// <summary> GameObject with cube that's a) shown to indicate selected data column; b) used for raycast collisions  </summary>
     public GameObject cubePrefab;
+
     private GameObject dataIndicatorCube;
     private GameObject blockIntersectionCube;
     private Collider blockIntersectionCollider;
@@ -198,10 +202,15 @@ public class DataInspector : MonoBehaviorSingleton<DataInspector> {
         rowOut = colOut = 0;
 
         //Hack during VR dev
-        if (Camera.main == null)
+        if (desktopCamera == null)
+        {
+            Debug.LogError("desktopCamera is null");
             return false;
+        }
 
-        Ray ray = Camera.main.ScreenPointToRay(pointerPosition);
+        //Had to change this explicitly to desktop camera when added vrtk 3.3, interesting.
+        //Was previously using Camera.main
+        Ray ray = desktopCamera.ScreenPointToRay(pointerPosition);
         return SelectWithRayUsingGridIntersection(ray, out rowOut, out colOut, false);
     }
 
