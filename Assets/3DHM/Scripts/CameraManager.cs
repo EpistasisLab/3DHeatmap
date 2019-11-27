@@ -16,10 +16,6 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
 
     /// <summary> Flag to enable/disable follow-HMD mode </summary>
     public bool followHmdEnabled;
-    /// <summary> The HMD transform to use for FollowHMD mode
-    /// NOTE ** Empirically, use the SteamVR "Camera (eye)" object rather than "Camera (head)", the
-    /// latter of which is disabled at runtime and doesn't respond to hmd movement. go figure.</summary>
-    public Transform hmdTransform;
     /// <summary> Offset along HMD fwd vector for the smooth follow </summary>
     public float followHmdFwdOffset = -1;
     /// <summary> Smooth time for position for follow mode </summary>
@@ -33,6 +29,8 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <summary> Distance from graph at which to start accelerating zoom scaling </summary>
     public float zoomScaleHeight = 10;
 
+    /// <summary> The HMD transform to use for FollowHMD mode </summary>
+    private Transform hmdTransform;
     /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
     private SmoothVector3 posSmoother;
     /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
@@ -49,8 +47,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
 
         lookAtTarget = Vector3.zero;
 
-        if (hmdTransform == null)
-            Debug.LogError("HmdTransform == null");
+        hmdTransform = VRManager.I.HmdRig.transform;
 
         //Smoothing helpers
         posSmoother = new SmoothVector3(Vector3.zero);

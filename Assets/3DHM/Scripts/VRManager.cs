@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
-using Valve.VR;
 using UnityEngine.UI;
 using SMView;
 
@@ -11,10 +10,12 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     enum Hand { left, right };
 
+    /*
     private Hand GetHand(SteamVR_Input_Sources sis)
     {
         return sis == SteamVR_Input_Sources.LeftHand ? Hand.left : Hand.right;
     }
+    */
 
     /// <summary> UI element for the enable/disable button </summary>
     public Text VRenableButtonText;
@@ -127,7 +128,9 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         XRSettings.enabled = enable;
         
         //Hack this setting to prevent errors with steamvr behaviors when we disable vr mode
+        /*
         SteamVR_Input.initialized = enable;
+        */
 
         //Do this before enabling followHMD mode in desktop camera.
         //When this is enabled, it will take over drawing to the app desktop window.
@@ -237,7 +240,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     //Event handlers for events from SteamVR Input system
     //
-
+    /*
     //Controller grip button has changed state
     public void OnGrabGripChange(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
     {
@@ -270,6 +273,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         handRot[(int)GetHand(sis)] = sbb.transform.rotation;
         //Debug.Log("handPos " + handPos[0].ToString("F3") + " " + handPos[1].ToString("F3"));
     }
+    */
 
     //Reset the player/hmd to default position
     public void ResetPlayerPosition()
