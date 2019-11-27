@@ -23,8 +23,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// <summary> The default player/hmd offset from the plot's center/front edge </summary>
     public Vector3 defaultPlayerOffset;
 
-    /// <summary> The headset, camera rig object </summary>
-    public GameObject HmdRig;
+    /// <summary> The headset, camera rig object - the root location of player. Doesn't move with user's head movement.</summary>
+    public GameObject hmdRoot;
+    /// <summary> The transform of hmd that actually moves around with user's head movement </summary>
+    public Transform hmdUserMovementTransform;
 
     /// <summary> Scaling in each direction for movement of data by grab-and-move </summary>
     public Vector3 grabMoveScale;
@@ -36,7 +38,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     ///  Will need to modify this based on which VR system/controller is in use. </summary>
     public float laserPointerXRot = 0;
 
-    public Vector3 UserHeadPosition { get { return HmdRig.transform.position; } }
+    public Vector3 UserHeadPosition { get { return hmdRoot.transform.position; } }
 
     /// <summary> Flags for whether a controller grab is currently happening.
     /// Array with element for each hand. </summary>
@@ -134,7 +136,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
         //Do this before enabling followHMD mode in desktop camera.
         //When this is enabled, it will take over drawing to the app desktop window.
-        HmdRig.SetActive(enable);
+        hmdRoot.SetActive(enable);
 
         //Tell desktop camera to go into follow-hmd mode.
         //Do this after enabling the hmd rig.
@@ -279,7 +281,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     public void ResetPlayerPosition()
     {
         Vector3 center = Graph.I.GetPlotCenter();
-        HmdRig.transform.position = new Vector3(center.x, Graph.I.sceneCorner.y + defaultPlayerOffset.y, Graph.I.sceneCorner.z + defaultPlayerOffset.z);
+        hmdRoot.transform.position = new Vector3(center.x, Graph.I.sceneCorner.y + defaultPlayerOffset.y, Graph.I.sceneCorner.z + defaultPlayerOffset.z);
     }
 
     //////////

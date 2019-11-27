@@ -47,7 +47,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
 
         lookAtTarget = Vector3.zero;
 
-        hmdTransform = VRManager.I.HmdRig.transform;
+        hmdTransform = VRManager.I.hmdUserMovementTransform;
 
         //Smoothing helpers
         posSmoother = new SmoothVector3(Vector3.zero);
