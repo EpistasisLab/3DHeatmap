@@ -8,14 +8,7 @@ using SMView;
 
 public class VRManager : MonoBehaviorSingleton<VRManager> {
 
-    enum Hand { left, right };
-
-    /*
-    private Hand GetHand(SteamVR_Input_Sources sis)
-    {
-        return sis == SteamVR_Input_Sources.LeftHand ? Hand.left : Hand.right;
-    }
-    */
+    public enum Hand { left, right, undefined };
 
     /// <summary> UI element for the enable/disable button </summary>
     public Text VRenableButtonText;
@@ -217,13 +210,13 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     private void LookForTriggerActivity()
     {
-        if( triggerDown[1])
-        {
-            Quaternion correction = new Quaternion();
-            correction.eulerAngles = new Vector3(laserPointerXRot, 0, 0);
-            Ray ray = new Ray(handPos[1], handRot[1] * (correction * Vector3.forward));
-            DataInspector.I.InspectDataWithRay(ray, true);
-        }
+        if (!triggerDown[0] && !triggerDown[1])
+            return;
+        Hand hand = triggerDown[(int)Hand.left] ? Hand.left : Hand.right;
+        Quaternion correction = new Quaternion();
+        correction.eulerAngles = new Vector3(laserPointerXRot, 0, 0);
+        Ray ray = new Ray(handPos[(int)hand], handRot[(int)hand] * (correction * Vector3.forward));
+        DataInspector.I.InspectDataWithRay(ray, true);
     }
 
     private void LookForGrabActivity()
@@ -240,9 +233,27 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         }
     }
 
-    //Event handlers for events from SteamVR Input system
+    //Event handlers for events from VRTK events system
     //
-    /*
+    public void OnGripPressRelease(Hand hand, bool state /*true for down*/)
+    {
+        grabDown[(int)hand] = state;
+        handPosPrev[(int)hand] = handPos[(int)hand];
+    }
+
+    /// <summary> Trigger press/release. Not trigger position </summary>
+    public void OnTriggerPressRelease(Hand hand, bool state /*true for down/press*/)
+    {
+        triggerDown[(int)hand] = state;
+    }
+
+    public void OnControllerTransformChange(Hand hand, Transform txfm)
+    {
+        handPos[(int)hand] = txfm.position;
+        handRot[(int)hand] = txfm.transform.rotation;
+    }
+
+    /* this one is from SteamVR 2 Input system. Keep it around as ref for now
     //Controller grip button has changed state
     public void OnGrabGripChange(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
     {
@@ -255,7 +266,8 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         grabDown[(int)GetHand(sis)] = state;
         handPosPrev[(int)GetHand(sis)] = handPos[(int)GetHand(sis)];
     }
-
+    */
+    /*
     /// <summary> GrabPinch is trigger press </summary>
     public void OnGrabPinchChange(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
     {
@@ -285,7 +297,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     }
 
     //////////
-    // VR UI 
+    // VR enable/disable UI on desktop
     //
     public void OnEnableButtonClick()
     {
