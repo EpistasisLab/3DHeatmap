@@ -48,9 +48,13 @@ MIT License. See LICENSE doc in repo.
 
 # Installation
 
+### Windows and MacOS
 Executables are provided for Windows and MacOS in the [Release](https://github.com/EpistasisLab/3DHeatmap/releases) section of the github project.
+[Click here to download.](https://github.com/EpistasisLab/3DHeatmap/releases)
+Once the download completes, extract the folder and you can put it anywhere you like.
+To run it, click on the executable file or app starting with _3DHeatmap__
 
-Otherwise you can clone/download the repo and run it with Unity.
+Otherwise you can clone/download the repo and run it with [Unity](https://unity.com/).
 
 # Motivation for Developing 3D Heatmap
 

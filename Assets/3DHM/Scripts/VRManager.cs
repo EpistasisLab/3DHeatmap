@@ -73,6 +73,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
         //Enter VR mode if available
         VRmodeEnable(VRisAvailable);
+        Debug.Log("VRManager.Initialize: VRisAvailable: " + VRisAvailable + " XRSettings. loadedDeviceName: " + XRSettings.loadedDeviceName + " vrDeviceName: " + vrDeviceName);
     }
 
 

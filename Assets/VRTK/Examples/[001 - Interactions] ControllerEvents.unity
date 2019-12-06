@@ -408,9 +408,9 @@ MonoBehaviour:
   autoManageVRSettings: 1
   autoLoadSetup: 1
   setups:
+  - {fileID: 730106134}
   - {fileID: 323797067}
   - {fileID: 989801329}
-  - {fileID: 730106134}
   - {fileID: 437934681}
   - {fileID: 2086791897}
   excludeTargetGroups: 1a0000001b000000
