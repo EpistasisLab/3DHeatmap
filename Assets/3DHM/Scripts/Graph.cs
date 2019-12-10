@@ -653,7 +653,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
         Vector3 maxes = new Vector3()
         {
             x = rightWall.transform.position.x / 2,
-            y = VRManager.I.VRmodeIsEnabled ? VRManager.I.UserHeadPosition.y : 0,
+            y = VRManager.I.VRmodeIsEnabled ? Mathf.Max(0, VRManager.I.UserHeadPosition.y - GetBlockSceneMaxHeight() ) : 0,
             z = frontBackWall.transform.position.z / 2
         };
 
@@ -711,6 +711,14 @@ public class Graph : MonoBehaviorSingleton<Graph>
     public float GetBlockSceneHeight(float heightValue)
     {
         return (GetBlockMeshHeight(heightValue) * this.sceneHeight * this.currGraphHeightScale) + this.MinGraphSceneHeight;
+    }
+
+    /// <summary> Max block height (not world y position, see GetBlockSceneHeight() comments) in the graph </summary>
+    /// <returns></returns>
+    public float GetBlockSceneMaxHeight()
+    {
+        float val = DataManager.I.GetVariableByMapping(DataManager.Mapping.Height).MaxValue;
+        return GetBlockSceneHeight(val);
     }
 
     /// <summary> Get the height for the block in scene units at a particular data position (row, column).

@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.UI;
 using SMView;
+using VRTK;
 
 public class VRManager : MonoBehaviorSingleton<VRManager> {
 
@@ -16,10 +17,42 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// <summary> The default player/hmd offset from the plot's center/front edge </summary>
     public Vector3 defaultPlayerOffset;
 
-    /// <summary> The headset, camera rig object - the root location of player. Doesn't move with user's head movement.</summary>
-    public GameObject hmdRoot;
+    /// <summary> The headset, camera rig object, the play area - the root location of player. Doesn't move with user's head movement.</summary>
+    public Transform PlayArea
+    {
+        get
+        {
+            if (!VRisAvailable)
+                return null;
+            //Get the current root/boundary object from VRTK which returns the appropriate object for whatever SDK is in use.
+            if (VRTK_SDK_Bridge.GetPlayArea() == null)
+            {
+                Debug.LogError("VRManager: VRTK actualBoundaries is null. Returning empty GO.");
+                return new GameObject("dummy PlaySpace").transform;
+            }
+            else
+                return VRTK_SDK_Bridge.GetPlayArea();
+        }
+    }
+
     /// <summary> The transform of hmd that actually moves around with user's head movement </summary>
-    public Transform hmdUserMovementTransform;
+    public Transform hmdTransform
+    {
+        get
+        {
+            if (!VRisAvailable)
+                return null;
+            //Get the current root/boundary object from VRTK which returns the appropriate object for whatever SDK is in use.
+            Transform txf = VRTK_SDK_Bridge.GetHeadset();
+            if (txf == null)
+            {
+                Debug.LogError("VRManager: VRTK GetHeadset() is null. Returning empty GO.");
+                return new GameObject("dummy hmdTransform").transform;
+            }
+            else
+                return txf;
+        }
+    }
 
     /// <summary> Scaling in each direction for movement of data by grab-and-move </summary>
     public Vector3 grabMoveScale;
@@ -31,7 +64,10 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     ///  Will need to modify this based on which VR system/controller is in use. </summary>
     public float laserPointerXRot = 0;
 
-    public Vector3 UserHeadPosition { get { return hmdRoot.transform.position; } }
+    /// <summary>
+    /// Get/set the user head position. Make sure the object is valid first though.
+    /// </summary>
+    public Vector3 UserHeadPosition { get { return hmdTransform == null ? new Vector3(0,1,0) : hmdTransform.position; } private set { if(hmdTransform!= null) hmdTransform.position = value; } }
 
     /// <summary> Flags for whether a controller grab is currently happening.
     /// Array with element for each hand. </summary>
@@ -59,7 +95,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     public bool VRdeviceEnabled { get { return XRSettings.enabled; } }
 
     /// <summary> Check if vr device is loaded and ready to use. May not be enabled, but it's ready to be enabled. </summary>
-    private bool VRisAvailable { get { return VRdevicePresent && (String.Compare(XRSettings.loadedDeviceName, vrDeviceName, true) == 0); } }
+    private bool VRisAvailable { get { return VRdevicePresent && VRTK_SDKManager.GetLoadedSDKSetup() != null; } }
 
     /// <summary> True if 3DHM is running VR mode </summary>
     public bool VRmodeIsEnabled { get; private set; }
@@ -70,19 +106,27 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         grabDown[0] = grabDown[1] = false;
 
         //StartCoroutine("DeviceCheckDebug");
-
-        //Enter VR mode if available
-        VRmodeEnable(VRisAvailable);
-        Debug.Log("VRManager.Initialize: VRisAvailable: " + VRisAvailable + " XRSettings. loadedDeviceName: " + XRSettings.loadedDeviceName + " vrDeviceName: " + vrDeviceName);
     }
 
+    IEnumerator LateStart()
+    {
+        //Waiit two frames to be more sure that VRTK has finished setting up
+        yield return null;
+        yield return null;
+        //Enter VR mode if available
+        VRmodeEnable(VRisAvailable);
+        Debug.Log("VRManager.LateInitialize: VRisAvailable: " + VRisAvailable + " XRSettings. loadedDeviceName: " + XRSettings.loadedDeviceName + " vrDeviceName: " + vrDeviceName);
+    }
 
     void Start()
     {
+        //Do the enabling with a delay, because the VRTK setup itself (VRTK_SDKManager.OnEnable) ends up
+        // finishing in a coroutine too.
+        StartCoroutine(LateStart());
     }
 
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    void Update () {
 		
 	}
 
@@ -116,7 +160,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
         if( enable == true && !VRisAvailable)
         {
-            Debug.LogError("VrmodeEnable called, but VR is not available.");
+            Debug.LogError("VrmodeEnable called, but VR is not available. Has VRTK_SDKManager finished setup?");
             return;
         }
 
@@ -130,7 +174,9 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
         //Do this before enabling followHMD mode in desktop camera.
         //When this is enabled, it will take over drawing to the app desktop window.
-        hmdRoot.SetActive(enable);
+        //NOTE - this may not work like we expect after change to VRTK. PlaySpace is the 'play area' from VRTK, 
+        // and before that it was the camera rig object, and I'm  not sure if they're the same.
+        PlayArea.gameObject.SetActive(enable);
 
         //Tell desktop camera to go into follow-hmd mode.
         //Do this after enabling the hmd rig.
@@ -187,7 +233,11 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// </summary>
     public void DeviceLoadAndEnable()
     {
-        if (VRisAvailable)
+        /*
+         * needs to be reworked since adding vrtk 3.3. It has a headset switcher tool we could show and use.
+         * Or otherwise figuring out how to disable and reenable via vrtk
+         * 
+        if (VRisAvailable) //why does this exit here? Should instead be if(!VRisAvailable) ??
             return;
         //Using just openvr for now, so it's simple.
         //make sure it's not loaded already
@@ -201,6 +251,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
             // condition will handle it when this routine is called again.
             VRmodeEnable(true);
         }
+        */
     }
 
     public void DeviceDisconnect()
@@ -268,33 +319,29 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         handPosPrev[(int)GetHand(sis)] = handPos[(int)GetHand(sis)];
     }
     */
-    /*
-    /// <summary> GrabPinch is trigger press </summary>
-    public void OnGrabPinchChange(SteamVR_Behaviour_Boolean sbb, SteamVR_Input_Sources sis, bool state)
-    {
-        //I figure we should only get grip changes from left and right hand controllers, but just in case...
-        if (sis != SteamVR_Input_Sources.LeftHand && sis != SteamVR_Input_Sources.RightHand)
-            return;
-
-        //Debug.Log("GrabPinch with " + GetHand(sis).ToString() + " state " + state);
-
-        triggerDown[(int)GetHand(sis)] = state;
-    }
-
-    //Controller/hand has changed position/rotation
-    public void OnControllerTransformChange(SteamVR_Behaviour_Pose sbb, SteamVR_Input_Sources sis)
-    {
-        handPos[(int)GetHand(sis)] = sbb.transform.position;
-        handRot[(int)GetHand(sis)] = sbb.transform.rotation;
-        //Debug.Log("handPos " + handPos[0].ToString("F3") + " " + handPos[1].ToString("F3"));
-    }
-    */
 
     //Reset the player/hmd to default position
     public void ResetPlayerPosition()
     {
+        StartCoroutine(ResetPlayerPositionDelayed());
+    }
+
+    /// <summary>
+    /// Use this coroutine because VRTK doesn't get set up till after first frame, and
+    /// the Graph.Start method wants to call ResetPlayerPosition.
+    /// Awkward workaround
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator ResetPlayerPositionDelayed()
+    {
+        //Wait two frames to be more sure that VRTK has finished setting up
+        yield return null;
+        yield return null;
+        //Make sure VR mode is available
+        if (!VRisAvailable)
+            yield break;
         Vector3 center = Graph.I.GetPlotCenter();
-        hmdRoot.transform.position = new Vector3(center.x, Graph.I.sceneCorner.y + defaultPlayerOffset.y, Graph.I.sceneCorner.z + defaultPlayerOffset.z);
+        PlayArea.position  = new Vector3(center.x, Graph.I.sceneCorner.y + defaultPlayerOffset.y, Graph.I.sceneCorner.z + defaultPlayerOffset.z);
     }
 
     //////////

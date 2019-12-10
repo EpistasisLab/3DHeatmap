@@ -30,7 +30,7 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     public float zoomScaleHeight = 10;
 
     /// <summary> The HMD transform to use for FollowHMD mode </summary>
-    private Transform hmdTransform;
+    private Transform hmdTransform { get { return VRManager.I.hmdTransform == null ? new GameObject("dummyHmdUMT").transform : VRManager.I.hmdTransform; } }
     /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
     private SmoothVector3 posSmoother;
     /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
@@ -46,8 +46,6 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
             Debug.LogError("camera == null");
 
         lookAtTarget = Vector3.zero;
-
-        hmdTransform = VRManager.I.hmdUserMovementTransform;
 
         //Smoothing helpers
         posSmoother = new SmoothVector3(Vector3.zero);

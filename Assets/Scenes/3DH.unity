@@ -8771,8 +8771,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   VRenableButtonText: {fileID: 1359632048}
   defaultPlayerOffset: {x: 0, y: 9, z: -10}
-  hmdRoot: {fileID: 1373955160}
-  hmdUserMovementTransform: {fileID: 1233296708}
   grabMoveScale: {x: 600, y: 110, z: 1100}
   grabMoveScaleExp: 1.55
   laserPointerXRot: 45
