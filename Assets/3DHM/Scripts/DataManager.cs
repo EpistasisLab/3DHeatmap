@@ -135,7 +135,7 @@ public class DataVariable : CSVReaderData
     /// <summary> A user-friendly label/name for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
     private string label;
     /// <summary> A user-friendly label/name for this data variable. Set (at least initially) via GUI and used for id'ing by user and displaying on heatmap. </summary>
-    public string Label { get { return label; } set { label = value; } }
+    public string Label { get { return label; } set { label = value; DataManager.I.ForceUniqueLabels(); } }
 
     /// <summary> The UI handler that this dataVar has been assignd to. Null if not yet set. </summary>
     public DataVarUIHandler UIhandler;
@@ -537,7 +537,7 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
 
     /// <summary>
     /// Return a loaded DataVariable by label.
-    /// Note that labels aren't guaranteed to be unique, so this returns first match.
+    /// Note that labels guaranteed to be unique, see ForceUniqueLabels()
     /// </summary>
     /// <param name="label"></param>
     /// <returns>null if no match</returns>
@@ -613,17 +613,47 @@ public class DataManager : MonoBehaviorSingleton<DataManager> {
 
     /// <summary>
     /// Return a list of the label for each loaded DataVariable
-    /// Note that labels aren't guaranteed to be unique.
+    /// Note that labels guaranteed to be unique, see ForceUniqueLabels()
     /// </summary>
     /// <returns>Empty string if none loaded</returns>
     public List<string> GetLabels()
     {
+        //Just in case, even though uniqueness should be forced each time Label is changed on a var.
+        ForceUniqueLabels();
+
         List<string> labels = new List<string>();
         foreach (DataVariable var in variables)
         {
             labels.Add(var.Label);
         }
         return labels;
+    }
+
+    /// <summary>
+    /// Got through the list of labels, and for any any loaded variables,
+    ///  make sure the labels are unique by add _<N> to end of a label that's
+    ///  a duplicate of a prior label
+    ///NOTE - since we call this method from the DataVariable.Label property, it can
+    /// end up recursing, but it's fine except that for multiple duplicates, instead of
+    /// getting eg. label, label_1 and label_2, we get label, label_1 and label_1_1
+    /// </summary>
+    public void ForceUniqueLabels()
+    {
+        for (int refInd = 0; refInd < variables.Count; refInd++)
+        {
+            int dupCount = 0;
+            string refLabel = variables[refInd].Label;
+            //Go thru each var futher down the list to look for duplicates
+            for(int chkInd = refInd+1; chkInd < variables.Count; chkInd++)
+            {
+                if(refLabel == variables[chkInd].Label)
+                {
+                    dupCount++;
+                    variables[chkInd].Label += ("_" + dupCount.ToString());
+                    UIManager.I.RefreshUI();
+                }
+            }
+        }
     }
 
     /// <summary>

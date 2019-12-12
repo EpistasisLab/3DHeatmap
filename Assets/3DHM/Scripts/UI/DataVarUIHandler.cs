@@ -42,7 +42,7 @@ public class DataVarUIHandler : MonoBehaviour {
                 filepathSelected = _dataVar.Filepath;
             SetFileNeedsLoading(false);
             _dataVar.UIhandler = this;
-            RefreshUI();
+            RefreshUIforThisPanel();
         }
     }
 
@@ -135,7 +135,9 @@ public class DataVarUIHandler : MonoBehaviour {
     }
 
     // Use this for initialization
-    void Start () {
+    // Use Awake instead of Start to make sure things are set up before a UI refresh in init
+    // from other code.
+    void Awake () {
         //There's only one comp. of type InputField, so this is easy...
         inputField = transform.GetComponentInChildren<InputField>(); //should recurse
         if (inputField == null)
@@ -173,7 +175,7 @@ public class DataVarUIHandler : MonoBehaviour {
         //Empty string indicates not yet specified
         filepathSelected = "";
         SetFileNeedsLoading(false);
-        RefreshUI();
+        RefreshUIforThisPanel();
     }
 
     public static void Clear(DataVariable dataVar)
@@ -183,8 +185,17 @@ public class DataVarUIHandler : MonoBehaviour {
             h.Clear();
     }
 
+    /// <summary>
+    /// Refresh the UI's of all handlers
+    /// </summary>
+    public static void RefreshUIall()
+    {
+        foreach (DataVarUIHandler dvh in allHandlers)
+            dvh.RefreshUIforThisPanel();
+    }
+
     /// <summary> Update the UI for this panel, given the current state of the assoc'ed DataVariable </summary>
-    public void RefreshUI()
+    public void RefreshUIforThisPanel()
     {
         //Update according to DataVariable
         string label = "_name unassigned_";
@@ -268,7 +279,7 @@ public class DataVarUIHandler : MonoBehaviour {
         SetFileNeedsLoading(true);
         //Switch prompting behavior to the next UI element if this element is currently prompting.
         UIManager.I.ShowNextUIActionPrompt(go);
-        RefreshUI();
+        RefreshUIforThisPanel();
     }
 
     /// <summary> Get the current selection of header options based on the drop-down box. </summary>
@@ -379,7 +390,7 @@ public class DataVarUIHandler : MonoBehaviour {
             UIManager.I.ShowMessageDialog(msg);
         }
         SetFileNeedsLoading(!success);
-        RefreshUI();
+        RefreshUIforThisPanel();
     }
 
     //Mouse enter

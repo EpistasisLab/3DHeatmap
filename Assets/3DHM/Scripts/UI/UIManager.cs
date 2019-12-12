@@ -246,7 +246,8 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         visualMappingUIHandler.RefreshUI();
         InputManager.I.Reset();
         VRManager.I.UIupdate();
-        
+        DataVarUIHandler.RefreshUIall();
+
         //Debug
         //dataMgr.DebugDumpVariables(false/*verbose*/);   
     }

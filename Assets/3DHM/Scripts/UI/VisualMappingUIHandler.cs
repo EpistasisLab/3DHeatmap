@@ -102,11 +102,11 @@ public class VisualMappingUIHandler : MonoBehaviour {
         DataManager.I.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
     }
 
-    private void SetLabelChoicesByCurrentVars()
+    private void SetDropdownsValueByCurrentVars()
     {
-        SetLabelChoiceIndexByVarLabel(heightLabelDropdown, DataManager.I.HeightVar);
-        SetLabelChoiceIndexByVarLabel(topColorLabelDropdown, DataManager.I.TopColorVar);
-        SetLabelChoiceIndexByVarLabel(sideColorLabelDropdown, DataManager.I.SideColorVar);
+        SetDropdownValueByVarLabel(heightLabelDropdown, DataManager.I.HeightVar);
+        SetDropdownValueByVarLabel(topColorLabelDropdown, DataManager.I.TopColorVar);
+        SetDropdownValueByVarLabel(sideColorLabelDropdown, DataManager.I.SideColorVar);
     }
 
     /// <summary>
@@ -114,10 +114,11 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// This lets us change the dropdown options/list and set the
     /// choice back to what it was pointing at before (or the default if
     /// its variable was removed).
+    /// Note that labels guaranteed to be unique, see DataManager.ForceUniqueLabels()
     /// </summary>
     /// <param name="dd"></param>
     /// <param name="var"></param>
-    private void SetLabelChoiceIndexByVarLabel(Dropdown dd, DataVariable var)
+    private void SetDropdownValueByVarLabel(Dropdown dd, DataVariable var)
     {
         int index;
         if (var == null)
@@ -142,7 +143,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
         PopulateLabelDropdownItems();
         //Since items in the dropdown may (probably) have changed, find ones that match
         // current variable mappings and set the dropdown to match that.
-        SetLabelChoicesByCurrentVars();
+        SetDropdownsValueByCurrentVars();
         //Now call this since we want to make default assignments when a new
         // var is added or only one var and can't use choice dropdown.
         AssignVarsByCurrentLabelChoices();
