@@ -8,7 +8,7 @@ namespace SMView
 {
 
     /// <summary>
-    /// An SVMview for a dropdown element, stores and returns current selected dropdown item index number as int.
+    /// An SVMview for a dropdown element, stores and returns current selected dropdown 'value', i.e. the selected item index number, as int.
     /// </summary>
     public class SMVViewDropdown : SMVviewBase
     {

@@ -12,8 +12,8 @@ using UnityEngine.UI;
 /// </summary>
 public class UIManager : MonoBehaviorSingleton<UIManager>
 {
-    //The UI canvas
-    private GameObject canvas;
+    /// <summary> The UI canvas for the desktop </summary>
+    public GameObject canvasDesktop { get; private set; }
     //A bunch of refs to various elements
     //A bunch of refs to various elements
     //Public ones to set in inspector. Probably should
@@ -21,7 +21,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     public GameObject toolTipPanel;
     public GameObject statusPanel;
     //private ones
-    private GameObject dataTopPanel;
+    private GameObject mainPanel;
     private GameObject optionsTopPanel;
     private GameObject visualMappingPanel;
     private VisualMappingUIHandler visualMappingUIHandler;
@@ -31,7 +31,9 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     public GameObject mappingHeightDropdown;
     public GameObject mappingTopColorDropdown;
     public GameObject mappingSideColorDropdown;
-
+    /// <summary> The panel in the VR/world canvas in which to drop copies of menus </summary>
+    public GameObject VRCanvasLayoutPanel;
+    
     /// <summary> Index within the auto-prompt list of the UI object that's currently being highlighted in some way </summary>
     private int currentAutoUIActionPrompteeIndex;
     /// <summary> Obj pointer to UI element that's currently being flashed. </summary>
@@ -51,9 +53,9 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     //void Awake () {
     protected override void Initialize() { 
         //UI Canvas
-        canvas = GetAndCheckGameObject("CanvasScreenSpace");
+        canvasDesktop = GetAndCheckGameObject("CanvasScreenSpace");
         //Graph panels
-        dataTopPanel = GetAndCheckGameObject("DataTopPanel");
+        mainPanel = GetAndCheckGameObject("MainPanel");
         optionsTopPanel = GetAndCheckGameObject("OptionsTopPanel");
 
         //Sub panels and components
@@ -69,9 +71,23 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
             Debug.LogError("visualMappingUIHandler == null");
         //dataVarsTopPanel = GetAndCheckGameObject("DataVarsTopPanel");
 
+//        SetupVRmenus();
+
         TooltipHide();
 
+        //Make sure this is called to init the list of dataVar handlers
+        DataVarUIHandler.InitializeListOfAll();
+
         UIActionPromptInit();
+    }
+
+    /// <summary>
+    /// This will copy 
+    /// </summary>
+    private void SetupVRmenus()
+    {
+        GameObject mainMenuVR = Instantiate(mainPanel, VRCanvasLayoutPanel.transform);
+        GameObject optionMenuVR = Instantiate(optionsTopPanel, VRCanvasLayoutPanel.transform);
     }
 
     IEnumerator StartAutoUIActionPromptsCoroutine()
@@ -191,7 +207,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     public void ShowMessageDialog(string message, float preferredWidth = 0f, bool leftAlign = false)
     {
         //Debug.Log("in ShowMessageDialog");
-        GameObject go = Instantiate(messageDialogPrefab, canvas.GetComponent<RectTransform>());
+        GameObject go = Instantiate(messageDialogPrefab, canvasDesktop.GetComponent<RectTransform>());
         go.GetComponent<MessageDialog>().ShowMessage(message, preferredWidth, leftAlign);
 
         //disable main UI
@@ -267,8 +283,6 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// <summary> Set up the list of game objects for action prompting </summary>
     private void UIActionPromptInit()
     {
-        //Make sure this is called to init the list of dataVar handlers
-        DataVarUIHandler.InitializeListOfAll();
         UIActionPromptees = new List<GameObject>();
         //Add relevant UI elemetns for first two data vars
         for(int index = 0; index < 2; index++)

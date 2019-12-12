@@ -61,17 +61,17 @@ public class DataVarUIHandler : MonoBehaviour {
 
     private GameObject loadButton;
     
-    /// <summary> Static list of all handlers of this type in the scene </summary>
+    /// <summary> Static list of all handlers of this type in the scene BUT only in the desktop canvas </summary>
     private static DataVarUIHandler[] allHandlers;
 
     /// <summary> Find all instances of this class in the scene, make a list, and assign their index values in order.
     /// This should be run on startup, and if more instances of this class are made at runtime. 
-    /// 1st run during startup happens automatically from UIManager </summary>
+    /// 1st run during startup happens automatically from UIManager.
+    /// NOTE - this list is only for instances from the desktop canvas, not the VR canvas </summary>
     public static void InitializeListOfAll()
     {
-        //*NOTE* we might want to make sure these are sorted by height/position, but skip that for now
-        //
-        allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
+        allHandlers = UIManager.I.canvasDesktop.GetComponentsInChildren<DataVarUIHandler>();
+        //allHandlers = GameObject.FindObjectsOfType<DataVarUIHandler>();
         for (int i = 0; i < allHandlers.Length; i++)
         {
             allHandlers[i]._UIindex = i;

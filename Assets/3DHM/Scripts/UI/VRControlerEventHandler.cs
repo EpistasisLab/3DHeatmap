@@ -493,14 +493,13 @@ public class VRControlerEventHandler : MonoBehaviour
     private void DoStartMenuReleased(object sender, ControllerInteractionEventArgs e)
     {
         if (logAllEvents)
-        {
             DebugLogger(VRTK_ControllerReference.GetRealIndex(e.controllerReference), "START MENU", "released", e);
-        }
     }
 
     private void DoControllerEnabled(object sender, ControllerInteractionEventArgs e)
     {
-        DebugLogger(VRTK_ControllerReference.GetRealIndex(e.controllerReference), "CONTROLLER STATE", "ENABLED", e);
+        if(logAllEvents)
+            DebugLogger(VRTK_ControllerReference.GetRealIndex(e.controllerReference), "CONTROLLER STATE", "ENABLED", e);
         controller = e.controllerReference.actual;
         hand = e.controllerReference.hand == SDK_BaseController.ControllerHand.Left ? VRManager.Hand.left : e.controllerReference.hand == SDK_BaseController.ControllerHand.Right ? VRManager.Hand.right : VRManager.Hand.undefined;
     }
@@ -514,7 +513,8 @@ public class VRControlerEventHandler : MonoBehaviour
 
     private void DoControllerIndexChanged(object sender, ControllerInteractionEventArgs e)
     {
-        DebugLogger(VRTK_ControllerReference.GetRealIndex(e.controllerReference), "CONTROLLER STATE", "INDEX CHANGED", e);
+        if(logAllEvents)
+            DebugLogger(VRTK_ControllerReference.GetRealIndex(e.controllerReference), "CONTROLLER STATE", "INDEX CHANGED", e);
     }
 
     private void DoMiddleFingerSenseAxisChanged(object sender, ControllerInteractionEventArgs e)
