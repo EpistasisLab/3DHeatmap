@@ -40,7 +40,7 @@ public class SMV : SMView.MonoBehaviorSingleton<SMV> {
     /// Array of SMVcontrol, each of which holds a value/state and the view(s) to which it's mapped.
     /// There will always be one SMVcontrol for each SMVmapping member.
     /// </summary>
-    private SMVcontrol[] controlArray;
+    private SMVcontrol[] controls;
 
 	// in a MonoBehaviorSingleton object, use this for initialization instead of Awake 
 	protected override void Initialize () {
@@ -60,17 +60,17 @@ public class SMV : SMView.MonoBehaviorSingleton<SMV> {
     {
 
         if( initialize)
-            controlArray = new SMVcontrol[Enum.GetNames(typeof(SMVmapping)).Length];
+            controls = new SMVcontrol[Enum.GetNames(typeof(SMVmapping)).Length];
 
-        for(int i = 0; i < controlArray.Length; i++)
+        for(int i = 0; i < controls.Length; i++)
         {
             if (initialize)
             {
-                controlArray[i] = new SMVcontrol();
-                controlArray[i].Init((SMVmapping)i, onUpdateEvent);
+                controls[i] = new SMVcontrol();
+                controls[i].Init((SMVmapping)i, onUpdateEvent);
             }
             else
-                controlArray[i].SetupMappings();
+                controls[i].SetupMappings();
         }
         
         if(doDebugLogging)
@@ -86,7 +86,18 @@ public class SMV : SMView.MonoBehaviorSingleton<SMV> {
     /// <param name="val"></param>
     public void SetValue(SMVmapping mapping, object val)
     {
-        controlArray[(int)mapping].SetValue(val);
+        controls[(int)mapping].SetValue(val);
+    }
+
+    /// <summary>
+    /// Pass an object containing ui-specific special item.
+    /// Each view will check for proper type and convert, and ignore if not proper.
+    /// e.g. for Dropdown UI, this is list of items to populate the dropdown
+    /// </summary>
+    /// <param name="options"></param>
+    public void SetSpecial(SMVmapping mapping, object obj)
+    {
+        controls[(int)mapping].SetSpecial(obj);
     }
 
     /// <summary>
@@ -95,19 +106,19 @@ public class SMV : SMView.MonoBehaviorSingleton<SMV> {
     /// <returns></returns>
     public float GetValueFloat(SMVmapping mapping)
     {
-        return controlArray[(int)mapping].GetValueFloat();
+        return controls[(int)mapping].GetValueFloat();
     }
     public int GetValueInt(SMVmapping mapping)
     {
-        return controlArray[(int)mapping].GetValueInt();
+        return controls[(int)mapping].GetValueInt();
     }
     public string GetValueString(SMVmapping mapping)
     {
-        return controlArray[(int)mapping].GetValueString();
+        return controls[(int)mapping].GetValueString();
     }
     public bool GetValueBool(SMVmapping mapping)
     {
-        return controlArray[(int)mapping].GetValueBool();
+        return controls[(int)mapping].GetValueBool();
     }
 
     /// <summary>
@@ -129,7 +140,7 @@ public class SMV : SMView.MonoBehaviorSingleton<SMV> {
     public void DebugDump()
     {
         Debug.Log("====== SMV version " + SMVversion.String + " == SMVcontrols dump ======");
-        foreach (SMVcontrol control in controlArray)
+        foreach (SMVcontrol control in controls)
         {
             control.DebugDump();
         }

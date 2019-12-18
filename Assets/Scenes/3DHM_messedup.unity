@@ -142,17 +142,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0182c58ea56c04c55b8a2a2450abf664, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  graphContainer: {fileID: 671579206}
-  runtimeRidgeContainer: {fileID: 996632503}
-  runtimeLabelsContainer: {fileID: 1950906430}
-  protolabel: {fileID: 1246378791304790, guid: 62691a240c195544b9a82c064b3c0b76, type: 3}
-  frontBackWall: {fileID: 1613973315}
-  rearBackWall: {fileID: 263018228}
-  leftWall: {fileID: 1934511758}
-  rightWall: {fileID: 1695550903}
-  sceneWidth: 40
-  sceneDepthByBin: 40
-  sceneHeight: 20
+  graphContainer: {fileID: 0}
+  runtimeRidgeContainer: {fileID: 0}
+  runtimeLabelsContainer: {fileID: 0}
+  protolabel: {fileID: 0}
+  frontBackWall: {fileID: 0}
+  rearBackWall: {fileID: 0}
+  leftWall: {fileID: 0}
+  rightWall: {fileID: 0}
+  sceneWidth: 20
+  sceneDepthByBin: 20
+  sceneHeight: 5
   binSeparation: 0
   rowDepthFull: 0
   sceneDepthByBinWithSep: 0
@@ -165,7 +165,7 @@ MonoBehaviour:
   numRows: 0
   numCols: 0
   currGraphHeightScale: 0
-  bevelFraction: 0.01
+  bevelFraction: 0.05
 --- !u!4 &42
 Transform:
   m_ObjectHideFlags: 0
@@ -791,7 +791,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e13f5329848e0784893d72b74a8bec5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textElement: {fileID: 1131258135}
+  textElement: {fileID: 0}
 --- !u!114 &11538872
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1379,12 +1379,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &68170154 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 147176, guid: 4d293c8e162f3874b982baadd71153d2,
-    type: 3}
-  m_PrefabInstance: {fileID: 1154829923}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &78483241
 GameObject:
   m_ObjectHideFlags: 0
@@ -3551,7 +3545,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06a3e50fbb279c8469c23e3d5789ee55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapping: 2
+  mapping: 0
 --- !u!1 &308059628
 GameObject:
   m_ObjectHideFlags: 0
@@ -3794,7 +3788,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e13f5329848e0784893d72b74a8bec5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textElement: {fileID: 1945509006}
+  textElement: {fileID: 0}
 --- !u!114 &315830990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3996,13 +3990,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoManageScriptDefines: 1
   activeScriptingDefineSymbolsWithoutSDKClasses: []
-  scriptAliasLeftController: {fileID: 1940141977}
-  scriptAliasRightController: {fileID: 1853577134}
+  scriptAliasLeftController: {fileID: 0}
+  scriptAliasRightController: {fileID: 0}
   autoManageVRSettings: 1
   autoLoadSetup: 1
-  setups:
-  - {fileID: 1902041711}
-  - {fileID: 818295054}
+  setups: []
   excludeTargetGroups: 1b0000001a000000
   persistOnLoad: 0
 --- !u!4 &338887953
@@ -8769,11 +8761,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f7d0622d08fa324d82dc9b08e214112, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VRenableButtonText: {fileID: 1359632048}
-  defaultPlayerOffset: {x: 0, y: 9, z: -10}
-  grabMoveScale: {x: 600, y: 110, z: 1100}
-  grabMoveScaleExp: 1.55
-  laserPointerXRot: 45
+  VRenableButtonText: {fileID: 0}
+  defaultPlayerOffset: {x: 0, y: 0, z: 0}
+  grabMoveScale: {x: 0, y: 0, z: 0}
+  grabMoveScaleExp: 1
+  laserPointerXRot: 0
 --- !u!1 &567583812
 GameObject:
   m_ObjectHideFlags: 0
@@ -9065,21 +9057,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bacbd5c560f07df4495b0a8d74e828b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  translationScaleKeys: 0.08
-  zoomScaleKeys: 0.06
-  rotationScaleKeys: 0.2
-  translationScaleMouse: 1.5
+  translationScaleKeys: 1.5
+  zoomScaleKeys: 2
+  rotationScaleKeys: 1
+  translationScaleMouse: 25
   rotationScaleMouse: 1
-  mouseSingleClickThreshold: 0.25
-  zoomScaleScrollWheel: 4
+  mouseSingleClickThreshold: 0
+  zoomScaleScrollWheel: 0
   touchStartDelay: 0.15
-  pinchZoomScaleTouch: 0.01
+  pinchZoomScaleTouch: 0.2
   pinchZoomExpScaleTouch: 1.5
   pinchZoomDotThresholdTouch: 0.9
   rotationScaleTouch: 0.1
   rotationExpScaleTouch: 1.5
   rotationDotThresholdTouch: 0.9
-  translationScaleTouch: 0.01
+  translationScaleTouch: 0.1
   translationExpScaleTouch: 1.5
   translateDotThresholdTouch: 0.95
   contDataInspectionEnabled: 1
@@ -9134,12 +9126,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &583550167 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 124034, guid: 4d293c8e162f3874b982baadd71153d2,
-    type: 3}
-  m_PrefabInstance: {fileID: 1154829923}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &605694986
 GameObject:
   m_ObjectHideFlags: 0
@@ -9624,6 +9610,53 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 674910027}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &685562159
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 685562161}
+  - component: {fileID: 685562160}
+  m_Layer: 0
+  m_Name: SiimpleModelView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &685562160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685562159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3c87b1d43d4ecb4398c688ec5044f06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onUpdateEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  doDebugLogging: 0
+--- !u!4 &685562161
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685562159}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 759.26404, y: -386.62204, z: 1188.194}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 732260889}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &692556441
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10216,6 +10249,7 @@ Transform:
   m_LocalPosition: {x: 740.3799, y: 372.84372, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 685562161}
   - {fileID: 1334861249}
   m_Father: {fileID: 0}
   m_RootOrder: 11
@@ -11640,7 +11674,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06a3e50fbb279c8469c23e3d5789ee55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapping: 4
+  mapping: 0
 --- !u!1 &775796172
 GameObject:
   m_ObjectHideFlags: 0
@@ -11954,32 +11988,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eeda6d41317f444b900e374895f14e95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoPopulateObjectReferences: 0
-  actualBoundaries: {fileID: 1373955160}
-  actualHeadset: {fileID: 1233296707}
-  actualLeftController: {fileID: 583550167}
-  actualRightController: {fileID: 1100343706}
-  modelAliasLeftController: {fileID: 68170154}
-  modelAliasRightController: {fileID: 819558365}
+  autoPopulateObjectReferences: 1
+  actualBoundaries: {fileID: 0}
+  actualHeadset: {fileID: 0}
+  actualLeftController: {fileID: 0}
+  actualRightController: {fileID: 0}
+  modelAliasLeftController: {fileID: 0}
+  modelAliasRightController: {fileID: 0}
   cachedSystemSDKInfo:
     baseTypeName: VRTK.SDK_BaseSystem
     fallbackTypeName: VRTK.SDK_FallbackSystem
-    typeName: VRTK.SDK_SteamVRSystem
+    typeName: VRTK.SDK_FallbackSystem
     descriptionIndex: 0
   cachedBoundariesSDKInfo:
     baseTypeName: VRTK.SDK_BaseBoundaries
     fallbackTypeName: VRTK.SDK_FallbackBoundaries
-    typeName: VRTK.SDK_SteamVRBoundaries
+    typeName: VRTK.SDK_FallbackBoundaries
     descriptionIndex: 0
   cachedHeadsetSDKInfo:
     baseTypeName: VRTK.SDK_BaseHeadset
     fallbackTypeName: VRTK.SDK_FallbackHeadset
-    typeName: VRTK.SDK_SteamVRHeadset
+    typeName: VRTK.SDK_FallbackHeadset
     descriptionIndex: 0
   cachedControllerSDKInfo:
     baseTypeName: VRTK.SDK_BaseController
     fallbackTypeName: VRTK.SDK_FallbackController
-    typeName: VRTK.SDK_SteamVRController
+    typeName: VRTK.SDK_FallbackController
     descriptionIndex: 0
 --- !u!4 &818295055
 Transform:
@@ -12083,12 +12117,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ShowMaskGraphic: 0
---- !u!1 &819558365 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 192944, guid: 4d293c8e162f3874b982baadd71153d2,
-    type: 3}
-  m_PrefabInstance: {fileID: 1154829923}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &826724076
 GameObject:
   m_ObjectHideFlags: 0
@@ -12588,7 +12616,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c08a9f0a7417824188da3c3aef2e61f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VRTKControllerEvents: {fileID: 1940141979}
+  VRTKControllerEvents: {fileID: 0}
   logAllEvents: 0
 --- !u!1 &885118416
 GameObject:
@@ -12623,7 +12651,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   clickOnPointerCollision: 0
-  autoActivateWithinDistance: 1
+  autoActivateWithinDistance: 0
 --- !u!114 &885118418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13242,7 +13270,6 @@ GameObject:
   m_Component:
   - component: {fileID: 969025312}
   - component: {fileID: 969025311}
-  - component: {fileID: 969025313}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -13262,15 +13289,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bad81adaef391846bf3661278e81ac3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  toolTipPanel: {fileID: 1964889207}
-  statusPanel: {fileID: 2076688176}
-  messageDialogPrefab: {fileID: 1554442831380166, guid: 804e1c098ce6b944f8ebae05f5bff796,
-    type: 3}
-  redrawButton: {fileID: 605694986}
-  mappingHeightDropdown: {fileID: 1590994915}
-  mappingTopColorDropdown: {fileID: 766187702}
-  mappingSideColorDropdown: {fileID: 1568179159}
-  VRCanvasLayoutPanel: {fileID: 648864302}
+  toolTipPanel: {fileID: 0}
+  statusPanel: {fileID: 0}
+  messageDialogPrefab: {fileID: 0}
+  redrawButton: {fileID: 0}
+  mappingHeightDropdown: {fileID: 0}
+  mappingTopColorDropdown: {fileID: 0}
+  mappingSideColorDropdown: {fileID: 0}
+  VRCanvasLayoutPanel: {fileID: 0}
 --- !u!4 &969025312
 Transform:
   m_ObjectHideFlags: 0
@@ -13285,33 +13311,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &969025313
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 969025310}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f3c87b1d43d4ecb4398c688ec5044f06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onUpdateEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 969025311}
-        m_MethodName: SMV_OnUpdateEvent
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  doDebugLogging: 0
 --- !u!1 &996402003
 GameObject:
   m_ObjectHideFlags: 0
@@ -13355,7 +13354,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c08a9f0a7417824188da3c3aef2e61f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VRTKControllerEvents: {fileID: 1853577135}
+  VRTKControllerEvents: {fileID: 0}
   logAllEvents: 0
 --- !u!1 &996632503
 GameObject:
@@ -15172,7 +15171,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06a3e50fbb279c8469c23e3d5789ee55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapping: 6
+  mapping: 0
 --- !u!1 &1080292533
 GameObject:
   m_ObjectHideFlags: 0
@@ -15342,13 +15341,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06a3e50fbb279c8469c23e3d5789ee55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapping: 7
---- !u!1 &1100343706 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 159396, guid: 4d293c8e162f3874b982baadd71153d2,
-    type: 3}
-  m_PrefabInstance: {fileID: 1154829923}
-  m_PrefabAsset: {fileID: 0}
+  mapping: 0
 --- !u!1 &1119456031
 GameObject:
   m_ObjectHideFlags: 0
@@ -16683,12 +16676,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &1233296707 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 189822, guid: 4d293c8e162f3874b982baadd71153d2,
-    type: 3}
-  m_PrefabInstance: {fileID: 1154829923}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1233296708 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 413432, guid: 4d293c8e162f3874b982baadd71153d2,
@@ -17729,7 +17716,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b29aeaa37f2a544a91ae22f6625f467, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapping: 1
+  mapping: 0
 --- !u!114 &1280823271
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18679,7 +18666,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 732260889}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1334861250
 MonoBehaviour:
@@ -19550,12 +19537,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8b542fe1513dfd84d8879ebe5c183494, type: 3}
---- !u!1 &1373955160 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 146900, guid: 4d293c8e162f3874b982baadd71153d2,
-    type: 3}
-  m_PrefabInstance: {fileID: 1154829923}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1373955165 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 420908, guid: 4d293c8e162f3874b982baadd71153d2,
@@ -21344,7 +21325,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06a3e50fbb279c8469c23e3d5789ee55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapping: 5
+  mapping: 0
 --- !u!1 &1589238175
 GameObject:
   m_ObjectHideFlags: 0
@@ -21652,7 +21633,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06a3e50fbb279c8469c23e3d5789ee55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapping: 3
+  mapping: 0
 --- !u!1 &1596177696
 GameObject:
   m_ObjectHideFlags: 0
@@ -25824,15 +25805,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: add9710b97af3634e8fa5125abe67380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultViewOffset: {x: 0, y: 30, z: -5}
+  defaultViewOffset: {x: 0, y: 0, z: 0}
   followHmdEnabled: 0
-  followHmdFwdOffset: 0
-  followHmdPosTime: 0.3
+  followHmdFwdOffset: -1
+  followHmdPosTime: 0.7
   followHmdPosMaxVel: 4
-  followHmdRotTime: 0.25
+  followHmdRotTime: 1
   followHmdRotMaxVel: 100
-  zoomScalePower: 1.35
-  zoomScaleHeight: 5
+  zoomScalePower: 1.5
+  zoomScaleHeight: 10
 --- !u!224 &1814658524
 RectTransform:
   m_ObjectHideFlags: 0
@@ -25962,8 +25943,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   activationButton: 10
   activationMode: 0
-  selectionButton: 10
-  clickMethod: 1
+  selectionButton: 3
+  clickMethod: 0
   attemptClickOnDeactivate: 0
   clickAfterHoverDuration: 0
   maximumLength: Infinity
@@ -25994,9 +25975,9 @@ MonoBehaviour:
   directionIndicator: {fileID: 0}
   customRaycast: {fileID: 0}
   pointerOriginSmoothingSettings:
-    smoothsPosition: 1
+    smoothsPosition: 0
     maxAllowedPerFrameDistanceDifference: 0.003
-    smoothsRotation: 1
+    smoothsRotation: 0
     maxAllowedPerFrameAngleDifference: 1.5
   validCollisionColor: {r: 0, g: 1, b: 0, a: 1}
   invalidCollisionColor: {r: 1, g: 0, b: 0, a: 1}
@@ -26022,15 +26003,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ec704cceb26f6f49b6c900fc83d8d18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableTeleport: 0
+  enableTeleport: 1
   targetListPolicy: {fileID: 0}
-  pointerRenderer: {fileID: 1853577138}
-  activationButton: 9
+  pointerRenderer: {fileID: 0}
+  activationButton: 10
   holdButtonToActivate: 1
   activateOnEnable: 0
   activationDelay: 0
   selectionButton: 10
-  selectOnPress: 1
+  selectOnPress: 0
   selectionDelay: 0
   selectAfterHoverDuration: 0
   interactWithObjects: 0
@@ -26561,32 +26542,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eeda6d41317f444b900e374895f14e95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoPopulateObjectReferences: 0
-  actualBoundaries: {fileID: 2006242877}
-  actualHeadset: {fileID: 2006242876}
-  actualLeftController: {fileID: 2006242875}
-  actualRightController: {fileID: 2006242874}
+  autoPopulateObjectReferences: 1
+  actualBoundaries: {fileID: 0}
+  actualHeadset: {fileID: 0}
+  actualLeftController: {fileID: 0}
+  actualRightController: {fileID: 0}
   modelAliasLeftController: {fileID: 0}
   modelAliasRightController: {fileID: 0}
   cachedSystemSDKInfo:
     baseTypeName: VRTK.SDK_BaseSystem
     fallbackTypeName: VRTK.SDK_FallbackSystem
-    typeName: VRTK.SDK_OculusSystem
+    typeName: VRTK.SDK_FallbackSystem
     descriptionIndex: 0
   cachedBoundariesSDKInfo:
     baseTypeName: VRTK.SDK_BaseBoundaries
     fallbackTypeName: VRTK.SDK_FallbackBoundaries
-    typeName: VRTK.SDK_OculusBoundaries
+    typeName: VRTK.SDK_FallbackBoundaries
     descriptionIndex: 0
   cachedHeadsetSDKInfo:
     baseTypeName: VRTK.SDK_BaseHeadset
     fallbackTypeName: VRTK.SDK_FallbackHeadset
-    typeName: VRTK.SDK_OculusHeadset
+    typeName: VRTK.SDK_FallbackHeadset
     descriptionIndex: 0
   cachedControllerSDKInfo:
     baseTypeName: VRTK.SDK_BaseController
     fallbackTypeName: VRTK.SDK_FallbackController
-    typeName: VRTK.SDK_OculusController
+    typeName: VRTK.SDK_FallbackController
     descriptionIndex: 0
 --- !u!4 &1902041712
 Transform:
@@ -26739,13 +26720,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DataObjectLayer: 8
-  desktopCamera: {fileID: 1814658521}
-  cubePrefab: {fileID: 1643424693120684, guid: 086dcb706b4ba0d4285eac110fe90557, type: 3}
-  graphFloor: {fileID: 1503015023}
-  displayPanel: {fileID: 11538869}
-  displayPanelVR: {fileID: 315830987}
-  indicatorFlashFreq: 0.5
-  indicatorMaxAlpha: 0.6
+  desktopCamera: {fileID: 0}
+  cubePrefab: {fileID: 0}
+  graphFloor: {fileID: 0}
+  displayPanel: {fileID: 0}
+  displayPanelVR: {fileID: 0}
+  indicatorFlashFreq: 0
+  indicatorMaxAlpha: 0
   showDataIndicator: 1
   showDataInspectorDesktop: 1
   showDataInspectorVR: 1
@@ -27478,9 +27459,9 @@ MonoBehaviour:
   directionIndicator: {fileID: 0}
   customRaycast: {fileID: 0}
   pointerOriginSmoothingSettings:
-    smoothsPosition: 1
+    smoothsPosition: 0
     maxAllowedPerFrameDistanceDifference: 0.003
-    smoothsRotation: 1
+    smoothsRotation: 0
     maxAllowedPerFrameAngleDifference: 1.5
   validCollisionColor: {r: 0, g: 1, b: 0, a: 1}
   invalidCollisionColor: {r: 1, g: 0, b: 0, a: 1}
@@ -27506,15 +27487,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ec704cceb26f6f49b6c900fc83d8d18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableTeleport: 0
+  enableTeleport: 1
   targetListPolicy: {fileID: 0}
-  pointerRenderer: {fileID: 1940141981}
-  activationButton: 9
+  pointerRenderer: {fileID: 0}
+  activationButton: 10
   holdButtonToActivate: 1
   activateOnEnable: 0
   activationDelay: 0
-  selectionButton: 3
-  selectOnPress: 1
+  selectionButton: 10
+  selectOnPress: 0
   selectionDelay: 0
   selectAfterHoverDuration: 0
   interactWithObjects: 0
@@ -27538,8 +27519,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   activationButton: 10
   activationMode: 0
-  selectionButton: 10
-  clickMethod: 1
+  selectionButton: 3
+  clickMethod: 0
   attemptClickOnDeactivate: 0
   clickAfterHoverDuration: 0
   maximumLength: Infinity
@@ -28070,7 +28051,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e13f5329848e0784893d72b74a8bec5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textElement: {fileID: 503398469}
+  textElement: {fileID: 0}
 --- !u!1 &1969490887 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1376888363292746, guid: 8b542fe1513dfd84d8879ebe5c183494,
@@ -28457,24 +28438,6 @@ PrefabInstance:
 --- !u!4 &2006242872 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a,
-    type: 3}
-  m_PrefabInstance: {fileID: 2006242870}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2006242874 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 113768, guid: 126d619cf4daa52469682f85c1378b4a,
-    type: 3}
-  m_PrefabInstance: {fileID: 2006242870}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2006242875 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 109308, guid: 126d619cf4daa52469682f85c1378b4a,
-    type: 3}
-  m_PrefabInstance: {fileID: 2006242870}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2006242876 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 100002, guid: 126d619cf4daa52469682f85c1378b4a,
     type: 3}
   m_PrefabInstance: {fileID: 2006242870}
   m_PrefabAsset: {fileID: 0}

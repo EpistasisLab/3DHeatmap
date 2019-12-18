@@ -1119,36 +1119,12 @@ public class Graph : MonoBehaviorSingleton<Graph>
     }
 
     /// <summary>
-    /// Event handler for the SMV Simple Model View system.
-    /// This handles events that are generated when an SMV-mapped state is
-    /// changed, either from UI or from code, so it acts like a method that
-    /// you normally would call from both your UI event handler and from
-    /// your code when a particular value is changed.
-    /// </summary>
-    /// <param name="mapping"></param>
-    public void SMV_OnUpdateEvent(SMVmapping mapping)
-    {
-        switch (mapping)
-        {
-            case SMVmapping.GraphHeightFrac:
-                UpdateGraphHeight();
-                break;
-            case SMVmapping.VRdesktopViewMode:
-                VRManager.I.OnDesktopViewDropdown(SMV.I.GetValueInt(SMVmapping.VRdesktopViewMode));
-                break;
-            default:
-                Debug.LogError("Unrecognized SMVmapping in event handler: " + mapping.ToString());
-                break;
-        }
-    }
-
-    /// <summary>
     /// Stauffer added
     /// Let's us call this func from UI with a [0,1] fractional value.
     /// Used internally from SimpleModelView callback.
     /// </summary>
     /// <param name="frac"></param>
-    private void UpdateGraphHeight()
+    public void UpdateGraphHeight()
     {
         //Square the height-scaling-fraction so we get more sensitivity in the bottom of the range.
         //This is important for getting a good height scale in larger data sets where ridges need to be short to see an overview.

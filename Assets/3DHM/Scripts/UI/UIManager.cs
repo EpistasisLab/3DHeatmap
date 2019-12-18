@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using SMView;
 
 /// <summary>
 /// Singleton class for managing much of the UI stuff.
@@ -122,6 +123,35 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
             }
         }
         */
+    }
+
+    /// <summary>
+    /// Event handler for the SMV Simple Model View system.
+    /// This handles events that are generated when an SMV-mapped state is
+    /// changed, either from UI or from code, so it acts like a method that
+    /// you normally would call from both your UI event handler and from
+    /// your code when a particular value is changed.
+    /// </summary>
+    /// <param name="mapping"></param>
+    public void SMV_OnUpdateEvent(SMVmapping mapping)
+    {
+        switch (mapping)
+        {
+            case SMVmapping.GraphHeightFrac:
+                Graph.I.UpdateGraphHeight();
+                break;
+            case SMVmapping.VRdesktopViewMode:
+                VRManager.I.OnDesktopViewDropdown(SMV.I.GetValueInt(SMVmapping.VRdesktopViewMode));
+                break;
+            case SMVmapping.VarMapHeight:
+            case SMVmapping.VarMapSide:
+            case SMVmapping.VarMapTop:
+                visualMappingUIHandler.OnLabelValueChange();
+                break;
+            default:
+                //Debug.LogError("Unrecognized SMVmapping in event handler: " + mapping.ToString());
+                break;
+        }
     }
 
     /// <summary>

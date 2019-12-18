@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using SMView;
 
 /// <summary>
 /// Handler code for the TOP PANEL that contains multiple UI group for visual mapping selections, i.e
@@ -16,6 +17,35 @@ public class VisualMappingUIHandler : MonoBehaviour {
     private Dropdown topColortableDropdown;
     private Dropdown sideColortableDropdown;
 
+    //Accessors for dropdown values via SMV.
+    //The main value of using SMV for these is so that we can have these in both
+    // desktop and VR menus and they automatically stay sync'ed.
+    private int HeightLabelDropdownValue
+    {
+        get { return SMV.I.GetValueInt(SMVmapping.VarMapHeight); }
+        set { SMV.I.SetValue(SMVmapping.VarMapHeight, value); }
+    }
+    private int TopColorLabelDropdownValue
+    {
+        get { return SMV.I.GetValueInt(SMVmapping.VarMapTop); }
+        set { SMV.I.SetValue(SMVmapping.VarMapTop, value); }
+    }
+    private int SideColorLabelDropdownValue
+    {
+        get { return SMV.I.GetValueInt(SMVmapping.VarMapSide); }
+        set { SMV.I.SetValue(SMVmapping.VarMapSide, value); }
+    }
+    private int TopColortableDropdownValue
+    {
+        get { return SMV.I.GetValueInt(SMVmapping.VarMapTopColorTable); }
+        set { SMV.I.SetValue(SMVmapping.VarMapTopColorTable, value); }
+    }
+    private int SideColortableDropdownValue
+    {
+        get { return SMV.I.GetValueInt(SMVmapping.VarMapSideColorTable); }
+        set { SMV.I.SetValue(SMVmapping.VarMapSideColorTable, value); }
+    }
+       
     // Use this for initialization
     void Start()
     {
@@ -51,8 +81,10 @@ public class VisualMappingUIHandler : MonoBehaviour {
     {
         int[] assigns = new int[3];
         assigns[(int)DataManager.Mapping.Height] = -1; //N/A
-        assigns[(int)DataManager.Mapping.TopColor] = topColortableDropdown.value; // transform.Find("TopColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
-        assigns[(int)DataManager.Mapping.SideColor] = sideColortableDropdown.value; // transform.Find("SideColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
+        assigns[(int)DataManager.Mapping.TopColor] = TopColortableDropdownValue;
+        assigns[(int)DataManager.Mapping.SideColor] = SideColortableDropdownValue;
+        //assigns[(int)DataManager.Mapping.TopColor] = topColortableDropdown.value; // transform.Find("TopColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
+        //assigns[(int)DataManager.Mapping.SideColor] = sideColortableDropdown.value; // transform.Find("SideColorPanel").transform.Find("ColorDropdown").gameObject.GetComponentInChildren<Dropdown>().value;
         return assigns;
     }
 
@@ -66,18 +98,18 @@ public class VisualMappingUIHandler : MonoBehaviour {
         if (mapping == DataManager.Mapping.Height)
             return;
         if (mapping == DataManager.Mapping.SideColor)
-            sideColortableDropdown.value = index;
+            SideColortableDropdownValue = index;
         else
-            topColortableDropdown.value = index;
+            TopColortableDropdownValue = index;
     }
 
     /// <summary>
     /// Receive a value change event from one of the label dropdown elements in the panel.
     /// </summary>
-    /// <param name="go"></param>
-    public void OnLabelValueChange(GameObject go)
+    public void OnLabelValueChange()
     {
         //Debug.Log("Value Change. go.GetInstanceID() " + go.GetInstanceID());
+        /*
         string label = go.GetComponentInChildren<Dropdown>().captionText.text;
         DataVariable var = DataManager.I.GetVariableByLabel( label );
         if( var == null)
@@ -85,8 +117,9 @@ public class VisualMappingUIHandler : MonoBehaviour {
             Debug.LogWarning("null var returned for label " + label);
             return;
         }
+        */
         AssignVarsByCurrentLabelChoices();
-        UIManager.I.ShowNextUIActionPrompt(go);
+        UIManager.I.ShowNextUIActionPrompt();
         //This method will only do anything if auto-prompting has already finished.
         UIManager.I.StartRedrawPrompt();
         //DataManager.I.DebugDumpVariables(false);
@@ -97,6 +130,8 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// </summary>
     private void AssignVarsByCurrentLabelChoices()
     {
+        //*NOTE* these dropdowns use SMVview componenets, but those only provide the 'value', i.e. chosen dropdown field index.
+        // So we really on refs to the dropdowns themselves here to get chosen text.
         DataManager.I.AssignVariableMappingByLabel(DataManager.Mapping.Height, heightLabelDropdown.captionText.text);
         DataManager.I.AssignVariableMappingByLabel(DataManager.Mapping.TopColor, topColorLabelDropdown.captionText.text);
         DataManager.I.AssignVariableMappingByLabel(DataManager.Mapping.SideColor, sideColorLabelDropdown.captionText.text);
@@ -104,9 +139,20 @@ public class VisualMappingUIHandler : MonoBehaviour {
 
     private void SetDropdownsValueByCurrentVars()
     {
-        SetDropdownValueByVarLabel(heightLabelDropdown, DataManager.I.HeightVar);
-        SetDropdownValueByVarLabel(topColorLabelDropdown, DataManager.I.TopColorVar);
-        SetDropdownValueByVarLabel(sideColorLabelDropdown, DataManager.I.SideColorVar);
+        SetDropdownValueByVarLabel(DataManager.Mapping.Height, DataManager.I.HeightVar);
+        SetDropdownValueByVarLabel(DataManager.Mapping.TopColor, DataManager.I.TopColorVar);
+        SetDropdownValueByVarLabel(DataManager.Mapping.SideColor, DataManager.I.SideColorVar);
+    }
+
+    private void SetDropdownValueByMapping(DataManager.Mapping mapping, int value)
+    {
+        //Set value via SMV so VR menu gets updated too
+        switch (mapping)
+        {
+            case DataManager.Mapping.Height: HeightLabelDropdownValue = value; break;
+            case DataManager.Mapping.TopColor: TopColorLabelDropdownValue = value; break;
+            case DataManager.Mapping.SideColor: SideColorLabelDropdownValue = value; break;
+        }
     }
 
     /// <summary>
@@ -118,8 +164,15 @@ public class VisualMappingUIHandler : MonoBehaviour {
     /// </summary>
     /// <param name="dd"></param>
     /// <param name="var"></param>
-    private void SetDropdownValueByVarLabel(Dropdown dd, DataVariable var)
+    private void SetDropdownValueByVarLabel(DataManager.Mapping mapping, DataVariable var)
     {
+        Dropdown dd = null;
+        switch (mapping)
+        {
+            case DataManager.Mapping.Height: dd = heightLabelDropdown; break;
+            case DataManager.Mapping.TopColor: dd = topColorLabelDropdown; break;
+            case DataManager.Mapping.SideColor: dd = sideColorLabelDropdown; break;
+        }
         int index;
         if (var == null)
             index = 0;
@@ -133,7 +186,7 @@ public class VisualMappingUIHandler : MonoBehaviour {
         //If no match, defaults to first item in dropdown
         if (index == dd.options.Count)
             index = 0;
-        dd.value = index;
+        SetDropdownValueByMapping(mapping, index);
     }
 
     /// <summary>
@@ -159,8 +212,13 @@ public class VisualMappingUIHandler : MonoBehaviour {
             od.text = label;
             list.Add(od);
         }
+        SMV.I.SetSpecial(SMVmapping.VarMapHeight, list);
+        SMV.I.SetSpecial(SMVmapping.VarMapSide, list);
+        SMV.I.SetSpecial(SMVmapping.VarMapTop, list);
+        /* orig
         heightLabelDropdown.options = list;
         topColorLabelDropdown.options = list;
         sideColorLabelDropdown.options = list;
+        */
     }
 }

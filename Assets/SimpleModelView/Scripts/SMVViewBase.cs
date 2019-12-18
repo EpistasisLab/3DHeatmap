@@ -102,6 +102,16 @@ namespace SMView
         protected abstract void SetValueDerived(object val);
 
         /// <summary>
+        /// Pass an object containing ui-specific special item.
+        /// Overridden method will check for proper type and convert, and ignore if not proper.
+        /// e.g. for Dropdown UI, this is list of items to populate the dropdown
+        /// </summary>
+        public virtual void SetSpecial(object obj)
+        {
+            //Be default, do nothing.
+        }
+
+        /// <summary>
         /// Check the passed value to see that its data type matches that of the view's data type.
         /// For textual-class views, if we get a string for a non-string textual-class view, attempt to parse it into the appropriate
         /// type. On success, change val to the parsed value.

@@ -17,7 +17,7 @@ namespace SMView
     /// install a new version of SimpleModelView, it won't overwrite your changes.
     /// 
     /// </summary>
-    public enum SMVmapping { undefined/*always include this*/, GraphHeightFrac, VRdesktopViewMode };
+    public enum SMVmapping { undefined/*always include this*/, GraphHeightFrac, VRdesktopViewMode, VarMapHeight, VarMapTop, VarMapSide, VarMapTopColorTable, VarMapSideColorTable };
 
 
 }

@@ -166,7 +166,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
         //VR setup
         XRSettings.enabled = enable;
-        
+
         //Hack this setting to prevent errors with steamvr behaviors when we disable vr mode
         /*
         SteamVR_Input.initialized = enable;
@@ -176,13 +176,14 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         //When this is enabled, it will take over drawing to the app desktop window.
         //NOTE - this may not work like we expect after change to VRTK. PlaySpace is the 'play area' from VRTK, 
         // and before that it was the camera rig object, and I'm  not sure if they're the same.
-        PlayArea.gameObject.SetActive(enable);
+        if(PlayArea != null)    
+            PlayArea.gameObject.SetActive(enable);
 
         //Tell desktop camera to go into follow-hmd mode.
         //Do this after enabling the hmd rig.
         CameraManager.I.FollowHMDenable(enable);
 
-        VRmodeIsEnabled = enable && VRisAvailable;
+        VRmodeIsEnabled = enable && VRisAvailable && PlayArea != null;
 
         if (enable)
             ShowInstructions();

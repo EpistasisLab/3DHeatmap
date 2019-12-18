@@ -215,6 +215,22 @@ namespace SMView
             onUpdateEvent.Invoke(mapping);
         }
 
+        /// <summary>
+        /// Pass an object containing ui-specific special item.
+        /// Each view will check for proper type and convert, and ignore if not proper.
+        /// e.g. for Dropdown UI, this is list of items to populate the dropdown
+        /// </summary>
+        /// <param name="options"></param>
+        public void SetSpecial(object obj)
+        {
+            //Update each UI element
+            foreach (SMVviewBase view in views)
+            {
+                view.SetSpecial(obj);
+            }
+        }
+
+
         /// <summary> Return the current value as generic object type </summary>
         public object GetValueAsObject()
         {
