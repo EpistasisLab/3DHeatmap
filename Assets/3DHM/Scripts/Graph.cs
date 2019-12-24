@@ -717,8 +717,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
     /// <returns></returns>
     public float GetBlockSceneMaxHeight()
     {
-        float val = DataManager.I.GetVariableByMapping(DataManager.Mapping.Height).MaxValue;
-        return GetBlockSceneHeight(val);
+        DataVariable dv = DataManager.I.GetVariableByMapping(DataManager.Mapping.Height);
+        if (dv == null)
+            return 0;
+        return GetBlockSceneHeight(dv.MaxValue);
     }
 
     /// <summary> Get the height for the block in scene units at a particular data position (row, column).

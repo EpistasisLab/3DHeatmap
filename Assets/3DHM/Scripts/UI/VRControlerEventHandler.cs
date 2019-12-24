@@ -424,6 +424,8 @@ public class VRControlerEventHandler : MonoBehaviour
         {
             DebugLogger(VRTK_ControllerReference.GetRealIndex(e.controllerReference), "BUTTON ONE", "pressed down", e);
         }
+
+        VRManager.I.OnMenuButtonDown();
     }
 
     private void DoButtonOneReleased(object sender, ControllerInteractionEventArgs e)
@@ -432,6 +434,7 @@ public class VRControlerEventHandler : MonoBehaviour
         {
             DebugLogger(VRTK_ControllerReference.GetRealIndex(e.controllerReference), "BUTTON ONE", "released", e);
         }
+        VRManager.I.OnMenuButtonRelease();
     }
 
     private void DoButtonOneTouchStart(object sender, ControllerInteractionEventArgs e)

@@ -32,9 +32,14 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     public GameObject mappingHeightDropdown;
     public GameObject mappingTopColorDropdown;
     public GameObject mappingSideColorDropdown;
+    /// <summary> The canvas holding the VR menu </summary>
+    public GameObject VRMenuCanvas;
     /// <summary> The panel in the VR/world canvas in which to drop copies of menus </summary>
     public GameObject VRCanvasLayoutPanel;
-    
+    /// <summary> Distance of VR menu from player </summary>
+    public float VRMenuDistance = 1.5f;
+    public Vector3 VRMenuDefaultDirection;
+
     /// <summary> Index within the auto-prompt list of the UI object that's currently being highlighted in some way </summary>
     private int currentAutoUIActionPrompteeIndex;
     /// <summary> Obj pointer to UI element that's currently being flashed. </summary>
@@ -72,7 +77,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
             Debug.LogError("visualMappingUIHandler == null");
         //dataVarsTopPanel = GetAndCheckGameObject("DataVarsTopPanel");
 
-//        SetupVRmenus();
+        SetupVRmenus();
 
         TooltipHide();
 
@@ -83,12 +88,45 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     }
 
     /// <summary>
-    /// This will copy 
+    /// Set up VR menus
     /// </summary>
     private void SetupVRmenus()
     {
+        //Make copies of the menus and put them into the world-space canvas for VR.
+        //For non-button elements, we rely on SMView controls to keep synchronized with desktop UI.
         GameObject mainMenuVR = Instantiate(mainPanel, VRCanvasLayoutPanel.transform);
         GameObject optionMenuVR = Instantiate(optionsTopPanel, VRCanvasLayoutPanel.transform);
+        //optionMenuVR.transform.position = Vector3.zero;
+
+        //Remove the data subpanel - don't want to get involved with loading files from VR
+        Transform txf = mainMenuVR.transform.Find("DataVarsHeader");
+        if (txf != null)
+            txf.gameObject.SetActive(false);
+        txf = mainMenuVR.transform.Find("DataVarsTopPanel");
+        if (txf != null)
+            txf.gameObject.SetActive(false);
+        
+        //Note that VR headset may not be set up at this point, so will just point to default player position.
+        PositionVRmenu();
+    }
+
+    public void PositionVRmenu()
+    {
+        PositionVRmenu(VRMenuDefaultDirection);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="direction">Direction vector from user towards desired menu position</param>
+    public void PositionVRmenu(Vector3 direction)
+    {
+        Vector3 user = VRManager.I.hmdTransform != null ? VRManager.I.hmdTransform.position : VRManager.I.GetDefaultPlayerPosition();
+        VRMenuCanvas.transform.position = user + (direction.normalized * VRMenuDistance);
+        //Turn the menu to face the user.
+        //NOTE - If I simply call LookAt(user), the menu is facing 180 wrong direction. Doesn't make sense.
+        //So workaround is to tell it to look 180 deg away from user, then it ends up looking at user.
+        VRMenuCanvas.transform.LookAt(user + 2*(direction.normalized * VRMenuDistance));
     }
 
     IEnumerator StartAutoUIActionPromptsCoroutine()

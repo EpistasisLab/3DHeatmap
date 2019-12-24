@@ -73,6 +73,7 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
     /// Array with element for each hand. </summary>
     private bool[] grabDown = new bool[2];
     private bool[] triggerDown = new bool[2];
+    private bool menuButtonDown = false;
 
     /// <summary> Current hand/controller position. Vector with one elem for each hand. </summary>
     private Vector3[] handPos = new Vector3[2];
@@ -127,7 +128,8 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
 
     // Update is called once per frame
     void Update () {
-		
+        //Do stuff if menu button is held down
+        HandleMenuButton();
 	}
 
     private void LateUpdate()
@@ -300,6 +302,27 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         triggerDown[(int)hand] = state;
     }
 
+    /// <summary> Menu button has been pressed down </summary>
+    public void OnMenuButtonDown()
+    {
+        menuButtonDown = true;
+    }
+
+    public void OnMenuButtonRelease()
+    {
+        menuButtonDown = false;
+    }
+
+    private void HandleMenuButton()
+    {
+        //Move the menu with menu button held
+        if (menuButtonDown && hmdTransform != null)
+        {
+            Vector3 direx = hmdTransform.transform.forward;
+            UIManager.I.PositionVRmenu(direx);
+        }
+    }
+
     public void OnControllerTransformChange(Hand hand, Transform txfm)
     {
         handPos[(int)hand] = txfm.position;
@@ -341,8 +364,14 @@ public class VRManager : MonoBehaviorSingleton<VRManager> {
         //Make sure VR mode is available
         if (!VRisAvailable)
             yield break;
+        PlayArea.position  = GetDefaultPlayerPosition();
+    }
+
+    public Vector3 GetDefaultPlayerPosition()
+    {
         Vector3 center = Graph.I.GetPlotCenter();
-        PlayArea.position  = new Vector3(center.x, Graph.I.sceneCorner.y + defaultPlayerOffset.y, Graph.I.sceneCorner.z + defaultPlayerOffset.z);
+        //This is ugly - need a better routine to get this position.
+        return new Vector3(center.x, Graph.I.sceneCorner.y + defaultPlayerOffset.y, Graph.I.sceneCorner.z + defaultPlayerOffset.z);
     }
 
     //////////

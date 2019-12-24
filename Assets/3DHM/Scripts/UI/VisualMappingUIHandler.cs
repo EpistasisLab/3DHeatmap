@@ -212,6 +212,8 @@ public class VisualMappingUIHandler : MonoBehaviour {
             od.text = label;
             list.Add(od);
         }
+        //This will set the options for all dropdowns mapped to
+        // each mapping, i.e. in desktop and VR menus
         SMV.I.SetSpecial(SMVmapping.VarMapHeight, list);
         SMV.I.SetSpecial(SMVmapping.VarMapSide, list);
         SMV.I.SetSpecial(SMVmapping.VarMapTop, list);
