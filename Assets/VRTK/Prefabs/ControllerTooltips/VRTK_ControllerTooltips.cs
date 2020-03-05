@@ -282,7 +282,12 @@ namespace VRTK
 
             for (int i = 1; i < availableButtons.Length; i++)
             {
-                buttonTooltips[i] = transform.Find(availableButtons[i].ToString()).GetComponent<VRTK_ObjectTooltip>();
+                //Stauffer - add check for null txf
+                Transform txf = transform.Find(availableButtons[i].ToString());
+                if (txf == null)
+                    Debug.LogError("Couldn't find controller tooltip's object tooltip " + availableButtons[i].ToString());
+                else
+                    buttonTooltips[i] = txf.GetComponent<VRTK_ObjectTooltip>();
             }
         }
 
