@@ -29,11 +29,12 @@ public class CameraManager : MonoBehaviorSingleton<CameraManager> {
     /// <summary> Distance from graph at which to start accelerating zoom scaling </summary>
     public float zoomScaleHeight = 10;
 
-    /// <summary> The HMD transform to use for FollowHMD mode </summary>
-    private Transform hmdTransform { get { return VRManager.I.hmdTransform == null ? new GameObject("dummyHmdUMT").transform : VRManager.I.hmdTransform; } }
-    /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
+    /// <summary> The VR HMD transform to use for FollowHMD mode in VR mode.
+    /// If not set up yet, ie during init IIRC, then just return a dummy transform </summary>
+    private Transform hmdTransform { get { return VRManager.I.hmdTransform == null ? gameObject.transform : VRManager.I.hmdTransform; } }
+    /// <summary> For VR FollowHmd mode. Helper class for SmoothDamp. </summary>
     private SmoothVector3 posSmoother;
-    /// <summary> For FollowHmd mode. Helper class for SmoothDamp. </summary>
+    /// <summary> For VR FollowHmd mode. Helper class for SmoothDamp. </summary>
     private SmoothQuaternion rotSmoother;
 
     //Use this instead of Awake since this is a MonoBehaviorSingleton
