@@ -15120,24 +15120,26 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 1078040735}
-  m_Template: {fileID: 511426155}
-  m_CaptionText: {fileID: 354860493}
-  m_CaptionImage: {fileID: 187376598}
-  m_ItemText: {fileID: 14840903}
-  m_ItemImage: {fileID: 1296512560}
+  m_TargetGraphic: {fileID: 1080292537}
+  m_Template: {fileID: 1871405556}
+  m_CaptionText: {fileID: 1951635255}
+  m_CaptionImage: {fileID: 826724078}
+  m_ItemText: {fileID: 2001025913}
+  m_ItemImage: {fileID: 185445114}
   m_Value: 0
   m_Options:
     m_Options:
     - m_Text: 0
       m_Image: {fileID: 21300000, guid: f873340e4dd9cc44c99c6dd14cca9125, type: 3}
     - m_Text: 1
-      m_Image: {fileID: 21300000, guid: 7f27f5d5bacbe7b40968a7187bd803c5, type: 3}
+      m_Image: {fileID: 21300000, guid: 486ee28e6bfad324da4b0ab73c25ee7b, type: 3}
     - m_Text: 2
-      m_Image: {fileID: 21300000, guid: 807bf8d743a05f24b8cf29aac82017c3, type: 3}
+      m_Image: {fileID: 21300000, guid: 7f27f5d5bacbe7b40968a7187bd803c5, type: 3}
     - m_Text: 3
-      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+      m_Image: {fileID: 21300000, guid: 807bf8d743a05f24b8cf29aac82017c3, type: 3}
     - m_Text: 4
+      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+    - m_Text: 5
       m_Image: {fileID: 21300000, guid: 573c47fc86ea45741a209c11e1df7310, type: 3}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -15302,12 +15304,14 @@ MonoBehaviour:
     - m_Text: 0
       m_Image: {fileID: 21300000, guid: f873340e4dd9cc44c99c6dd14cca9125, type: 3}
     - m_Text: 1
-      m_Image: {fileID: 21300000, guid: 7f27f5d5bacbe7b40968a7187bd803c5, type: 3}
+      m_Image: {fileID: 21300000, guid: 486ee28e6bfad324da4b0ab73c25ee7b, type: 3}
     - m_Text: 2
-      m_Image: {fileID: 21300000, guid: 807bf8d743a05f24b8cf29aac82017c3, type: 3}
+      m_Image: {fileID: 21300000, guid: 7f27f5d5bacbe7b40968a7187bd803c5, type: 3}
     - m_Text: 3
-      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+      m_Image: {fileID: 21300000, guid: 807bf8d743a05f24b8cf29aac82017c3, type: 3}
     - m_Text: 4
+      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+    - m_Text: 5
       m_Image: {fileID: 21300000, guid: 573c47fc86ea45741a209c11e1df7310, type: 3}
   m_OnValueChanged:
     m_PersistentCalls:

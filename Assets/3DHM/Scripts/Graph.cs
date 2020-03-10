@@ -352,10 +352,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
         set;
     }
 
-    // Stauffer - NOTE this seems to work with the currently-loaded row data,
-    //   by accessing the Graph class properties topVals[] and sideVals[]
-    //Skipping 'bin' stuff for now
-    public virtual Color MakeColor(DataManager.Mapping mapping, int row, int column)
+
+    public virtual Color GetColorForRowCol(DataManager.Mapping mapping, int row, int column)
     {
         bool isSide = mapping == DataManager.Mapping.SideColor;
 
@@ -372,15 +370,18 @@ public class Graph : MonoBehaviorSingleton<Graph>
                 retColor = this.GreenRed(inv, isSide);
                 break;
             case 1:
-                retColor = this.Rainbow(inv, isSide);
+                retColor = this.GreenRedInverse(inv, isSide);
                 break;
             case 2:
-                retColor = this.YellowBlue(inv, isSide);
+                retColor = this.Rainbow(inv, isSide);
                 break;
             case 3:
-                retColor = this.GrayScale(inv, isSide);
+                retColor = this.YellowBlue(inv, isSide);
                 break;
             case 4:
+                retColor = this.GrayScale(inv, isSide);
+                break;
+            case 5:
                 retColor = this.ConstantColor(inv, isSide);
                 break;
             default:
@@ -414,6 +415,11 @@ public class Graph : MonoBehaviorSingleton<Graph>
             red = (inv - 0.5f) * 2f;
         }
         return new Color(red, green, 0f, trans);
+    }
+
+    public virtual Color GreenRedInverse(float inv, bool isSide)
+    {
+        return GreenRed(1 - inv, isSide);
     }
 
     public virtual Color YellowBlue(float inv, bool isSide)
@@ -805,8 +811,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
             }
 
             //For the values at this row/col, set up state
-            topColor = this.MakeColor(DataManager.Mapping.TopColor, row, colNum);
-            sideColor = this.MakeColor(DataManager.Mapping.SideColor, row, colNum);
+            topColor = this.GetColorForRowCol(DataManager.Mapping.TopColor, row, colNum);
+            sideColor = this.GetColorForRowCol(DataManager.Mapping.SideColor, row, colNum);
             //Used to set vertex properties depending on whether data is a valid number or NaN
             bool topIsANumber = !DataManager.I.GetIsNanByMapping(DataManager.Mapping.TopColor, row, colNum);
             bool sideIsANumber = !DataManager.I.GetIsNanByMapping(DataManager.Mapping.SideColor, row, colNum);
