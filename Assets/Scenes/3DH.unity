@@ -8118,7 +8118,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 2}
-  m_SizeDelta: {x: 0, y: 150}
+  m_SizeDelta: {x: 0, y: 200}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &511426156
 MonoBehaviour:
@@ -15120,12 +15120,12 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 1080292537}
-  m_Template: {fileID: 1871405556}
-  m_CaptionText: {fileID: 1951635255}
-  m_CaptionImage: {fileID: 826724078}
-  m_ItemText: {fileID: 2001025913}
-  m_ItemImage: {fileID: 185445114}
+  m_TargetGraphic: {fileID: 1078040735}
+  m_Template: {fileID: 511426155}
+  m_CaptionText: {fileID: 354860493}
+  m_CaptionImage: {fileID: 187376598}
+  m_ItemText: {fileID: 14840903}
+  m_ItemImage: {fileID: 1296512560}
   m_Value: 0
   m_Options:
     m_Options:
@@ -15138,8 +15138,12 @@ MonoBehaviour:
     - m_Text: 3
       m_Image: {fileID: 21300000, guid: 807bf8d743a05f24b8cf29aac82017c3, type: 3}
     - m_Text: 4
-      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+      m_Image: {fileID: 21300000, guid: 66d80956e7fa4a64186cd11fc6e04b08, type: 3}
     - m_Text: 5
+      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+    - m_Text: 6
+      m_Image: {fileID: 21300000, guid: 44c6e1c145a02754a8d816c0b0a85cee, type: 3}
+    - m_Text: 7
       m_Image: {fileID: 21300000, guid: 573c47fc86ea45741a209c11e1df7310, type: 3}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -15310,8 +15314,12 @@ MonoBehaviour:
     - m_Text: 3
       m_Image: {fileID: 21300000, guid: 807bf8d743a05f24b8cf29aac82017c3, type: 3}
     - m_Text: 4
-      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+      m_Image: {fileID: 21300000, guid: 66d80956e7fa4a64186cd11fc6e04b08, type: 3}
     - m_Text: 5
+      m_Image: {fileID: 21300000, guid: 66260cdf18dbc1749a4552717995973b, type: 3}
+    - m_Text: 6
+      m_Image: {fileID: 21300000, guid: 44c6e1c145a02754a8d816c0b0a85cee, type: 3}
+    - m_Text: 7
       m_Image: {fileID: 21300000, guid: 573c47fc86ea45741a209c11e1df7310, type: 3}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -28655,7 +28663,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 2}
-  m_SizeDelta: {x: 0, y: 150}
+  m_SizeDelta: {x: 0, y: 200}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1871405557
 MonoBehaviour:

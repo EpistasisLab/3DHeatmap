@@ -379,9 +379,15 @@ public class Graph : MonoBehaviorSingleton<Graph>
                 retColor = this.YellowBlue(inv, isSide);
                 break;
             case 4:
-                retColor = this.GrayScale(inv, isSide);
+                retColor = this.YellowBlueInverse(inv, isSide);
                 break;
             case 5:
+                retColor = this.GrayScale(inv, isSide);
+                break;
+            case 6:
+                retColor = this.GrayScaleInverse(inv, isSide);
+                break;
+            case 7:
                 retColor = this.ConstantColor(inv, isSide);
                 break;
             default:
@@ -428,6 +434,11 @@ public class Graph : MonoBehaviorSingleton<Graph>
         return new Color(1f - inv, 1f - inv, inv, trans);
     }
 
+    public virtual Color YellowBlueInverse(float inv, bool isSide)
+    {
+        return YellowBlue(1 - inv, isSide);
+    }
+
     public virtual Color Spectrum(float inv, bool isSide)
     {
         float trans = 1;// isSide ? 0.7f : 0.9f;
@@ -455,6 +466,11 @@ public class Graph : MonoBehaviorSingleton<Graph>
     public virtual Color GrayScale(float inv, bool isSide)
     {
         return new Color(inv, inv, inv, 1);// isSide ? 0.7f : 0.9f);
+    }
+
+    public virtual Color GrayScaleInverse(float inv, bool isSide)
+    {
+        return new Color(1 - inv, 1 - inv, 1 - inv, 1);
     }
 
     public virtual Color ConstantColor(float inv, bool isSide)
