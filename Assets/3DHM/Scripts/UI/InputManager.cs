@@ -376,7 +376,8 @@ public class InputManager : MonoBehaviorSingleton<InputManager> {
             (Time.time - contDataInspectionPrevTime) > contDataInspectionInterval &&
             ! CameraManager.I.followHmdEnabled)
         {
-            DataInspector.I.InspectDataAtScreenPosition(Input.mousePosition);
+            if (Graph.I.GraphIsShowing)
+                DataInspector.I.InspectDataAtScreenPosition(Input.mousePosition);
             contDataInspectionPrevTime = Time.time;
         }
 
