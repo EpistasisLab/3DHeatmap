@@ -29,6 +29,9 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     //private GameObject dataVarsTopPanel; not using here currently
     public GameObject messageDialogPrefab;
     public GameObject redrawButton;
+    /// <summary> The redraw button in the VR copy of the UI. Special handling for this one since we
+    /// want to flash it in VR too. MUST BE SET MANUALLY DURING VR MENU INIT </summary>
+    private GameObject redrawButtonVR;
     public GameObject mappingHeightDropdown;
     public GameObject mappingTopColorDropdown;
     public GameObject mappingSideColorDropdown;
@@ -105,7 +108,14 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         txf = mainMenuVR.transform.Find("DataVarsTopPanel");
         if (txf != null)
             txf.gameObject.SetActive(false);
-        
+
+        //Save ref to the redraw button in the menu copy
+        txf = mainMenuVR.transform.Find("TopButtonsPanel/RedrawButton");
+        if (txf != null)
+            redrawButtonVR = txf.gameObject;
+        else
+            Debug.LogError("SetupVRmenus: redraw button not found");
+
         //Note that VR headset may not be set up at this point, so will just point to default player position.
         PositionVRmenu();
     }
@@ -428,16 +438,26 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
                 StartStopUIActionPrompt(mostRecentUIActionPrompteeObj, false);
             uiObj.GetComponent<UIElementFlasher>().StartFlashing();
             mostRecentUIActionPrompteeObj = uiObj;
+
+            //Special handling of redraw button so we can also flash it in VR menu. A hack
+            if(uiObj == redrawButton && redrawButtonVR != null)
+                redrawButtonVR.GetComponent<UIElementFlasher>().StartFlashing();
         }
         else
         {
             uiObj.GetComponent<UIElementFlasher>().StopFlashing();
             //don't set this, in case we get mulitple calls here while setting up - don't want to lose track of what's actually flashing
             //mostRecentUIActionPrompteeObj = null;
+
+            //Special handling of redraw button so we can also flash it in VR menu. A hack
+            if (uiObj == redrawButton && redrawButtonVR != null)
+                redrawButtonVR.GetComponent<UIElementFlasher>().StopFlashing();
         }
     }
 
-    /// <summary> Prompt the user to redraw by flashing UI element </summary>
+    /// <summary> Prompt the user to redraw by flashing UI element.
+    /// We prompt for a user-initiated redraw instead of starting one automatically
+    /// since the redraw takes time, especially for large data sets</summary>
     public void StartRedrawPrompt()
     {
         //First make sure we've stopped auto-prompts
