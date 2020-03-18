@@ -125,6 +125,14 @@ public class VisualMappingUIHandler : MonoBehaviour {
         //DataManager.I.DebugDumpVariables(false);
     }
 
+    /// <summary> The color table dropdown has changed </summary>
+    public void OnColorValueChange()
+    {
+        //We don't do anything else here because we query the selected color table
+        // on demand rather than store it somewhere.
+        UIManager.I.StartRedrawPrompt();
+    }
+
     /// <summary>
     /// Take the current dropdown choices and use them to assign vars to visual mapping, if vars are valid
     /// </summary>
