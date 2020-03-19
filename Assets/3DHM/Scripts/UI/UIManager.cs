@@ -518,6 +518,11 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
         ShowIntroMessage();
     }
 
+    public void OnQuitButton()
+    {
+        Application.Quit();
+    }
+
     public void OnClearData()
     {
         Graph.I.ClearCurrentGraph();
