@@ -9383,7 +9383,7 @@ GameObject:
   - component: {fileID: 648864305}
   - component: {fileID: 648864304}
   - component: {fileID: 648864307}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: HorizLayoutPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12618,7 +12618,7 @@ GameObject:
   - component: {fileID: 885118419}
   - component: {fileID: 885118418}
   - component: {fileID: 885118417}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: VRCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28380,7 +28380,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 23
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0

@@ -803,7 +803,14 @@ public class Graph : MonoBehaviorSingleton<Graph>
         GameObject newRidge = UnityEngine.Object.Instantiate(this.protomesh, new Vector3(this.sceneCorner.x, this.sceneCorner.y, this.sceneCorner.z + zoff), Quaternion.identity);
         //Store the new object in container for easily moving it around, and tidyness
         newRidge.transform.SetParent(runtimeRidgeContainer.transform);
+        //Set the layer to default. For some reason it's getting set to the UI layer.
+        //Would bee better to sort out why, but for now just manually set it to 0
+        newRidge.layer = 0;
+
+        //Set scale
         newRidge.transform.localScale = new Vector3(this.sceneWidth, this.sceneHeight * this.currGraphHeightScale, this.rowDepthDataOnly);
+
+        //Get the mesh so we can set it below
         Mesh amesh = ((MeshFilter)newRidge.gameObject.GetComponent(typeof(MeshFilter))).mesh;
         this.xRidges[this.numRidges/*a class variable!*/] = new XRidge();
 
