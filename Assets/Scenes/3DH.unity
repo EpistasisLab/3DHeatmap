@@ -28424,7 +28424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: add9710b97af3634e8fa5125abe67380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultViewOffset: {x: 0, y: 30, z: -5}
+  defaultViewOffset: {x: 0, y: 60, z: -40}
   followHmdEnabled: 0
   followHmdFwdOffset: 0
   followHmdPosTime: 0.3

@@ -119,7 +119,7 @@ public class ProjectManager : MonoBehaviorSingleton<ProjectManager>
     /// <summary> Choose a project file from disk and load it and restore it</summary>
     public void Restore()
     {
-        Graph.I.ClearCurrentGraph();
+        Graph.I.ClearCurrentGraph(true);
         StartCoroutine(RestoreCoroutine());
     }
 

@@ -525,7 +525,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
 
     public void OnClearData()
     {
-        Graph.I.ClearCurrentGraph();
+        Graph.I.ClearCurrentGraph(true);
         DataManager.I.Clear();
     }
 

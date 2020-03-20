@@ -103,6 +103,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
         }
     }
     private Vector3 _sceneCorner;
+
+    /// <summary> Flag that's set when a view reset should be done the next time we redraw </summary>
+    private bool resetViewRequeted = false;
+
     /// <summary> Stauffer - separtion in scene units between bins, whether bins are interleaved or not. So if not interleaved,
     /// it's separation between groups of rows of each bin. If interleaved, this is separation between each row (different than rowGap, however).
     /// NOT USING</summary>
@@ -212,7 +216,8 @@ public class Graph : MonoBehaviorSingleton<Graph>
         labelsColumnBottom = new List<Label>();
         labelsColumnTop = new List<Label>();
 
-        ResetView();
+        //Let's us reset the view once the graph is loaded, so it can be an appropriate view
+        ResetViewOnNextDraw();
 
         //Debug.Log("Application.persistentDataPath: " + Application.persistentDataPath);
 
@@ -295,7 +300,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
         //Draw it!
         ShowData();
 
-        ResetView();
+        //Only call this if we request that we need it, 
+        // so the graph stays in place when we simply change color table or mappings and redraw
+        if(resetViewRequeted)
+            ResetView();
     }
 
 
@@ -533,6 +541,13 @@ public class Graph : MonoBehaviorSingleton<Graph>
         graphContainer.SetActive(show);
     }
 
+    /// <summary> Call this if we will want the view to be reset the next time graph is drawn.
+    /// e.g. when we clear a graph </summary>
+    public void ResetViewOnNextDraw()
+    {
+        resetViewRequeted = true;
+    }
+
     public void ResetView()
     {
         //Move the graph back to default position in case
@@ -544,6 +559,9 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
         //VR player hmd
         VRManager.I.ResetPlayerPosition();
+
+        //clear this
+        resetViewRequeted = false;
     }
 
     /// <summary> Get data axes extents (num rows, columns and height range) </summary>
@@ -571,7 +589,12 @@ public class Graph : MonoBehaviorSingleton<Graph>
 
     public bool GraphIsShowing { get { return this.numRidges > 0; } }
 
-    public void ClearCurrentGraph()
+    /// <summary>
+    /// Clear the objects that make up the current graph, and some other cleanup.
+    /// </summary>
+    /// <param name="resetView">Pass true for the camera view to be reset when the next graph is drawn. 
+    /// When we're just changing viz params on the current graph/data, pass false</param>
+    public void ClearCurrentGraph(bool resetView)
     {
         //Looks to be deleting old mesh/visualization
         if (this.numRidges > 0)
@@ -589,6 +612,10 @@ public class Graph : MonoBehaviorSingleton<Graph>
         ShowHideGraphFloor(false);
         //This tells us there's no graph showing. Goofy.
         this.numRidges = 0;
+
+        //Request reset view here so that the next graph we load will set default view appropriate for the graph
+        if(resetView)
+            ResetViewOnNextDraw();
     }
 
     public virtual void ShowData()
@@ -598,7 +625,7 @@ public class Graph : MonoBehaviorSingleton<Graph>
             return;
         }
 
-        ClearCurrentGraph();
+        ClearCurrentGraph(false);
         ShowHideGraphFloor(true);
 
         //Stauffer - this call should be fine for now with member vars we setup previously.
