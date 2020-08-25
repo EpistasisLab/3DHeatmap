@@ -129,6 +129,8 @@ In VR mode, the desktop window can display can operate in two modes, controlled 
 
 # <a name="DevStuff"></a>Developer Stuff (high level notes)
 
+For more details, [see the wiki](https://github.com/EpistasisLab/3DHeatmap/wiki)
+
 ### Unity
 As of Sept. 2019, the 3D Heatmap project has been developed in Unity 2018.2.1f1. Why not Unity 2019? Inertia. And maybe some things will break, we don't know yet.
 
