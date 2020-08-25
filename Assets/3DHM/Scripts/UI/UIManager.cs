@@ -180,7 +180,7 @@ public class UIManager : MonoBehaviorSingleton<UIManager>
     /// you normally would call from both your UI event handler and from
     /// your code when a particular value is changed.
     /// </summary>
-    /// <param name="mapping"></param>
+    /// <param name="mapping">SMVmapping identifier</param>
     public void SMV_OnUpdateEvent(SMVmapping mapping)
     {
         switch (mapping)

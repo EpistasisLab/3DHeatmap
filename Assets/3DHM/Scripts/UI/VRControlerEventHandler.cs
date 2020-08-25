@@ -16,7 +16,7 @@ public class VRControlerEventHandler : MonoBehaviour
     /// <summary> Set to have all button events logged for debugging/testing </summary>
     public bool logAllEvents;
 
-    /// <summary> Set this in the inspector based on which ControllerEvents gameobject this is attached to </summary>
+    /// <summary> Assigned at startup via DoControllerEnabled event listener </summary>
     private VRManager.Hand hand = VRManager.Hand.undefined;
 
     /// <summary> Ref to the actual game object for the controller. Use this for getting pose </summary>
